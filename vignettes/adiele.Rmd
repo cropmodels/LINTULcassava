@@ -1,0 +1,618 @@
+
+## figure 1
+
+##########################################################################################
+#Scripts that produce the figures 1 and 1A as shown in the EJA paper
+#
+#Authors: JG Adiele and AGT Schut
+#PPS, December 2020
+#
+#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
+#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
+#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+#
+##########################################################################################
+
+#Names of resulting figures
+Fig1A.TIF <- "./Figures/Adiele et al. EJA Figure 1A.tif"
+Fig1A.PDF <- "./Figures/Adiele et al. EJA Figure 1A.pdf"
+Fig1.TIF <- "./Figures/Adiele et al. EJA Figure 1.tif"
+Fig1.PDF <- "./Figures/Adiele et al. EJA Figure 1.pdf"
+
+#Data measured with an AccuPar below and above canopy
+DATA_ACCUPAR <- read.csv("./Data/AccuPAR measurements and LAI and k calculations for 2016+2017.csv", header = T)
+
+
+#Figure 1A.
+Adiele_etal_EJA_Fig_1A <- function(DATA){
+  Modk <- lm(DATA$ln_FLI ~ -1 + DATA$LAI)
+  
+  uLY<-unique(DATA[,"Loc_yr"])
+  ii<-DATA[,"Loc_yr"]=="Benue_2017"
+  plot(x=DATA[ii,"LAI"],y=DATA[ii,"ln_FLI"],
+       cex.lab=1.5, cex = 1.0,
+       xlab = 'Leaf area index (m²/m²)',
+       ylab = '-ln (1-fLI)',
+       xlim = c(0,7), ylim = c(0,5),
+       type="p",
+       pch=15,col="black")
+  ii<-DATA[,"Loc_yr"]=="Benue_2016"
+  points(x=DATA[ii,"LAI"],y=DATA[ii,"ln_FLI"], pch=0,col="black",cex=1.0)
+  ii<-DATA[,"Loc_yr"]=="Edo_2016"
+  points(x=DATA[ii,"LAI"],y=DATA[ii,"ln_FLI"], pch=1,col="black",cex=1.0)
+  ii<-DATA[,"Loc_yr"]=="Edo_2017"
+  points(x=DATA[ii,"LAI"],y=DATA[ii,"ln_FLI"], pch=16,col="black",cex=1.0)
+
+  legend("bottomright", c("Benue, 2016" ,"Benue, 2017","Edo, 2016", "Edo, 2017"),
+         cex=1.0,
+         pch = c(0, 15, 1, 16), bty="n") 
+  
+  print(summary(Modk))
+  print(anova(Modk))
+  abline(Modk)
+  legend('topleft', c('R² = 0.99', 'y = 0.67x'), bty = 'n')
+}
+
+tiff(Fig1A.TIF, height = 13, width = 16, units = 'cm', 
+     compression = "lzw", res = 600)
+  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+  Adiele_etal_EJA_Fig_1A(DATA = DATA_ACCUPAR)
+dev.off()
+
+pdf(Fig1A.PDF)
+  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+  Adiele_etal_EJA_Fig_1A(DATA = DATA_ACCUPAR)
+dev.off()
+
+
+Adiele_etal_EJA_Fig_1 <- function(DATA){
+
+  Modk <- lm(DATA$ln_FLI ~ -1 + DATA$LAI)
+  
+  plot(x=DATA[,"LAI"],y=DATA[,"ln_FLI"],
+       cex.lab=1.5, cex = 1.0,
+       xlab = 'Leaf area index (m²/m²)',
+       ylab = '-ln (1-fLI)',
+       xlim = c(0,7), ylim = c(0,5),
+       type="p",
+       pch=1,col="black")
+
+  print(summary(Modk))
+  print(anova(Modk))
+  abline(Modk)
+  legend('topleft', c('R² = 0.99', 'y = 0.67x'), bty = 'n')
+}
+tiff(Fig1.TIF, height = 13, width = 16, units = 'cm', 
+     compression = "lzw", res = 600)
+  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+  Adiele_etal_EJA_Fig_1(DATA = DATA_ACCUPAR)
+dev.off()
+
+pdf(Fig1.PDF)
+  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+  Adiele_etal_EJA_Fig_1(DATA = DATA_ACCUPAR)
+dev.off()
+
+## figure 2
+
+##########################################################################################
+#Script that produces figure 2 as shown in the EJA paper
+#
+#Authors: JG Adiele and AGT Schut
+#PPS, December 2020
+#
+#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
+#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
+#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+#
+##########################################################################################
+
+#Names of resulting figures
+Fig2.TIF <- "./Figures/Adiele et al. EJA Figure 2.tif"
+Fig2.PDF <- "./Figures/Adiele et al. EJA Figure 2.pdf"
+
+#READ IN THE DATA
+DATA <- read.csv("./Data/fPAR selected treatments Benue Edo 2016 and 2017.csv", header = T)
+
+#################################################################
+
+DAP_vs_IPAR<-function(Series1=TRT1,Series2=NULL,Series3=NULL,
+                     LOCYR=LOCYR,
+                     LEG=TRUE,LEGTEXT=c('NfPfKf', 'NfPfKf', 'NfPfKf', "Observed")){
+  
+  # leaves
+  
+  ColS1 <- rgb(red = 0, green = 0, blue = 0, alpha = 1) #black line
+  ColS2 <- rgb(red = 1, green = 0, blue = 0, alpha = 0.8)#red line
+  ColS3 <- rgb(red = 0, green = 0, blue = 1, alpha = 0.8)#blue line
+  
+  plot( x    = Series1$DAP, 
+        y    = Series1$fPAR, type="l", 
+        col  = ColS1, 
+        xlab = "Days after planting", 
+        ylab = "IPAR, f",
+        ylim = c(0,1), 
+        xlim=c(0,450),
+        lwd  = 1.5,
+        lty  = 1,
+        cex.lab  = 1.25, #1.0
+        cex.axis= 1.1, #0.85
+        mgp=c(2,0.5,0))
+  text(x=100, y=0.05,labels=LOCYR,cex=1.5)
+  arrows(Series1$DAP, Series1$fPAR-Series1$fPAR_sd, 
+         Series1$DAP, Series1$fPAR+Series1$fPAR_sd, 
+           length=0.05, angle=90, code=3,col = ColS1)
+    points(x   = Series1$DAP,
+           y   = Series1$fPAR,
+           col = ColS1,
+           pch = 2)
+    colLEG <- ColS1
+    colLWD <- 1.5
+    colLTY <- 1
+    colPCH <- 2
+
+  if(length(Series2)>1){
+    lines(x    = Series2$DAP, 
+          y    = Series2$fPAR, 
+          col  = ColS2, 
+          lwd  = 1.5,
+          lty  = 2)
+    arrows(Series2$DAP+3, Series2$fPAR-Series2$fPAR_sd, 
+           Series2$DAP+3, Series2$fPAR+Series2$fPAR_sd, 
+           length=0.05, angle=90, code=3,col = ColS2)
+    points(x   = Series1$DAP,
+           y   = Series1$fPAR,
+           col = ColS1,
+           pch = 5)
+    colLEG <- c(colLEG,ColS2)
+    colLWD <- c(colLWD, 1.5)
+    colLTY <- c(colLTY, 2)
+    colPCH <- c(colPCH, 5)
+  }
+  if(length(Series3)>1){
+      lines(x    = Series3$DAP, 
+            y    = Series3$fPAR, 
+            col  = ColS3, 
+            lwd  = 1.5,
+            lty  = 4)
+      arrows(Series3$DAP-3, Series3$fPAR-Series3$fPAR_sd, 
+             Series3$DAP-3, Series3$fPAR+Series3$fPAR_sd, 
+             length=0.05, angle=90, code=3,col = ColS3)
+      points(x   = Series3$DAP,
+             y   = Series3$fPAR,
+             col = ColS3,
+             pch = 19)
+      colLEG <- c(colLEG,ColS3)
+      colLWD <- c(colLWD, 1.5)
+      colLTY <- c(colLTY, 4)
+      colPCH <- c(colPCH, 19)
+    }    
+  if(LEG){
+    legend("bottomright", legend=LEGTEXT, col = colLEG, lwd = colLWD, lty = colLTY, pch = colPCH, bty = "n")
+  }
+}
+
+Figure2 <- function(DATA){
+  par(mfrow=c(2,2),oma=c(3,3,1,1),mar=c(1.5,1.5,0,0))
+  ii<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfK1")
+  ij<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfKf")
+  ik<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfKfMn")
+  DAP_vs_IPAR(Series1=DATA[ii,],Series2=DATA[ij,],Series3=DATA[ik,],
+              LOCYR="Edo, 2016",
+              LEG=TRUE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
+  ii<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfK1")
+  ij<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfKf")
+  ik<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2016" & DATA[,"Treatment"]=="NfPfKfMn")
+  DAP_vs_IPAR(Series1=DATA[ii,],Series2=DATA[ij,],Series3=DATA[ik,],
+              LOCYR="Benue, 2016",
+              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
+  ii<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfK1")
+  ij<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfKf")
+  ik<-which(DATA[,"Location"]=="Edo" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfKfMn")
+  DAP_vs_IPAR(Series1=DATA[ii,],Series2=DATA[ij,],Series3=DATA[ik,],
+              LOCYR="Edo, 2017",
+              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
+  ii<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfK1")
+  ij<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfKf")
+  ik<-which(DATA[,"Location"]=="Benue" & DATA[,"Year"]=="2017" & DATA[,"Treatment"]=="NfPfKfMn")
+  DAP_vs_IPAR(Series1=DATA[ii,],Series2=DATA[ij,],Series3=DATA[ik,],
+              LOCYR="Benue, 2017",
+              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
+  mtext("Days after planting", side = 1, line = 1, outer = TRUE, at = NA,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+  
+  mtext("IPAR, f", 
+        side = 2, line = 1, outer = TRUE, at = 0.25,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+  mtext("IPAR, f", 
+        side = 2, line = 1, outer = TRUE, at = 0.75,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+}
+
+tiff(Fig2.TIF, height = 13, width = 20, units = 'cm', 
+       compression = "lzw", res = 600)
+  Figure2(DATA)  
+dev.off()
+
+pdf(Fig2.PDF)
+  Figure2(DATA)  
+dev.off()
+
+## figure 3
+
+##########################################################################################
+#Scripts that produce the figures 1 and 1A as shown in the EJA paper
+#
+#Authors: JG Adiele and AGT Schut
+#PPS, December 2020
+#
+#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
+#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
+#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+#
+##########################################################################################
+
+#Names of resulting figures
+Fig3.TIF <- "./Figures/Adiele et al. EJA Figure 3.tif"
+Fig3.PDF <- "./Figures/Adiele et al. EJA Figure 3.pdf"
+
+#Data on cumulative intercepted PAR, combining measure wheater data and interpolated measurements of LI from AccurPAR data
+Bio_cumIPAR <- read.csv("./Data/Bio+cumIPAR_NFPFKF_BenueEdo_Locations+years.csv", header = T)
+
+#Figure 3.
+Adiele_etal_EJA_Fig_3 <- function(Bio_cumIPAR){
+  
+  Bio_cumIPAR$Loc_yr <- factor(Bio_cumIPAR$Loc_yr)
+  #par(mfrow=c(1,2))
+  ii<-which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2016" )
+  plot(Bio_cumIPAR[ii,"Cum_PAR.MJm.2"], Bio_cumIPAR[ii,"BiomassDM.gm.2"], xlab = "Cumulative IPAR (MJ/m²)", ylab = "Biomass (g/m²)",
+       cex.lab=1.3, cex = 1.0, pch =1, xlim = c(0,2600), ylim = c(0,9000))
+  ii<-which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2017" )
+  points(Bio_cumIPAR[ii,"Cum_PAR.MJm.2"], Bio_cumIPAR[ii,"BiomassDM.gm.2"], pch =16, cex = 1.0)
+  
+  ii<-which(Bio_cumIPAR[,"Loc_yr"]=="Benue_2016" )
+  points(Bio_cumIPAR[ii,"Cum_PAR.MJm.2"], Bio_cumIPAR[ii,"BiomassDM.gm.2"], pch =2, cex = 1.0)
+  ii<-which(Bio_cumIPAR[,"Loc_yr"]=="Benue_2016" )
+  points(Bio_cumIPAR[ii,"Cum_PAR.MJm.2"], Bio_cumIPAR[ii,"BiomassDM.gm.2"], pch =17, cex = 1.0)
+  legend('bottomright', c('Edo, 2016', 'Edo, 2017', 'Benue, 2016', 'Benue, 2017'), 
+         pch = c(1,16,2,17), bty = 'n')
+  
+  #c(20,15,1,0)
+  ii<-which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2016" )
+  ModBE <- lm(BiomassDM.gm.2 ~ -1 + Cum_PAR.MJm.2,Bio_cumIPAR[ii,])
+  summary(ModBE)
+  anova(ModBE)
+  abline(ModBE)
+  legend('topleft', c('Edo 2016', 'R² = 0.98, P< .001', 'y = 2.76x'), bty = 'n')
+}
+
+tiff(Fig3.TIF, height = 16, width = 16, units = 'cm', 
+     compression = "lzw", res = 600)
+par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+Adiele_etal_EJA_Fig_3(Bio_cumIPAR=Bio_cumIPAR)
+dev.off()
+
+pdf(Fig3.PDF)
+par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+Adiele_etal_EJA_Fig_3(Bio_cumIPAR=Bio_cumIPAR)
+dev.off()
+
+## figure 4
+
+##########################################################################################
+#Scripts that produce the figure 4 as shown in the EJA paper
+#
+#Authors: JG Adiele and AGT Schut
+#PPS, December 2020
+#
+#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
+#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
+#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+#
+##########################################################################################
+
+#Names of resulting figures
+Fig4.TIF <- "./Figures/Adiele et al. EJA Figure 4.tif"
+Fig4.PDF <- "./Figures/Adiele et al. EJA Figure 4.pdf"
+
+#Data output from LINTUL-cASSAVA simulations
+#Analysing Simulated and observed yield 
+#Read in the data needed
+Pot_Edo16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_EDO_2016.csv')
+Wlim_Edo16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2016.csv')
+Pot_CRS16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_CRS_2016.csv')
+Wlim_CRS16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2016.csv')
+Pot_BEN16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_BENUE_2016.csv')
+Wlim_BEN16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2016.csv')
+
+Pot_Edo17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_EDO_2017.csv')
+Wlim_Edo17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2017.csv')
+Pot_CRS17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_CRS_2017.csv')
+Wlim_CRS17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2017.csv')
+Pot_BEN17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_BENUE_2017.csv')
+Wlim_BEN17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2017.csv')
+
+BIOMASS    <- read.csv('./Data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv', header = T) #plant parts g DM/m2
+BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
+BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
+BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
+BIOM_BEN17 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
+BIOM_CRS16 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
+BIOM_CRS17 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
+
+LeavesStemRootDynamics<-function(Series1=Potential,
+                                 Series2=NULL,
+                                 BIOMASS=NA,TITLE=title,
+                                 LEG=TRUE,LEGTEXT=c('Potential', 'Water lim.', 'Nutrient lim.', "Observed")){
+  
+  # leaves
+  
+  ColS1 <- rgb(red = 0, green = 0, blue = 0, alpha = 1) #black line
+  ColS2 <- rgb(red = 1, green = 0, blue = 0, alpha = 0.8)#red line
+  colBIOM <- "black" #'#22BB22'
+  
+  plot( x    = Series1$time, 
+        y    = Series1$WLVG, type="l", 
+        col  = ColS1, 
+        xlab = "time (days)", 
+        ylab = expression('Green leaves, g DM m'^-2),
+        ylim = c(0,500), 
+        lwd  = 2,
+        lty  = 1,
+        cex.lab  = 1.25, #1.0
+        cex.axis= 1.1, #0.85
+        mgp=c(2,0.5,0))
+  text(x=median(Series1$time), y=490,labels=TITLE,cex=1.5)
+  colLEG <- ColS1
+  colLWD <- 2
+  colLTY <- 1
+  colPCH <- NA
+  if(length(Series2)>1){
+    lines(x    = Series2$time, 
+          y    = Series2$WLVG, 
+          col  = ColS2, 
+          lwd  = 2,
+          lty  = 2)
+    colLEG <- c(colLEG,ColS2)
+    colLWD <- c(colLWD, 2)
+    colLTY <- c(colLTY, 2)
+    colPCH <- c(colPCH, NA)
+  }
+  if(length(BIOMASS)>1){
+    arrows(BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2-BIOMASS$std_DMLeaves.g.DM.m2, 
+           BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2+BIOMASS$std_DMLeaves.g.DM.m2, 
+           length=0.05, angle=90, code=3)
+    points(x   = BIOMASS$time,
+           y   = BIOMASS$DMLeaves.g.DM.m2,
+           col = colBIOM,
+           lwd = 2.5,
+           pch = 19)
+    colLEG <- c(colLEG,colBIOM)
+    colLWD <- c(colLWD, 2.5)
+    colLTY <- c(colLTY, NA)
+    colPCH <- c(colPCH, 19)
+  }
+  
+  ##############################################
+  
+  #STEMS
+  
+  #par(mfrow=c(1,1), oma = c(4,1,1,1), mar = c(0.6,5,0,0))
+  plot( x    = Series1$time, 
+        y    = Series1$WST, type="l", 
+        col  = ColS1, 
+        xlab = "time (days)", 
+        ylab = expression('Stems, g DM m'^-2),
+        ylim = c(0,2000), 
+        lwd  = 2,
+        lty  = 1,
+        cex.lab  = 1.25, #1.0
+        cex.axis= 1.1, #0.85
+        mgp=c(2,0.5,0))
+  
+  if(length(Series2)>1){
+    lines(x    = Series2$time, 
+          y    = Series2$WST, 
+          col  = ColS2, 
+          lwd  = 2,
+          lty  = 2)
+  }
+if(length(BIOMASS)>1){
+    arrows(BIOMASS$time, BIOMASS$DMstems.g.DM.m2-BIOMASS$std_DMstems.g.DM.m2, 
+           BIOMASS$time, BIOMASS$DMstems.g.DM.m2+BIOMASS$std_DMstems.g.DM.m2, 
+           length=0.05, angle=90, code=3)
+    points(x   = BIOMASS$time,
+           y   = BIOMASS$DMstems.g.DM.m2,
+           col = colBIOM,
+           lwd = 2.5,
+           pch = 19)
+  }
+  if(LEG){
+    leg_x <- 150   # higher is more to right
+    leg_y <- 1100  # higher is more to upper
+    legend("topleft", legend=LEGTEXT, col = colLEG, lwd = colLWD, lty = colLTY, pch = colPCH, bty = "n")
+  }
+  
+  ###################################################################
+  
+  #Storage roots
+  
+  plot( x    = Series1$time, 
+        y    = Series1$WSO, type="l", 
+        col  = ColS1, 
+        xlab = "time (days)", 
+        ylab = expression('Storage roots, g DM m'^-2),
+        ylim = c(0,4000), 
+        lwd  = 2,
+        lty  = 1,
+        cex.lab  = 1.25, #1.0
+        cex.axis= 1.1, #0.85
+        mgp=c(2,0.5,0))
+  if(length(Series2)>1){
+    lines(x    = Series2$time, 
+          y    = Series2$WSO, 
+          col  = ColS2, 
+          lwd  = 2,
+          lty  = 2)
+  }
+  if(length(BIOMASS)>1){
+    arrows(BIOMASS$time, BIOMASS$DMRoots.g.DM.m2 - BIOMASS$std_DMRoots.g.DM.m2, 
+           BIOMASS$time, BIOMASS$DMRoots.g.DM.m2 + BIOMASS$std_DMRoots.g.DM.m2, 
+           length=0.05, angle=90, code=3)
+    points(x   = BIOMASS$time,
+           y   = BIOMASS$DMRoots.g.DM.m2,
+           col = colBIOM,
+           lwd = 2.5,
+           pch = 19)
+  }
+}
+
+
+
+
+Figure4 <- function(){
+  par(mfcol=c(3,5),oma=c(3,3,1,1),mar=c(1.5,1.5,0,0))
+  LeavesStemRootDynamics(Series1=Pot_Edo17,
+                         Series2=Wlim_Edo17,
+                         BIOMASS=BIOM_Edo17,TITLE="Edo '17",
+                         LEG=TRUE,LEGTEXT=c('Potential', 'Water limited',"Observed"))
+  LeavesStemRootDynamics(Series1=Pot_CRS16,
+                         Series2=Wlim_CRS16,
+                         BIOMASS=BIOM_CRS16,TITLE="CRS '16",
+                         LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
+  LeavesStemRootDynamics(Series1=Pot_CRS17,
+                         Series2=Wlim_CRS17,
+                         BIOMASS=BIOM_CRS17,TITLE="CRS '17",
+                         LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
+  LeavesStemRootDynamics(Series1=Pot_BEN16,
+                         Series2=Wlim_BEN16,
+                         BIOMASS=BIOM_BEN16,TITLE="BEN '16",
+                         LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
+  LeavesStemRootDynamics(Series1=Pot_BEN17,
+                         Series2=Wlim_BEN17,
+                         BIOMASS=BIOM_BEN17,TITLE="BEN '17",
+                         LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
+  
+  mtext("Days after planting", side = 1, line = 1, outer = TRUE, at = NA,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+  
+  mtext("Roots, gDM/m2", 
+        side = 2, line = 1, outer = TRUE, at = 0.2,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+  mtext("Stems, gDM/m2", 
+        side = 2, line = 1, outer = TRUE, at = 0.52,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+  mtext("Leaves, gDM/m2 ", 
+        side = 2, line = 1, outer = TRUE, at = 0.86,
+        adj = NA, padj = NA, cex = 1, col = "black", font = NA)
+}
+
+tiff(Fig4.TIF, height = 13, width = 24, units = 'cm', 
+     compression = "lzw", res = 600)
+  Figure4()
+dev.off()
+
+pdf(Fig4.PDF)
+  Figure4()
+dev.off()
+
+## fig 5
+
+
+##########################################################################################
+#Scripts that produce the figures 5 as shown in the EJA paper
+#
+#Authors: JG Adiele and AGT Schut
+#PPS, December 2020
+#
+#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
+#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
+#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+#
+##########################################################################################
+
+##################################################################
+#Ploting simulated versus observed storage root yield            #
+#NfPfKf for all years in Benue, Cross River and Edo  (Fig. 5 in thesis chapter 3)            #
+##################################################################
+
+#Names of resulting figures
+Fig5.TIF <- "./Figures/Adiele et al. EJA Figure 5.tif"
+Fig5.PDF <- "./Figures/Adiele et al. EJA Figure 5.pdf"
+
+#Get the data
+MEASURED_DATA <- read.csv("./Data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv", header = T)
+MEASURED_DATA <- subset(MEASURED_DATA,Treatment == "NfPfKf", select=c("Year","Location","time","DMRoots.g.DM.m2"))
+MEASURED_DATA[,"DMRoots.t.ha"]<-MEASURED_DATA[,"DMRoots.g.DM.m2"]*1E4*1E-6
+
+#Get the sumulated results
+BEN16 <- data.frame(Location="Benue",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2016.csv"),select=c("time","WSOTHA")))
+BEN17 <- data.frame(Location="Benue",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2017.csv"),select=c("time","WSOTHA")))
+CRS16 <- data.frame(Location="CRS",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2016.csv"),select=c("time","WSOTHA")))
+CRS17 <- data.frame(Location="CRS",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2017.csv"),select=c("time","WSOTHA")))
+EDO17 <- data.frame(Location="Edo",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2017.csv"),select=c("time","WSOTHA")))
+#Add sowing year
+BEN16[,"Year"]<-2016
+CRS16[,"Year"]<-2016
+BEN17[,"Year"]<-2017
+CRS17[,"Year"]<-2017
+EDO17[,"Year"]<-2017
+MODELLED <- rbind(BEN16, BEN17, CRS16, CRS17, EDO17)
+
+COMBINED_DATA=NULL
+for(year in 2016:2017){
+  for(loc in c("Edo","Benue","CRS")){
+    ii<-which(MEASURED_DATA[,"Location"] == loc & MEASURED_DATA[,"Year"] == year)
+    jj<-which(MODELLED[,"Location"] == loc & MODELLED[,"Year"] == year)
+    combdata<-merge(MEASURED_DATA[ii,],MODELLED[jj,],by="time", suffixes=c(".measured",".modelled"))
+    COMBINED_DATA = rbind(COMBINED_DATA, combdata)
+  }
+}
+
+
+fit <- lm(WSOTHA ~ -1 + DMRoots.t.ha, COMBINED_DATA)
+sfit = summary(fit)
+RMSE=sqrt(mean(sfit$residuals^2))
+anova(fit)
+print(paste0("Fitted linear regression. Slope =", sfit$coefficients[1], ", R2= ",sfit$r.squared ,", RMSE =", RMSE))
+
+Figure_5 <- function(COMBINED_DATA){
+  ii<-which(COMBINED_DATA[,"Year.measured"]==2017 & COMBINED_DATA[,"Location.measured"]=="Benue")
+  plot(x=COMBINED_DATA[ii,"DMRoots.t.ha"],y=COMBINED_DATA[ii,"WSOTHA"],
+       xlim = c(0,40), ylim = c(0,40),
+       cex.lab=1.5, cex = 1.5,
+       xlab = 'Observed storage roots (t DM/ha)',
+       ylab = 'Simulated storage roots (t DM/ha)',
+       type="p",
+       pch=15,col="black")
+  ii<-which(COMBINED_DATA[,"Year.measured"]==2016 & COMBINED_DATA[,"Location.measured"]=="Benue")
+  points( x=COMBINED_DATA[ii,"DMRoots.t.ha"],y=COMBINED_DATA[ii,"WSOTHA"], pch=0,col="black",cex=1.5)
+  ii<-which(COMBINED_DATA[,"Year.measured"]==2017 & COMBINED_DATA[,"Location.measured"]=="Edo")
+  points( x=COMBINED_DATA[ii,"DMRoots.t.ha"],y=COMBINED_DATA[ii,"WSOTHA"], pch=16,col="black",cex=1.5)
+  ii<-which(COMBINED_DATA[,"Year.measured"]==2016 & COMBINED_DATA[,"Location.measured"]=="CRS")
+  points( x=COMBINED_DATA[ii,"DMRoots.t.ha"],y=COMBINED_DATA[ii,"WSOTHA"], pch=2,col="black",cex=1.5)
+  ii<-which(COMBINED_DATA[,"Year.measured"]==2017 & COMBINED_DATA[,"Location.measured"]=="CRS")
+  points( x=COMBINED_DATA[ii,"DMRoots.t.ha"],y=COMBINED_DATA[ii,"WSOTHA"], pch=17,col="black",cex=1.5)
+  lines(c(-100,100),c(-100,100),col="black",lty=1,lwd=2)
+  lines(c(-100,100),c(-100,100)*sfit$coefficients[1],col="red",lty=3,lwd=3)
+  
+  legend("bottomright", c("Edo, 2017", "CRS, 2016", "CRS, 2017", "Benue, 2016" ,"Benue, 2017"),
+         cex=1.2,
+         pch = c(16, 2,17,0,15), bty="n") 
+  #text(x=10,y=35,labels=paste0("slope = ",round(sfit$coefficients[1],2),", RMSE=",round(RMSE,2),", R²=",round(sfit$r.squared,2)))
+  legend('topleft', c( paste0('y = ',round(sfit$coefficients[1],2),'x'),
+                       paste0('R² = ', round(sfit$r.squared,2)),
+                       paste0('RMSE = ',round(RMSE,2))), 
+         cex=1.2, bty = 'n')
+}
+
+tiff(Fig5.TIF, height = 15, width = 15, units = 'cm', 
+     compression = "lzw", res = 600)
+  Figure_5(COMBINED_DATA)
+dev.off()
+
+pdf(Fig5.PDF)
+  Figure_5(COMBINED_DATA)
+dev.off()
+
+
