@@ -1,8 +1,8 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
+<!--
+%\VignetteEngine{litedown::vignette}
+%\VignetteIndexEntry{Adiele}
+%\VignetteEncoding{UTF-8}
+-->
 
 # Title 
 
@@ -17,7 +17,7 @@ mod <- list()
 lcp <- system.file(package="LINTCAS")
 country <- "nig"
 
-SiteInfo <- read.csv(file.path(lcp, "data/Field_characteristics_field_management.csv"))
+SiteInfo <- read.csv(file.path(lcp, "ex/Field_characteristics_field_management.csv"))
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
 	wdata <- get_weather(system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
@@ -85,7 +85,7 @@ Scripts that produce the figures 1 and 1A as shown in the EJA paper
 ```{r figure1}
 #Data measured with an AccuPar below and above canopy
 
-DATA_ACCUPAR <- read.csv(file.path(lcp, "./data/AccuPAR measurements and LAI and k calculations for 2016+2017.csv"))
+DATA_ACCUPAR <- read.csv(file.path(lcp, "ex/AccuPAR_and_caculated_LAI_k.csv"))
 
 #Figure 1A.
 Adiele_etal_EJA_Fig_1A <- function(DATA){
@@ -148,7 +148,7 @@ Adiele_etal_EJA_Fig_1 <- function(DATA){
 
 ```{r fig2}
 #READ IN THE DATA
-DATA <- read.csv(file.path(lcp, "./data/fPAR selected treatments Benue Edo 2016 and 2017.csv"))
+DATA <- read.csv(file.path(lcp, "ex/fPAR_Benue_Edo.csv"))
 
 #################################################################
 
@@ -273,7 +273,7 @@ Figure2 <- function(DATA){
 
 ```{r fig3}
 #Data on cumulative intercepted PAR, combining measure wheater data and interpolated measurements of LI from AccurPAR data
-Bio_cumIPAR <- read.csv(file.path(lcp, "./data/Bio+cumIPAR_NFPFKF_BenueEdo_Locations+years.csv"))
+Bio_cumIPAR <- read.csv(file.path(lcp, "ex/Bio_cumIPAR_NFPFKF_BenueEdo.csv"))
 
 #Figure 3.
 Adiele_etal_EJA_Fig_3 <- function(Bio_cumIPAR){
@@ -315,7 +315,7 @@ Adiele_etal_EJA_Fig_3(Bio_cumIPAR=Bio_cumIPAR)
 #Analysing Simulated and observed yield 
 #Read in the data needed
 #plant parts g DM/m2
-BIOMASS    <- read.csv(file.path(lcp, 'data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv'))
+BIOMASS    <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake_plantpart_totals_per_treatment.csv'))
 BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
@@ -499,7 +499,7 @@ Plotting simulated versus observed storage root yield NfPfKf for all years in Be
 
 ```{r fig5}
 #Get the data
-MEASURED_DATA <- read.csv(file.path(lcp, "data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv"))
+MEASURED_DATA <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake_plantpart_totals_per_treatment.csv"))
 
 MEASURED_DATA <- subset(MEASURED_DATA,Treatment == "NfPfKf", select=c("Year","Location","time","DMRoots.g.DM.m2"))
 MEASURED_DATA[,"DMRoots.t.ha"]<-MEASURED_DATA[,"DMRoots.g.DM.m2"]*1E4*1E-6
