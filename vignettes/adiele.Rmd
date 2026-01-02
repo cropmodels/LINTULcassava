@@ -1,138 +1,91 @@
-#-------------------------------------------------------------------------------------------------#
-# LINTUL2-CASSAVA run script
-#
-# Author:       Rob van den Beuken
-# Adapted:      A.G.T. Schut
-# Copyright:    Copyright 2019, PPS
-# Email:        tom.schut@wur.nl
-# Date:         19-12-2019
-#
-# Original LINTUL-Cassava: Ezui, K. S. et al. (2018). Simulating drought impact and mitigation in 
-# cassava using the LINTUL model. Field Crops Research, 219, 256-272.
-# 
-# Most of the code is a direct translation by Rob van den Beuken from the FST version 
-# as developed by Guillaume Ezui under supervision of Peter Leffelaar.
-# Joy Adiele used this original version to calibrate the model to Nigerian conditions.
-# For this, the RUE parameter was set to the measured value 
-# and LAI was forced using measured data from Edo 2016 to estimate the assimilate partitioning values for the used cultivar.
-# 
-# AGT Schut checked, simplified and adapted the code to its current format.
-# Calibration for Nigeria: 
-# Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). "A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions " European Journal of Agronomy 124: paper 126242.
-#
-# This file is used to run the LINTUL2_CASSAVA model and all its related components. 
-# Parameters used are from  Adiele et al.
-#
-#--------------------------------------------------------------------------------------------------#
-# BEFORE START
-# It is important before running this script to set the working directory to source file location: 
-# This is done as follows: Go to 'Session' -> 'Set Working Directory' -> To Source File Location
-#--------------------------------------------------------------------------------------------------#
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
-# GENERAL SETTINGS
-rm(list=ls())
-source('./Components/LINTUL2_CASSAVA_iniSTATES.R')
-source("./Components/LINTUL2_CASSAVA_PARAMETERS_EZUI.r")
-source('./Components/LINTUL2_CASSAVA_PARAMETERS_ADIELE.R')
-source('./Components/LINTUL2_CASSAVA_Help.R')
-source('./Components/LINTUL2_CASSAVA_Weather.R')
-source('./Components/LINTUL2_CASSAVA_field_management.R')
-source('./Components/LINTUL2_CASSAVA.r')	
+# Title 
 
-require('deSolve')              # used for solving ODEs
-# install.packages('deSolve')   # uncomment if the deSolve package is not yet installed
+This md produces the figures as shown in: 
 
-#Read in data from the site 
-SiteInfo <- read.csv("./Data/Field_characteristics_field_management.csv")
+Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
 
-country   <- "nig"
 
-for(year in c(2016, 2017)){
-  #-EDO----------------------------------------------------------------------------------------------------#
-  wdata <- get_weather('./Weather/', country=country, station='1', year=substr(toString(year),2,4), endtime = 506)
-  
-  #Use default parameters as defined by Ezui et al. and re-calibrated by Adiele et al. EJA 2021
-  pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year),
-                                               MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
-  
-  Pot_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
-  write.csv(Pot_Edo, paste0("./Results/LINTUL_CASSAVA_potential_growth_EDO_", year, ".csv"))
-  
-  pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year),
-                                               MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
-  Wlim_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
-  write.csv(Wlim_Edo,paste0("./Results/LINTUL_CASSAVA_water_limited_growth_EDO_", year, ".csv"))
-  
-  #-CRS, cross river---------------------------------------------------------------------------------------#
-  if(year == 2016){
-    wdata <- get_weather('./Weather/', country=country, station='3', year=substr(toString(year),2,4), endtime = 500)
-    pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year),
-                                                   MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
-    pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year),
-                                                 MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
-  }else if(year == 2017){
-    wdata <- get_weather('./Weather/', country=country, station='4', year=substr(toString(year),2,4), endtime = 500)
-    pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year),
-                                                   MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
-    pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year),
-                                                 MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
-  }
-  
-  Pot_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
-  write.csv(Pot_CRS,paste0("./Results/LINTUL_CASSAVA_potential_growth_CRS_", year, ".csv"))
-  
-  
-  Wlim_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
-  write.csv(Wlim_CRS,paste0("./Results/LINTUL_CASSAVA_water_limited_growth_CRS_", year, ".csv"))
-  
-  #-Benue-------------------------------------------------------------------------------------------------#
-  pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year),
-                                                      MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
-  pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year),
-                                               MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
-  wdata <- get_weather('./Weather/', country=country, station='2', year=substr(toString(year),2,4), endtime = pars_iri[["DOYHAR"]])
-  
-  Pot_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
-  write.csv(Pot_Ben,paste0("./Results/LINTUL_CASSAVA_potential_growth_BENUE_", year, ".csv"))
-  
-  
-  Wlim_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
-  write.csv(Wlim_Ben,paste0("./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_", year, ".csv"))
+```{r run_model}
+library(LINTCAS)
+mod <- list()
+lcp <- system.file(package="LINTCAS")
+country <- "nig"
+
+SiteInfo <- read.csv(file.path(lcp, "data/Field_characteristics_field_management.csv"))
+for(year in c(2016, 2017)) {
+  yr <- substr(year, 3, 4)
+	wdata <- get_weather(system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
+	  
+	#Use default parameters as defined by Ezui et al. and re-calibrated by Adiele et al. EJA 2021
+	pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
+	  
+	Pot_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+
+	#dir.create("results", F, F)
+	#write.csv(Pot_Edo, paste0("./results/LINTUL_CASSAVA_potential_growth_EDO_", year, ".csv"))
+	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Pot_Edo)
+	  
+	pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year),MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
+
+	Wlim_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
+
+	#write.csv(Wlim_Edo,paste0("./results/LINTUL_CASSAVA_water_limited_growth_EDO_", year, ".csv"))
+	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Wlim_Edo)
+	
+	#-CRS, cross river---------------------------------------------------------------------------------------#
+	if(year == 2016){
+		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='3', year=year, endtime = 500)
+		pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
+		pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
+	} else if(year == 2017) {
+		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='4', year=year, endtime = 500)
+		pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
+		pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
+	}
+	  
+	Pot_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+
+	#	write.csv(Pot_CRS,paste0("./results/LINTUL_CASSAVA_potential_growth_CRS_", year, ".csv"))
+	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Pot_CRS)
+	  
+	  
+	Wlim_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
+
+#	write.csv(Wlim_CRS,paste0("./results/LINTUL_CASSAVA_water_limited_growth_CRS_", year, ".csv"))
+	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Wlim_CRS)
+	  
+	#-Benue-------------------------------------------------------------------------------------------------#
+	pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
+	pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
+	wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='2', year=year, endtime = pars_iri[["DOYHAR"]])
+	  
+	Pot_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+
+#	write.csv(Pot_Ben,paste0("./results/LINTUL_CASSAVA_potential_growth_BENUE_", year, ".csv"))
+	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Pot_Ben)  
+	  
+	  
+	Wlim_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
+#	write.csv(Wlim_Ben,paste0("./results/LINTUL_CASSAVA_water_limited_growth_BENUE_", year, ".csv"))
+	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Wlim_Ben)
 }
-
-#===========================================================================================================
-#PLOTTING figures as in the EJA paper
-#===========================================================================================================
-source("./Components/Adiele et al 2021 EJA Fig1.R")
-source("./Components/Adiele et al 2021 EJA Fig2.R")
-source("./Components/Adiele et al 2021 EJA Fig3.R")
-source("./Components/Adiele et al 2021 EJA Fig4.R")
-source("./Components/Adiele et al 2021 EJA Fig5.R")
+```
 
 
-## figure 1
+## Figure 1
 
-##########################################################################################
-#Scripts that produce the figures 1 and 1A as shown in the EJA paper
-#
-#Authors: JG Adiele and AGT Schut
-#PPS, December 2020
-#
-#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
-#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
-#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
-#
-##########################################################################################
+Scripts that produce the figures 1 and 1A as shown in the EJA paper
 
-#Names of resulting figures
-Fig1A.TIF <- "./Figures/Adiele et al. EJA Figure 1A.tif"
-Fig1A.PDF <- "./Figures/Adiele et al. EJA Figure 1A.pdf"
-Fig1.TIF <- "./Figures/Adiele et al. EJA Figure 1.tif"
-Fig1.PDF <- "./Figures/Adiele et al. EJA Figure 1.pdf"
-
+```{r figure1}
 #Data measured with an AccuPar below and above canopy
-DATA_ACCUPAR <- read.csv("./Data/AccuPAR measurements and LAI and k calculations for 2016+2017.csv", header = T)
 
+DATA_ACCUPAR <- read.csv(file.path(lcp, "./data/AccuPAR measurements and LAI and k calculations for 2016+2017.csv"))
 
 #Figure 1A.
 Adiele_etal_EJA_Fig_1A <- function(DATA){
@@ -164,16 +117,9 @@ Adiele_etal_EJA_Fig_1A <- function(DATA){
   legend('topleft', c('R² = 0.99', 'y = 0.67x'), bty = 'n')
 }
 
-tiff(Fig1A.TIF, height = 13, width = 16, units = 'cm', 
-     compression = "lzw", res = 600)
-  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
-  Adiele_etal_EJA_Fig_1A(DATA = DATA_ACCUPAR)
-dev.off()
+par(oma=c(2,2,2,2),mar=c(5,5,0,0))
+Adiele_etal_EJA_Fig_1A(DATA = DATA_ACCUPAR)
 
-pdf(Fig1A.PDF)
-  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
-  Adiele_etal_EJA_Fig_1A(DATA = DATA_ACCUPAR)
-dev.off()
 
 
 Adiele_etal_EJA_Fig_1 <- function(DATA){
@@ -193,37 +139,16 @@ Adiele_etal_EJA_Fig_1 <- function(DATA){
   abline(Modk)
   legend('topleft', c('R² = 0.99', 'y = 0.67x'), bty = 'n')
 }
-tiff(Fig1.TIF, height = 13, width = 16, units = 'cm', 
-     compression = "lzw", res = 600)
   par(oma=c(2,2,2,2),mar=c(5,5,0,0))
   Adiele_etal_EJA_Fig_1(DATA = DATA_ACCUPAR)
-dev.off()
+```
 
-pdf(Fig1.PDF)
-  par(oma=c(2,2,2,2),mar=c(5,5,0,0))
-  Adiele_etal_EJA_Fig_1(DATA = DATA_ACCUPAR)
-dev.off()
+## Figure 2
 
-## figure 2
 
-##########################################################################################
-#Script that produces figure 2 as shown in the EJA paper
-#
-#Authors: JG Adiele and AGT Schut
-#PPS, December 2020
-#
-#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
-#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
-#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
-#
-##########################################################################################
-
-#Names of resulting figures
-Fig2.TIF <- "./Figures/Adiele et al. EJA Figure 2.tif"
-Fig2.PDF <- "./Figures/Adiele et al. EJA Figure 2.pdf"
-
+```{r fig2}
 #READ IN THE DATA
-DATA <- read.csv("./Data/fPAR selected treatments Benue Edo 2016 and 2017.csv", header = T)
+DATA <- read.csv(file.path(lcp, "./data/fPAR selected treatments Benue Edo 2016 and 2017.csv"))
 
 #################################################################
 
@@ -340,35 +265,15 @@ Figure2 <- function(DATA){
         adj = NA, padj = NA, cex = 1, col = "black", font = NA)
 }
 
-tiff(Fig2.TIF, height = 13, width = 20, units = 'cm', 
-       compression = "lzw", res = 600)
   Figure2(DATA)  
-dev.off()
+```
 
-pdf(Fig2.PDF)
-  Figure2(DATA)  
-dev.off()
 
-## figure 3
+## Figure 3
 
-##########################################################################################
-#Scripts that produce the figures 1 and 1A as shown in the EJA paper
-#
-#Authors: JG Adiele and AGT Schut
-#PPS, December 2020
-#
-#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
-#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
-#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
-#
-##########################################################################################
-
-#Names of resulting figures
-Fig3.TIF <- "./Figures/Adiele et al. EJA Figure 3.tif"
-Fig3.PDF <- "./Figures/Adiele et al. EJA Figure 3.pdf"
-
+```{r fig3}
 #Data on cumulative intercepted PAR, combining measure wheater data and interpolated measurements of LI from AccurPAR data
-Bio_cumIPAR <- read.csv("./Data/Bio+cumIPAR_NFPFKF_BenueEdo_Locations+years.csv", header = T)
+Bio_cumIPAR <- read.csv(file.path(lcp, "./data/Bio+cumIPAR_NFPFKF_BenueEdo_Locations+years.csv"))
 
 #Figure 3.
 Adiele_etal_EJA_Fig_3 <- function(Bio_cumIPAR){
@@ -397,53 +302,20 @@ Adiele_etal_EJA_Fig_3 <- function(Bio_cumIPAR){
   legend('topleft', c('Edo 2016', 'R² = 0.98, P< .001', 'y = 2.76x'), bty = 'n')
 }
 
-tiff(Fig3.TIF, height = 16, width = 16, units = 'cm', 
-     compression = "lzw", res = 600)
 par(oma=c(2,2,2,2),mar=c(5,5,0,0))
 Adiele_etal_EJA_Fig_3(Bio_cumIPAR=Bio_cumIPAR)
-dev.off()
 
-pdf(Fig3.PDF)
-par(oma=c(2,2,2,2),mar=c(5,5,0,0))
-Adiele_etal_EJA_Fig_3(Bio_cumIPAR=Bio_cumIPAR)
-dev.off()
+```
 
-## figure 4
 
-##########################################################################################
-#Scripts that produce the figure 4 as shown in the EJA paper
-#
-#Authors: JG Adiele and AGT Schut
-#PPS, December 2020
-#
-#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
-#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
-#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
-#
-##########################################################################################
+## Figure 4
 
-#Names of resulting figures
-Fig4.TIF <- "./Figures/Adiele et al. EJA Figure 4.tif"
-Fig4.PDF <- "./Figures/Adiele et al. EJA Figure 4.pdf"
-
+```{r fig4}
 #Data output from LINTUL-cASSAVA simulations
 #Analysing Simulated and observed yield 
 #Read in the data needed
-Pot_Edo16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_EDO_2016.csv')
-Wlim_Edo16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2016.csv')
-Pot_CRS16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_CRS_2016.csv')
-Wlim_CRS16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2016.csv')
-Pot_BEN16  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_BENUE_2016.csv')
-Wlim_BEN16 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2016.csv')
-
-Pot_Edo17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_EDO_2017.csv')
-Wlim_Edo17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2017.csv')
-Pot_CRS17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_CRS_2017.csv')
-Wlim_CRS17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2017.csv')
-Pot_BEN17  <-read.csv('./Results/LINTUL_CASSAVA_potential_growth_BENUE_2017.csv')
-Wlim_BEN17 <-read.csv('./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2017.csv')
-
-BIOMASS    <- read.csv('./Data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv', header = T) #plant parts g DM/m2
+#plant parts g DM/m2
+BIOMASS    <- read.csv(file.path(lcp, 'data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv'))
 BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
@@ -579,28 +451,26 @@ if(length(BIOMASS)>1){
 }
 
 
-
-
 Figure4 <- function(){
   par(mfcol=c(3,5),oma=c(3,3,1,1),mar=c(1.5,1.5,0,0))
-  LeavesStemRootDynamics(Series1=Pot_Edo17,
-                         Series2=Wlim_Edo17,
+  LeavesStemRootDynamics(Series1=mod$Pot_Edo17,
+                         Series2=mod$Wlim_Edo17,
                          BIOMASS=BIOM_Edo17,TITLE="Edo '17",
                          LEG=TRUE,LEGTEXT=c('Potential', 'Water limited',"Observed"))
-  LeavesStemRootDynamics(Series1=Pot_CRS16,
-                         Series2=Wlim_CRS16,
+  LeavesStemRootDynamics(Series1=mod$Pot_CRS16,
+                         Series2=mod$Wlim_CRS16,
                          BIOMASS=BIOM_CRS16,TITLE="CRS '16",
                          LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
-  LeavesStemRootDynamics(Series1=Pot_CRS17,
-                         Series2=Wlim_CRS17,
+  LeavesStemRootDynamics(Series1=mod$Pot_CRS17,
+                         Series2=mod$Wlim_CRS17,
                          BIOMASS=BIOM_CRS17,TITLE="CRS '17",
                          LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
-  LeavesStemRootDynamics(Series1=Pot_BEN16,
-                         Series2=Wlim_BEN16,
+  LeavesStemRootDynamics(Series1=mod$Pot_Ben16,
+                         Series2=mod$Wlim_Ben16,
                          BIOMASS=BIOM_BEN16,TITLE="BEN '16",
                          LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
-  LeavesStemRootDynamics(Series1=Pot_BEN17,
-                         Series2=Wlim_BEN17,
+  LeavesStemRootDynamics(Series1=mod$Pot_Ben17,
+                         Series2=mod$Wlim_Ben17,
                          BIOMASS=BIOM_BEN17,TITLE="BEN '17",
                          LEG=FALSE,LEGTEXT=c('Potential', 'Water lim.',"Observed"))
   
@@ -618,64 +488,31 @@ Figure4 <- function(){
         adj = NA, padj = NA, cex = 1, col = "black", font = NA)
 }
 
-tiff(Fig4.TIF, height = 13, width = 24, units = 'cm', 
-     compression = "lzw", res = 600)
-  Figure4()
-dev.off()
-
-pdf(Fig4.PDF)
-  Figure4()
-dev.off()
-
-## fig 5
+Figure4()
+```
 
 
-##########################################################################################
-#Scripts that produce the figures 5 as shown in the EJA paper
-#
-#Authors: JG Adiele and AGT Schut
-#PPS, December 2020
-#
-#Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). 
-#   A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high 
-#   yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
-#
-##########################################################################################
 
-##################################################################
-#Ploting simulated versus observed storage root yield            #
-#NfPfKf for all years in Benue, Cross River and Edo  (Fig. 5 in thesis chapter 3)            #
-##################################################################
+## Figure 5
 
-#Names of resulting figures
-Fig5.TIF <- "./Figures/Adiele et al. EJA Figure 5.tif"
-Fig5.PDF <- "./Figures/Adiele et al. EJA Figure 5.pdf"
+Plotting simulated versus observed storage root yield NfPfKf for all years in Benue, Cross River and Edo  (Fig. 5 in thesis chapter 3)
 
+```{r fig5}
 #Get the data
-MEASURED_DATA <- read.csv("./Data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv", header = T)
+MEASURED_DATA <- read.csv(file.path(lcp, "data/Biomass_NPKuptake_plantpart_totals_per_treatment.csv"))
+
 MEASURED_DATA <- subset(MEASURED_DATA,Treatment == "NfPfKf", select=c("Year","Location","time","DMRoots.g.DM.m2"))
 MEASURED_DATA[,"DMRoots.t.ha"]<-MEASURED_DATA[,"DMRoots.g.DM.m2"]*1E4*1E-6
 
-#Get the sumulated results
-BEN16 <- data.frame(Location="Benue",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2016.csv"),select=c("time","WSOTHA")))
-BEN17 <- data.frame(Location="Benue",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_BENUE_2017.csv"),select=c("time","WSOTHA")))
-CRS16 <- data.frame(Location="CRS",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2016.csv"),select=c("time","WSOTHA")))
-CRS17 <- data.frame(Location="CRS",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_CRS_2017.csv"),select=c("time","WSOTHA")))
-EDO17 <- data.frame(Location="Edo",subset(read.csv("./Results/LINTUL_CASSAVA_water_limited_growth_EDO_2017.csv"),select=c("time","WSOTHA")))
-#Add sowing year
-BEN16[,"Year"]<-2016
-CRS16[,"Year"]<-2016
-BEN17[,"Year"]<-2017
-CRS17[,"Year"]<-2017
-EDO17[,"Year"]<-2017
-MODELLED <- rbind(BEN16, BEN17, CRS16, CRS17, EDO17)
+MODELLED <- do.call(rbind, mod)[, c("Location", "Year", "time","WSOTHA")]
 
 COMBINED_DATA=NULL
 for(year in 2016:2017){
   for(loc in c("Edo","Benue","CRS")){
     ii<-which(MEASURED_DATA[,"Location"] == loc & MEASURED_DATA[,"Year"] == year)
     jj<-which(MODELLED[,"Location"] == loc & MODELLED[,"Year"] == year)
-    combdata<-merge(MEASURED_DATA[ii,],MODELLED[jj,],by="time", suffixes=c(".measured",".modelled"))
+    
+    combdata<-merge(MEASURED_DATA[ii,], MODELLED[jj,],by="time", suffixes=c(".measured",".modelled"))
     COMBINED_DATA = rbind(COMBINED_DATA, combdata)
   }
 }
@@ -717,13 +554,7 @@ Figure_5 <- function(COMBINED_DATA){
          cex=1.2, bty = 'n')
 }
 
-tiff(Fig5.TIF, height = 15, width = 15, units = 'cm', 
-     compression = "lzw", res = 600)
-  Figure_5(COMBINED_DATA)
-dev.off()
+Figure_5(COMBINED_DATA)
 
-pdf(Fig5.PDF)
-  Figure_5(COMBINED_DATA)
-dev.off()
-
+```
 

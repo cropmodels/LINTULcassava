@@ -13,9 +13,13 @@
 # cassava using the LINTUL model. Field Crops Research, 219, 256-272.
 #
 #--------------------------------------------------------------------------------------------------#
-get_weather <- function(directory="./Weather/",country="Edo",station="1",year=substr('2016', 2,4), endtime = 365){
-  weather1   <- matrix(data=as.numeric(unlist(scan(file=paste(directory,country,station,".",year,sep=""),
-                                                  what=list("","","","","","","","",""),comment.char='*',fill=TRUE,quiet=TRUE))),ncol=9)
+get_weather <- function(directory="./Weather/",country="Edo",station="1",year, endtime = 365){
+	
+	if (nchar(year) == 4) year=substr(year, 2,4)
+    # avoid missing trailing folder slash problem
+	fname= file.path(directory, paste0(country,station,".",year))
+  weather1   <- matrix(data=as.numeric(unlist(scan(fname,
+                   what=list("","","","","","","","",""),comment.char='*',fill=TRUE,quiet=TRUE))),ncol=9)
   weather1 <- weather1[-c(1),]
   
   # If the growth of the crop covers two years, weather data of two years is needed. 
@@ -23,8 +27,9 @@ get_weather <- function(directory="./Weather/",country="Edo",station="1",year=su
     year2 = paste0(as.numeric(year) + 1)
     year2 = paste0('00', year2)
     year2 = substr(year2, nchar(year2)-2,nchar(year2))
-    weather2 <- matrix(data=as.numeric(unlist(scan(file=paste(directory,country,station,".",year2,sep=""),
-                                                   what=list("","","","","","","","",""),comment.char='*',fill=TRUE,quiet=TRUE))),ncol=9)
+	fname2=file.path(directory, paste0(country,station,".",year2))
+    weather2 <- matrix(data=as.numeric(unlist(scan(fname2,
+                  what=list("","","","","","","","",""),comment.char='*',fill=TRUE,quiet=TRUE))),ncol=9)
     #Cut off site information (lat, lon etc) if given
     #weather2 <- weather2[-c(1),]
     if (as.numeric(year) %% 4 == 0){

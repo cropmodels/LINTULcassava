@@ -17,7 +17,7 @@
 LINTUL2_CASSAVA_RUN <- function(wdata, pars, year, starttime, endtime){
 
   DELT <- as.numeric(pars[which(names(pars)=='DELT')])
-  state_wlim <- ode(LINTUL2_CASSAVA_iniSTATES(pars), 
+  state_wlim <- deSolve::ode(LINTUL2_CASSAVA_iniSTATES(pars), 
                     seq(starttime, endtime, by = DELT), 
                     LINTUL2_CASSAVA_v2.0, pars,  WDATA = wdata,
                     method = "euler")
