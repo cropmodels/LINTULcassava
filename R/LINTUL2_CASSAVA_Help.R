@@ -14,7 +14,12 @@
 #------------------------------------------------------------------------------------------------------#
 
 #LINTUL CASSAVA for WATER LIMITED PRODUCTION:
-LINTUL2_CASSAVA_RUN <- function(wdata, pars, year, starttime, endtime){
+LC_run <- function(wdata, pars, year, starttime, endtime){
+
+  wdata <- derive_wth_vars(wdata)
+  # should use dates, not DOYS
+  wdata$DOYS <- wdata$DOY[1] + (1:nrow(wdata))-1
+ 
 
   DELT <- as.numeric(pars[which(names(pars)=='DELT')])
   state_wlim <- deSolve::ode(LINTUL2_CASSAVA_iniSTATES(pars), 

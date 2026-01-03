@@ -58,6 +58,12 @@ get_weather <- function(directory="./Weather/",country="Edo",station="1",year, e
 	w
 }
 
+#get_wth1 <- function(...) {
+#  w <- get_weather(...)
+#  LINTCAS:::derive_wth_vars(w)
+#}
+#wd <- get_wth1(directory=system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
+
 
 #-------------------------------------------------------------------------------------------------#
 # FUNCTION get_weather

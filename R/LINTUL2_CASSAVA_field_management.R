@@ -13,7 +13,7 @@
 # Purpose: Listing the field related input parameters for Lintul2     #
 #---------------------------------------------------------------------#
 
-LINTUL2_CASSAVA_FIELD_MANAGEMENT <- function(SiteInfo,MODEL_PARAM){ 
+LC_management <- function(SiteInfo, MODEL_PARAM){ 
 
   soil_param = c(
     ROOTDM = SiteInfo[1,"Maximum_rooting_depth.m"] ,                                # m            :     maximum rooting depth

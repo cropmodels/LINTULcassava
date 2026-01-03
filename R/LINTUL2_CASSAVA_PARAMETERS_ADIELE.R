@@ -16,12 +16,11 @@
 # FUNCTION adapted parameters                                               #
 # Purpose: Listing the input parameters for Lintul2                   #
 #---------------------------------------------------------------------#
-LINTUL2_CASSAVA_PARAMETERS_ADIELE <- function(irri =TRUE) {
+LINTUL2_CASSAVA_PARAMETERS_ADIELE <- function() {
   #get the defaults
   PARAM <- LINTUL2_CASSAVA_PARAMETERS_EZUI() 
   
   #Adjust with values listed in Adiele et al. (2019)
-  if ( irri == TRUE ) { PARAM[["IRRIGF"]] <- 1 }
   PARAM[["LAICR"]]   <- 3.5   #  m2 m-2     :     critical LAI beyond which leaf shedding is stimulated at Edo 
   PARAM[["LUE_OPT"]] <- 2.76   # g MJ PAR-1   :     Light use effeciency at optimum growing conditions at Edo
   PARAM[["SLAII"]]   <- 0.017 # 0.0051
