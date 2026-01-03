@@ -15,66 +15,80 @@ Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). A 
 library(LINTCAS)
 mod <- list()
 lcp <- system.file(package="LINTCAS")
-country <- "nig"
+#country <- "nig"
+# weather data
+wth <- derive_wth_vars(readRDS(file.path(lcp, "ex/weather.rds")))
+
+#get_wth1 <- function(...) {
+#  w <- get_weather(...)
+#  derive_wth_vars(w)
+#}
+#wd <- get_wth1(directory=system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
+
+get_wth <- function(name, year) {
+  w <- wth[(wth$NAME==name) & (wth$YEAR %in% (year + 0:1)), ]
+  # should use dates, not DOYS
+  w$DOYS <- 1:nrow(w)
+  w
+}
 
 SiteInfo <- read.csv(file.path(lcp, "ex/Field_characteristics_field_management.csv"))
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
-	wdata <- get_weather(system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
-	  
+#	wdata <- get_weather_old(system.file("weather", package="LINTCAS"), country="nig", station='1', year=year, endtime = 506)
+	wdata <- get_wth("Benin", year)
 	#Use default parameters as defined by Ezui et al. and re-calibrated by Adiele et al. EJA 2021
 	pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
-	  
-	Pot_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+		Pot_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
 
-	#dir.create("results", F, F)
-	#write.csv(Pot_Edo, paste0("./results/LINTUL_CASSAVA_potential_growth_EDO_", year, ".csv"))
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Pot_Edo)
 	  
 	pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year),MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
 
 	Wlim_Edo <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
 
-	#write.csv(Wlim_Edo,paste0("./results/LINTUL_CASSAVA_water_limited_growth_EDO_", year, ".csv"))
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Wlim_Edo)
 	
 	#-CRS, cross river---------------------------------------------------------------------------------------#
-	if(year == 2016){
-		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='3', year=year, endtime = 500)
+	if(year == 2016) {
+#		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='3', year=year, endtime = 500)
+		wdata <- get_wth("Ogoja CRS", year)
 		pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
 		pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
 	} else if(year == 2017) {
-		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='4', year=year, endtime = 500)
+#		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='4', year=year, endtime = 500)
+		wdata <- get_wth("Ikom CRS", year)
 		pars_iri  <-  LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
 		pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
 	}
 	  
 	Pot_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
 
-	#	write.csv(Pot_CRS,paste0("./results/LINTUL_CASSAVA_potential_growth_CRS_", year, ".csv"))
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Pot_CRS)
 	  
 	  
 	Wlim_CRS <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
 
-#	write.csv(Wlim_CRS,paste0("./results/LINTUL_CASSAVA_water_limited_growth_CRS_", year, ".csv"))
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Wlim_CRS)
 	  
 	#-Benue-------------------------------------------------------------------------------------------------#
 	pars_iri  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = TRUE))
 	pars_rf  <- LINTUL2_CASSAVA_FIELD_MANAGEMENT(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = LINTUL2_CASSAVA_PARAMETERS_ADIELE(irri = FALSE))
-	wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='2', year=year, endtime = pars_iri[["DOYHAR"]])
+
+#		wdata <- get_weather(system.file("weather", package="LINTCAS"), country=country, station='2', year=year, endtime = pars_iri[["DOYHAR"]])
+		wdata <- get_wth("Benue", year)
 	  
 	Pot_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
 
-#	write.csv(Pot_Ben,paste0("./results/LINTUL_CASSAVA_potential_growth_BENUE_", year, ".csv"))
 	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Pot_Ben)  
 	  
 	  
 	Wlim_Ben <- LINTUL2_CASSAVA_RUN(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
-#	write.csv(Wlim_Ben,paste0("./results/LINTUL_CASSAVA_water_limited_growth_BENUE_", year, ".csv"))
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Wlim_Ben)
 }
+
+#saveRDS(mod, "mod.rds")
+#m <- readRDS("mod.rds")
 ```
 
 
