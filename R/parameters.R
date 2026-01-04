@@ -27,7 +27,7 @@ Adiele_soil <- function(site, year) {
 		"DRATE" = "Drainage_rate.mm.d.1" # mm d-1 : max drainage rate
 	)
 
-	lcp <- system.file(package="LINTCAS")
+	lcp <- system.file(package="LINTULcassava")
 	ss <- readRDS(file.path(lcp, "ex/fields.rds"))
 	s <- ss[(ss$Location==site) & (ss$Year_of_planting==year), ]
 	if (nrow(s) == 0) {
@@ -40,7 +40,7 @@ Adiele_soil <- function(site, year) {
 }
 
 Adiele_weather <- function(site, year) { 
-	lcp <- system.file(package="LINTCAS")
+	lcp <- system.file(package="LINTULcassava")
 	wth <- readRDS(file.path(lcp, "ex/weather.rds"))
 	w <- wth[(wth$NAME==site) & (wth$YEAR >= year), ]
 	if (nrow(w) == 0) {

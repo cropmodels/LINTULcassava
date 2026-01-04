@@ -13,9 +13,9 @@ Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recal
 
 ```{r run_model}
 
-library(LINTCAS)
+library(LINTULcassava)
 mod <- list()
-lcp <- system.file(package="LINTCAS")
+lcp <- system.file(package="LINTULcassava")
 
 #crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")

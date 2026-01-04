@@ -1,8 +1,18 @@
-# LINTUL Cassava
+\name{LINTULcassava-package}
 
-This is the repo for the LINTULcassava R package. 
+\alias{LINTULcassava-package}
 
-It imlements the LINTUL-CASSAVA crop growth simulation model that was developed by 
+\alias{LINTULcassava}
+
+\docType{package}
+
+\title{
+\packageTitle{LINTULcassava}
+}
+
+\description{
+
+This package imlements the LINTUL-CASSAVA crop growth simulation model that was developed by 
 
 Ezui, K.S., P.A. Leffelaar, A.C. Franke, A. Mando, K.E. Giller (2018). Simulating drought impact and mitigation in cassava using the LINTUL model. Field Crops Research 219: 256-272.
 
@@ -13,10 +23,4 @@ Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). A 
 Most of the code is a direct translation by Rob van den Beuken from the FST version as developed by Guillaume Ezui under supervision of Peter Leffelaar. Joy Adiele used this original version to calibrate the model to Nigerian conditions. For this, the RUE parameter was set to the measured value and LAI was forced using measured data from Edo 2016 to estimate the assimilate partitioning values for the used cultivar. AGT Schut checked, simplified and adapted the code to its current format.
 
 Robert Hijmans adapted the R code to create the LINTULcassava R package.
-
-You can install the package with 
-
-```
-remotes::install_github("cropmodels/LINTULcassava")
-```
-
+}

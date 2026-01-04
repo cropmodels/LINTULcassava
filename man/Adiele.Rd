@@ -23,6 +23,11 @@ Adiele_soil(site, year)
 data.frame with weather data or list with soil parameters
 }
 
+\references{
+Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
+}
+
+
 \examples{
 w <- Adiele_weather("Benin", 2016)
 head(w)
