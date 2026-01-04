@@ -25,13 +25,10 @@ data.frame
 }
 
 \examples{
+
 crop <- LC_crop("Adiele")
-year <- 2016
-wth <- Adiele_weather("Benin", year)
-soil <- Adiele_soil("Edo", year)
-mng <-  list(year=year, starttime=45, endtime=582)
-cntr <- list(timestep=1)
-  
-pot <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
-wlim <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
+p <- Adiele("Edo", 2016)
+
+pot <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
+wlim <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 }

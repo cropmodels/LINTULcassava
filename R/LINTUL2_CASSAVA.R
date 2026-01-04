@@ -27,7 +27,7 @@
 
 
 #As used for JOY's work
-LINTUL2_CASSAVA_v2.0 <- function(Time, State, Pars, WDATA){
+LC_model <- function(Time, State, Pars, WDATA){
   with(as.list(c(State, Pars)), {
     #Daily weather data. Use the weather data from the last day 
     #if smaller time-steps are taken
@@ -277,8 +277,8 @@ LINTUL2_CASSAVA_v2.0 <- function(Time, State, Pars, WDATA){
       }
       # Growth of the leaf weight
       RWLV = RWLVG+RWLVD                  # g leaves DM m-2 d-1
-      # Total biomass increase 
-      WGTOTAL = WLV+WST+WCUTTING+WSO+WRT  # g DM m-2 d-1
+      ## Total biomass increase 
+	  ##WGTOTAL = WLV+WST+WCUTTING+WSO+WRT  # g DM m-2 d-1
       
       #--------------------------------------------LEAF GROWTH---------------------------------------------------#
       

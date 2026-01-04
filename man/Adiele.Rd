@@ -1,26 +1,24 @@
 \name{Adiele}
 
-\alias{Adiele_soil}
-\alias{Adiele_weather}
+\alias{Adiele}
 
-\title{Get example soil and weather data}
+\title{Example data}
 
 \description{
-Get example weather data and soil parameters (and also two management parameters) from the Adiele et al study.
+Get example weather data, and soil, management and model control parameters from the Adiele et al study.
 }
 
 \usage{
-Adiele_weather(site, year)
-Adiele_soil(site, year)
+Adiele(site, year)
 }
 
 \arguments{
-  \item{site}{character. Site name}
-  \item{year}{integer. Year}
+  \item{site}{character. Site name. One of "Edo", "Cross River", or "Benue"}
+  \item{year}{integer. Year. Either 2016 or 2017}
 }
 
 \value{
-data.frame with weather data or list with soil parameters
+list
 }
 
 \references{
@@ -29,9 +27,6 @@ Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recal
 
 
 \examples{
-w <- Adiele_weather("Benin", 2016)
-head(w)
-
-s <- Adiele_soil("Edo", 2017)
-str(s)
+w <- Adiele("Edo", 2016)
+str(w)
 }

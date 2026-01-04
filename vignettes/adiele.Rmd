@@ -22,48 +22,35 @@ lcp <- system.file(package="LINTULcassava")
 #crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
+
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
-	wth <- Adiele_weather("Benin", year)
-  soil <- Adiele_soil("Edo", year)
-  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
-  cntr <- list(timestep=1)
-  Pot_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
+  p <- Adiele("Edo", year)
+  Pot_Edo <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
 	  
-	Wlim_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
+  Wlim_Edo <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
 	
 	# CRS, cross river ---------------------------------------------------------#
-	if(year == 2016) {
-		wth <- Adiele_weather("Ogoja CRS", year)
-    soil <- Adiele_soil("Cross River1", year)
-	} else if(year == 2017) {
-		wth <- Adiele_weather("Ikom CRS", year)
-    soil <- Adiele_soil("Cross River2", year)
-	}
-  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
-	  
-	Pot_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
+  p <- Adiele("Cross River", year)
+  Pot_CRS <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
 	  
-	Wlim_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
+  Wlim_CRS <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
 	  
 	#- Benue ----------------------------------------------------------------#
-	wth <- Adiele_weather("Benue", year)
-  soil <- Adiele_soil("Benue2", year)
-  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
-	
-	Pot_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
+  p <- Adiele("Benue", year)
+  Pot_Ben <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
 	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
 	  
-	Wlim_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
+  Wlim_Ben <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
 ##saveRDS(mod, "mod2.rds")
-#m <- readRDS("mod.rds")
+#m <- readRDS("mod2.rds")
 #all.equal(m, mod)
 ```
 

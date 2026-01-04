@@ -14,7 +14,7 @@ LC_crop <- function(x) {
 	p
 }
 
-Adiele_soil <- function(site, year) { 
+Adiele <- function(site, year) { 
 
 	params = c(
 		"ROOTDM"= "Maximum_rooting_depth.m", # m : maximum rooting depth
@@ -30,15 +30,42 @@ Adiele_soil <- function(site, year) {
 
 	lcp <- system.file(package="LINTULcassava")
 	ss <- readRDS(file.path(lcp, "ex/fields.rds"))
+	if (site == "Benue") {
+		site <- "Benue2"
+	} else if (site == "Cross River") {
+		if (year == 2016) {
+			site <- "Cross River1"
+		} else {
+			site <- "Cross River2"
+		}
+	}
 	s <- ss[(ss$Location==site) & (ss$Year_of_planting==year), ]
 	if (nrow(s) == 0) {
-		stop("no soil data available for this site/year")
+		stop("no parameters data available for this site/year")
 	}
 	i <- match(params, names(s))
 	x <- as.list(s[i])
 	names(x) <- names(params)
-	x
+
+	mng <- list(DOYPL=x$DOYPL, DOYHAR=x$DOYHAR)
+	cntr <- list(timestep=1, starttime=x$DOYPL-100)
+	x$DOYPL <- x$DOYHAR <- NULL
+	
+	if (site=="Edo") {
+		wth <- Adiele_weather("Benin", year)
+	} else if (site == "Cross River1") {
+		wth <- Adiele_weather("Ogoja CRS", year)
+	} else if (site == "Cross River2") {
+		wth <- Adiele_weather("Ikom CRS", year)
+	} else if (site == "Benue2") {
+		wth <- Adiele_weather("Benue", year)
+	} else {
+		stop("something went wrong")
+	}
+		
+	list(weather=wth, soil=x, management=mng, control=cntr)
 }
+
 
 Adiele_weather <- function(site, year) { 
 	lcp <- system.file(package="LINTULcassava")

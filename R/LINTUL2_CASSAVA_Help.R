@@ -20,13 +20,13 @@ LC_run <- function(weather, crop, soil, management, control){
   # should use dates, not DOYS
   wdata$DOYS <- wdata$DOY[1] + (1:nrow(wdata))-1
 	
-  pars <- c(crop, soil, IRRIGF=management$IRRIGF, DELT=control$timestep)
+  pars <- c(crop, soil, management, DELT=control$timestep)
 
-  state_wlim <- deSolve::ode(LINTUL2_CASSAVA_iniSTATES(pars), 
-                    seq(management$starttime, management$endtime, by = control$timestep), 
-                    LINTUL2_CASSAVA_v2.0, pars, WDATA = wdata, method = "euler")
+	ini_states <- LC_iniSTATES(pars)
+	steps <- seq(control$starttime, management$DOYHAR, by = control$timestep)
+  state_wlim <- deSolve::euler(ini_states, steps, LC_model, pars, WDATA = wdata)
   
-  i <- which(wdata$DOYS == management$starttime)
+  i <- which(wdata$DOYS == control$starttime)
   i <- i:(i+nrow(state_wlim)-1)
  
   data.frame(year_planting=weather$YEAR[1], year=weather$YEAR[i], DOY=weather$DOY[i], state_wlim)
