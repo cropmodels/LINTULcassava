@@ -10,6 +10,9 @@ This document shows how to produces the figures shown in
 
 Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
 
+### run model 
+
+We first run the model for three locations and two years
 
 ```{r run_model}
 library(LINTULcassava)
@@ -24,11 +27,11 @@ for(year in c(2016, 2017)) {
 	wth <- Adiele_weather("Benin", year)
   soil <- Adiele_soil("Edo", year)
   mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
-
-  Pot_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+  cntr <- list(timestep=1)
+  Pot_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
 	  
-	Wlim_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	Wlim_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
 	
 	# CRS, cross river ---------------------------------------------------------#
@@ -41,10 +44,10 @@ for(year in c(2016, 2017)) {
 	}
   mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
 	  
-	Pot_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+	Pot_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
 	  
-	Wlim_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	Wlim_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
 	  
 	#- Benue ----------------------------------------------------------------#
@@ -52,10 +55,10 @@ for(year in c(2016, 2017)) {
   soil <- Adiele_soil("Benue2", year)
   mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
 	
-	Pot_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+	Pot_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE), cntr)
 	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
 	  
-	Wlim_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	Wlim_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE), cntr)
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
@@ -65,9 +68,8 @@ for(year in c(2016, 2017)) {
 ```
 
 
-The below reproduces the figures as shown in the EJA paper
-
 ### Figure 1A
+
 
 ```{r anova}
 #Data measured with an AccuPar below and above canopy
@@ -137,10 +139,10 @@ DAP_vs_IPAR <- function(Series1=TRT1,Series2=NULL,Series3=NULL, LOCYR, LEG=TRUE,
   red <- rgb(1, 0, 0, alpha = 0.8)
   blue <- rgb(0, 0, 1, alpha = 0.8)
   
-  plot(x = Series1$DAP, y = Series1$fPAR, type="l", 
+  plot(Series1$DAP, Series1$fPAR, type="l", 
         xlab = "Days after planting", ylab = "IPAR, f",
-        ylim = c(0,1), xlim=c(0,450), lwd  = 1.5, lty  = 1,
-        cex.lab  = 1.25, cex.axis= 1.1, mgp=c(2,0.5,0))
+        ylim = c(0,1), xlim=c(0,450), lwd = 1.5,
+        cex.lab = 1.25, cex.axis= 1.1, mgp=c(2,0.5,0))
   text(x=100, y=0.05,labels=LOCYR,cex=1.5)
   arrows(Series1$DAP, Series1$fPAR-Series1$fPAR_sd, 
          Series1$DAP, Series1$fPAR+Series1$fPAR_sd, 
@@ -152,22 +154,22 @@ DAP_vs_IPAR <- function(Series1=TRT1,Series2=NULL,Series3=NULL, LOCYR, LEG=TRUE,
     colPCH <- 2
 
   if(length(Series2)>1){
-    lines(x = Series2$DAP, y = Series2$fPAR, col = red, lwd = 1.5, lty = 2)
+    lines(Series2$DAP, Series2$fPAR, col = red, lwd = 1.5, lty = 2)
     arrows(Series2$DAP+3, Series2$fPAR-Series2$fPAR_sd, 
            Series2$DAP+3, Series2$fPAR+Series2$fPAR_sd, 
            length=0.05, angle=90, code=3, col = red)
-    points(x = Series1$DAP, y = Series1$fPAR, pch = 5)
+    points(Series1$DAP, Series1$fPAR, pch = 5)
     colLEG <- c(colLEG, red)
     colLWD <- c(colLWD, 1.5)
     colLTY <- c(colLTY, 2)
     colPCH <- c(colPCH, 5)
   }
   if(length(Series3)>1){
-      lines(x=Series3$DAP, y=Series3$fPAR, col=blue, lwd=1.5, lty=4)
+      lines(Series3$DAP, Series3$fPAR, col=blue, lwd=1.5, lty=4)
       arrows(Series3$DAP-3, Series3$fPAR-Series3$fPAR_sd, 
              Series3$DAP-3, Series3$fPAR+Series3$fPAR_sd, 
              length=0.05, angle=90, code=3,col = blue)
-      points(x = Series3$DAP, y = Series3$fPAR, col = blue, pch = 19)
+      points(Series3$DAP, Series3$fPAR, col = blue, pch = 19)
       colLEG <- c(colLEG, blue)
       colLWD <- c(colLWD, 1.5)
       colLTY <- c(colLTY, 4)
@@ -179,32 +181,23 @@ DAP_vs_IPAR <- function(Series1=TRT1,Series2=NULL,Series3=NULL, LOCYR, LEG=TRUE,
   }
 }
 
+
 Figure2 <- function(DATA){
+  one_plot <- function(loc, year, leg=FALSE) {
+    locyr <- DATA$Location==loc & DATA$Year==year 
+    i <- which(locyr & DATA$Treatment=="NfPfK1")
+    j <- which(locyr & DATA$Treatment=="NfPfKf")
+    k <- which(locyr & DATA$Treatment=="NfPfKfMn")
+    DAP_vs_IPAR(Series1=DATA[i,],Series2=DATA[j,],Series3=DATA[k,], 
+                LOCYR=paste(loc, year, collapse=", "),
+                LEG=leg, LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
+  }
+
   par(mfrow=c(2,2), oma=c(3,3,1,1), mar=c(1.5,1.5,0,0))
-  i <- which(DATA$Location=="Edo" & DATA$Year=="2016" & DATA$Treatment=="NfPfK1")
-  j <- which(DATA$Location=="Edo" & DATA$Year=="2016" & DATA$Treatment=="NfPfKf")
-  k <- which(DATA$Location=="Edo" & DATA$Year=="2016" & DATA$Treatment=="NfPfKfMn")
-  DAP_vs_IPAR(Series1=DATA[i,],Series2=DATA[j,],Series3=DATA[k,], LOCYR="Edo, 2016",
-              LEG=TRUE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
-			  
-  i <- which(DATA$Location=="Benue" & DATA$Year=="2016" & DATA$Treatment=="NfPfK1")
-  j <- which(DATA$Location=="Benue" & DATA$Year=="2016" & DATA$Treatment=="NfPfKf")
-  k <- which(DATA$Location=="Benue" & DATA$Year=="2016" & DATA$Treatment=="NfPfKfMn")
-  DAP_vs_IPAR(Series1=DATA[i,],Series2=DATA[j,],Series3=DATA[k,], LOCYR="Benue, 2016",
-              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
-			  
-  i <- which(DATA$Location=="Edo" & DATA$Year=="2017" & DATA$Treatment=="NfPfK1")
-  j <- which(DATA$Location=="Edo" & DATA$Year=="2017" & DATA$Treatment=="NfPfKf")
-  k <- which(DATA$Location=="Edo" & DATA$Year=="2017" & DATA$Treatment=="NfPfKfMn")
-  DAP_vs_IPAR(Series1=DATA[i,],Series2=DATA[j,],Series3=DATA[k,], LOCYR="Edo, 2017",
-              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
-			  
-  i <- which(DATA$Location=="Benue" & DATA$Year=="2017" & DATA$Treatment=="NfPfK1")
-  j <- which(DATA$Location=="Benue" & DATA$Year=="2017" & DATA$Treatment=="NfPfKf")
-  k <- which(DATA$Location=="Benue" & DATA$Year=="2017" & DATA$Treatment=="NfPfKfMn")
-  DAP_vs_IPAR(Series1=DATA[i,], Series2=DATA[j,], Series3=DATA[k,], LOCYR="Benue, 2017",
-              LEG=FALSE,LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
-			  
+  one_plot("Edo", 2016, TRUE)
+  one_plot("Benue", 2016)
+  one_plot("Edo", 2017)
+  one_plot("Benue", 2017)
   mtext("Days after planting", side = 1, line = 1, outer = TRUE)
   mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.25)
   mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.75)
