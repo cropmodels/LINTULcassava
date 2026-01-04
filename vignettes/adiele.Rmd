@@ -12,7 +12,6 @@ Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recal
 
 
 ```{r run_model}
-
 library(LINTULcassava)
 mod <- list()
 lcp <- system.file(package="LINTULcassava")
@@ -24,14 +23,15 @@ for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
 	wth <- Adiele_weather("Benin", year)
   soil <- Adiele_soil("Edo", year)
-  
-	Pot_Edo <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
-	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Pot_Edo)
+  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
+
+  Pot_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
 	  
-	Wlim_Edo <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year = year, starttime=soil$DOYPL-100, endtime= soil$DOYHAR)
-	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Wlim_Edo)
+	Wlim_Edo <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
 	
-	#-CRS, cross river---------------------------------------------------------------------------------------#
+	# CRS, cross river ---------------------------------------------------------#
 	if(year == 2016) {
 		wth <- Adiele_weather("Ogoja CRS", year)
     soil <- Adiele_soil("Cross River1", year)
@@ -39,22 +39,24 @@ for(year in c(2016, 2017)) {
 		wth <- Adiele_weather("Ikom CRS", year)
     soil <- Adiele_soil("Cross River2", year)
 	}
+  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
 	  
-	Pot_CRS <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
-	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Pot_CRS)
+	Pot_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
 	  
-	Wlim_CRS <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
-	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Wlim_CRS)
+	Wlim_CRS <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
 	  
-	#-Benue-------------------------------------------------------------------------------------------------#
+	#- Benue ----------------------------------------------------------------#
 	wth <- Adiele_weather("Benue", year)
   soil <- Adiele_soil("Benue2", year)
+  mng <- list(year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
 	
-	Pot_Ben <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
-	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Pot_Ben)
+	Pot_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
 	  
-	Wlim_Ben <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year=year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
-	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Wlim_Ben)
+	Wlim_Ben <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
+	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
 ##saveRDS(mod, "mod2.rds")
@@ -388,7 +390,8 @@ measured <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake.csv"))
 measured <- measured[measured$Treatment == "NfPfKf", c("Year","Location","time","DMRoots.g.DM.m2")]
 measured[,"DMRoots.t.ha"] <- measured[,"DMRoots.g.DM.m2"] * 0.01 #1E4*1E-6
 
-modelled <- do.call(rbind, mod)[, c("Location", "Year", "time","WSOTHA")]
+modelled <- do.call(rbind, mod)[, c("Location", "year", "time","WSOTHA")]
+names(modelled) <- gsub("year", "Year", names(modelled))
 
 dcomb <- merge(measured, modelled, by=c("time", "Year", "Location"))
 

@@ -14,30 +14,32 @@
 #------------------------------------------------------------------------------------------------------#
 
 #LINTUL CASSAVA for WATER LIMITED PRODUCTION:
-LC_run <- function(wdata, pars, year, starttime, endtime){
+LC_run <- function(wdata, crop, soil, management){
 
   wdata <- derive_wth_vars(wdata)
   # should use dates, not DOYS
   wdata$DOYS <- wdata$DOY[1] + (1:nrow(wdata))-1
- 
+	
+  pars <- c(crop, soil, IRRIGF=management$IRRIGF)
 
   DELT <- as.numeric(pars[which(names(pars)=='DELT')])
   state_wlim <- deSolve::ode(LINTUL2_CASSAVA_iniSTATES(pars), 
-                    seq(starttime, endtime, by = DELT), 
+                    seq(management$starttime, management$endtime, by = DELT), 
                     LINTUL2_CASSAVA_v2.0, pars,  WDATA = wdata,
                     method = "euler")
   
   state_wlim = data.frame(state_wlim)
 
-  year_info = data.frame(year_planting = rep(year,nrow(state_wlim)),
+  year <- management$year
+  year_info = data.frame(year_planting = rep(year, nrow(state_wlim)),
                          year = rep(as.numeric(year), nrow(state_wlim)),
                          DOY = state_wlim[,'time'])
   
-  if (as.numeric(year)%%4 == 0 & endtime > 366){
+  if (as.numeric(year)%%4 == 0 & management$endtime > 366){
     ii<-which(year_info[,'DOY'] > 366)
     year_info[ii,'year'] <- year_info[ii,'year'] + 1
     year_info[ii,'DOY'] <- year_info[ii,'DOY'] - 366
-  } else if(endtime > 365){
+  } else if (management$endtime > 365){
     ii<-which(year_info[,'DOY'] > 365)
     year_info[ii,'DOY'] <- year_info[ii,'DOY'] - 365
     year_info[ii,'year'] <- year_info[ii,'year'] + 1
@@ -45,3 +47,4 @@ LC_run <- function(wdata, pars, year, starttime, endtime){
 
   return(Modelresults = cbind(year_info, state_wlim))
 }
+
