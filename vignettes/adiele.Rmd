@@ -4,71 +4,56 @@
 %\VignetteEncoding{UTF-8}
 -->
 
-# Title 
+## Title 
 
-This md produces the figures as shown in: 
+This document shows how to produces the figures shown in 
 
-Adiele, J. G., A. G. T. Schut, K. S. Ezui, P. Pypers and K. E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: paper 126242.
+Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
 
 
 ```{r run_model}
+
 library(LINTCAS)
-mod  <-  list()
-lcp  <-  system.file(package="LINTCAS")
-# weather data
-wth  <-  readRDS(file.path(lcp, "ex/weather.rds"))
+mod <- list()
+lcp <- system.file(package="LINTCAS")
 
-
-get_wth  <-  function(name, year) {
-  wth[(wth$NAME==name) & (wth$YEAR >= year), ]
-}
-
-SiteInfo  <-  read.csv(file.path(lcp, "ex/Field_characteristics_field_management.csv"))
-Adiele_iri  <-  LC_parameters("Adiele", irri = TRUE)
-Adiele_rf  <-  LC_parameters("Adiele", irri = FALSE)
+#crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
+crop <- LC_crop("Adiele")
 
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
-	wdata <- get_wth("Benin", year)
-	#Use default parameters as defined by Ezui et al. and re-calibrated by Adiele et al. EJA 2021
-	pars_iri <- LC_management(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year), MODEL_PARAM = Adiele_iri)
-		
-	Pot_Edo <- LC_run(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+	wth <- Adiele_weather("Benin", year)
+  soil <- Adiele_soil("Edo", year)
+  
+	Pot_Edo <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year=year, starttime = soil$DOYPL-100, endtime = soil$DOYHAR)
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Pot_Edo)
 	  
-	pars_rf <- LC_management(SiteInfo = subset(SiteInfo, Location == "Edo" & Year_of_planting == year),MODEL_PARAM = Adiele_rf)
-	Wlim_Edo <- LC_run(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
-
+	Wlim_Edo <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year = year, starttime=soil$DOYPL-100, endtime= soil$DOYHAR)
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Year=year, Wlim_Edo)
 	
 	#-CRS, cross river---------------------------------------------------------------------------------------#
 	if(year == 2016) {
-		wdata <- get_wth("Ogoja CRS", year)
-		pars_iri <- LC_management(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = Adiele_iri)
-		pars_rf <- LC_management(SiteInfo = subset(SiteInfo, Location == "Cross River1" & Year_of_planting == year), MODEL_PARAM = Adiele_rf)
+		wth <- Adiele_weather("Ogoja CRS", year)
+    soil <- Adiele_soil("Cross River1", year)
 	} else if(year == 2017) {
-		wdata <- get_wth("Ikom CRS", year)
-		pars_iri <- LC_management(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = Adiele_iri)
-		pars_rf <- LC_management(SiteInfo = subset(SiteInfo, Location == "Cross River2" & Year_of_planting == year), MODEL_PARAM = Adiele_rf)
+		wth <- Adiele_weather("Ikom CRS", year)
+    soil <- Adiele_soil("Cross River2", year)
 	}
 	  
-	Pot_CRS <- LC_run(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
+	Pot_CRS <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Pot_CRS)
 	  
-	Wlim_CRS <- LC_run(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
+	Wlim_CRS <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Year=year, Wlim_CRS)
 	  
 	#-Benue-------------------------------------------------------------------------------------------------#
-	pars_iri <- LC_management(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = Adiele_iri)
-	pars_rf <- LC_management(SiteInfo = subset(SiteInfo, Location == "Benue2" & Year_of_planting == year), MODEL_PARAM = Adiele_rf)
-
-	wdata <- get_wth("Benue", year)
+	wth <- Adiele_weather("Benue", year)
+  soil <- Adiele_soil("Benue2", year)
 	
-	Pot_Ben <- LC_run(wdata = wdata,  pars = pars_iri, year = year, starttime = pars_iri[["DOYPL"]]-100, endtime = pars_iri[["DOYHAR"]])
-	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Pot_Ben)  
+	Pot_Ben <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year = year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
+	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Pot_Ben)
 	  
-	  
-	Wlim_Ben <- LC_run(wdata = wdata,  pars = pars_rf, year = year, starttime = pars_rf[["DOYPL"]]-100, endtime = pars_rf[["DOYHAR"]])
+	Wlim_Ben <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year=year, starttime=soil$DOYPL-100, endtime=soil$DOYHAR)
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Year=year, Wlim_Ben)
 }
 
@@ -105,9 +90,9 @@ Fig_1A <- function(DATA, model){
   i <- DATA$Loc_yr=="Benue_2016"
   points(x=DATA[i,"LAI"], y=DATA[i,"ln_FLI"], pch=0)
   i <- DATA[,"Loc_yr"]=="Edo_2016"
-  points(x=DATA[i,"LAI"],y=DATA[i,"ln_FLI"], pch=1)
+  points(x=DATA[i,"LAI"], y=DATA[i,"ln_FLI"], pch=1)
   i <- DATA[,"Loc_yr"]=="Edo_2017"
-  points(x=DATA[i,"LAI"],y=DATA[i,"ln_FLI"], pch=16)
+  points(x=DATA[i,"LAI"], y=DATA[i,"ln_FLI"], pch=16)
 
   legend("bottomright", c("Benue, 2016" ,"Benue, 2017","Edo, 2016", "Edo, 2017"),
           pch = c(0, 15, 1, 16), bty="n") 
@@ -229,39 +214,50 @@ Figure2(DATA)
 
 ### Figure 3
 
-```{r fig3}
-#Data on cumulative intercepted PAR, combining measure wheater data and interpolated measurements of LI from AccurPAR data
+Using data on cumulative intercepted PAR, combining measure wheater data and interpolated measurements of LI from AccurPAR data.
+
+
+First the regression model
+
+
+```{r anova_fig3}
 Bio_cumIPAR <- read.csv(file.path(lcp, "ex/Bio_cumIPAR_NFPFKF_BenueEdo.csv"))
 
-Fig_3 <- function(Bio_cumIPAR){
+i <- which(Bio_cumIPAR$Loc_yr == "Edo_2016")
+ModBE <- lm(BiomassDM.gm.2 ~ -1 + Cum_PAR.MJm.2, data=Bio_cumIPAR[i,])
+summary(ModBE)
+anova(ModBE)
+```
+
+And now the plot 
+
+```{r fig3}
+
+Fig_3 <- function(bp, model){
   
   par(oma=c(2,2,2,2),mar=c(5,5,0,0))
-  Bio_cumIPAR$Loc_yr <- factor(Bio_cumIPAR$Loc_yr)
+  bp$Loc_yr <- factor(bp$Loc_yr)
   #par(mfrow=c(1,2))
-  i <- which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2016" )
-  plot(Bio_cumIPAR[i,"Cum_PAR.MJm.2"], Bio_cumIPAR[i,"BiomassDM.gm.2"], 
+  i <- which(bp[,"Loc_yr"]=="Edo_2016" )
+  plot(bp[i,"Cum_PAR.MJm.2"], bp[i,"BiomassDM.gm.2"], 
        xlab = "Cumulative IPAR (MJ/m²)", ylab = "Biomass (g/m²)",
        cex.lab=1.3, cex = 1.0, pch =1, xlim = c(0,2600), ylim = c(0,9000))
-  i <- which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2017" )
-  points(Bio_cumIPAR[i,"Cum_PAR.MJm.2"], Bio_cumIPAR[i,"BiomassDM.gm.2"], pch=16)
+  i <- which(bp[,"Loc_yr"]=="Edo_2017" )
+  points(bp[i,"Cum_PAR.MJm.2"], bp[i,"BiomassDM.gm.2"], pch=16)
   
-  i <- which(Bio_cumIPAR[,"Loc_yr"]=="Benue_2016" )
-  points(Bio_cumIPAR[i,"Cum_PAR.MJm.2"], Bio_cumIPAR[i,"BiomassDM.gm.2"], pch =2)
-  i <- which(Bio_cumIPAR[,"Loc_yr"]=="Benue_2016" )
-  points(Bio_cumIPAR[i,"Cum_PAR.MJm.2"], Bio_cumIPAR[i,"BiomassDM.gm.2"], pch=17)
+  i <- which(bp[,"Loc_yr"]=="Benue_2016" )
+  points(bp[i,"Cum_PAR.MJm.2"], bp[i,"BiomassDM.gm.2"], pch =2)
+  i <- which(bp[,"Loc_yr"]=="Benue_2016" )
+  points(bp[i,"Cum_PAR.MJm.2"], bp[i,"BiomassDM.gm.2"], pch=17)
   legend('bottomright', c('Edo, 2016', 'Edo, 2017', 'Benue, 2016', 'Benue, 2017'), 
          pch = c(1,16,2,17), bty = 'n')
   
-  #c(20,15,1,0)
-  i <- which(Bio_cumIPAR[,"Loc_yr"]=="Edo_2016" )
-  ModBE <- lm(BiomassDM.gm.2 ~ -1 + Cum_PAR.MJm.2,Bio_cumIPAR[i,])
-  summary(ModBE)
-  anova(ModBE)
-  abline(ModBE)
+  abline(model)
   legend('topleft', c('Edo 2016', 'R² = 0.98, P< .001', 'y = 2.76x'), bty = 'n')
 }
 
-Fig_3(Bio_cumIPAR=Bio_cumIPAR)
+
+Fig_3(Bio_cumIPAR, ModBE)
 
 ```
 
@@ -273,7 +269,7 @@ Fig_3(Bio_cumIPAR=Bio_cumIPAR)
 #Analysing Simulated and observed yield 
 #Read in the data needed
 #plant parts g DM/m2
-BIOMASS   <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake_plantpart_totals_per_treatment.csv'))
+BIOMASS   <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake.csv'))
 BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
 BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
@@ -387,7 +383,7 @@ Plotting simulated versus observed storage root yield NfPfKf for all years in Be
 
 ```{r fig5}
 #Get the data
-measured <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake_plantpart_totals_per_treatment.csv"))
+measured <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake.csv"))
 
 measured <- measured[measured$Treatment == "NfPfKf", c("Year","Location","time","DMRoots.g.DM.m2")]
 measured[,"DMRoots.t.ha"] <- measured[,"DMRoots.g.DM.m2"] * 0.01 #1E4*1E-6

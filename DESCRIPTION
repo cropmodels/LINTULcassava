@@ -1,12 +1,13 @@
 Package: LINTCAS
 Type: Package
 Title: LINTUL CASSAVA crop growth simulation model
-Version: 0.0-1
-Date: 2026-01-01
+Version: 0.0-3
+Date: 2026-01-03
 Imports: deSolve
+Depends: R (>= 3.5.0)
 Suggests: litedown
 VignetteBuilder: litedown 
 Author: Joy Adiele, Rob van den Beuken, Guillaume Ezui, Peter Leffelaar, Tom Schut
-Maintainer: <r.hijmans@gmail.com>
-Description: This package implements the LINTUL_CASSAVA crop growth simulation model
+Maintainer: Robert Hijmans <r.hijmans@gmail.com>
+Description: This package implements a LINTUL crop growth simulation model for cassava. It is a packaged version of the LINTUL_Cassava_NPK model R code available here https://models.pps.wur.nl/index.php/lintulcassavanpk (2024-10-2100). The packaging was done to facilitate the use of the model.
 License: EUPL

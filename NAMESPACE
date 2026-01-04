@@ -1,4 +1,2 @@
-#exportPattern("^[^\\.]")
-
-export(LC_management, LC_parameters, LC_run)
+export(LC_crop, LC_run, Adiele_weather, Adiele_soil)
 
