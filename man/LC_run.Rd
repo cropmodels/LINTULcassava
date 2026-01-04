@@ -9,15 +9,14 @@ Run the model
 }
 
 \usage{
-LC_run(wdata, pars, year, starttime, endtime)
+LC_run(weather, crop, soil, management)
 }
 
 \arguments{
-  \item{wdata}{data.frame with weather data}
-  \item{pars}{list with crop, soil, and management parameters}
-  \item{year}{start year}
-  \item{starttime}{start DOY}
-  \item{endtime}{end DOY}
+  \item{weather}{data.frame with weather data}
+  \item{crop}{list with crop parameters}
+  \item{soil}{list with soil parameters}
+  \item{management}{list with management parameters (year, starttime, endtime, IRRIGF)}
 }
 
 \value{
@@ -29,7 +28,8 @@ crop <- LC_crop("Adiele")
 year <- 2016
 wth <- Adiele_weather("Benin", year)
 soil <- Adiele_soil("Edo", year)
+mng <-  list(year=year, starttime=45, endtime=582)
   
-pot <- LC_run(wth, pars=c(soil, crop, IRRIGF=TRUE), year=year, starttime=45, endtime=582)
-wlim <- LC_run(wth, pars=c(soil, crop, IRRIGF=FALSE), year=year, starttime=45, endtime=582)
+pot <- LC_run(wth, crop, soil, c(mng, IRRIGF=TRUE))
+wlim <- LC_run(wth, crop, soil, c(mng, IRRIGF=FALSE))
 }

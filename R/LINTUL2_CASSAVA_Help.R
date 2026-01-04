@@ -9,14 +9,14 @@
 # The LINTUL-CASSAVA_RUN function is running the full LINTUL2-CASSAVA script with all its components. 
 # This function adds year details
 #
-# Developer LINTUL-Cassava: Ezui, K. S. et al. (2018). Simulating drought impact and mitigation in 
+# Developer LINTUL-Cassava: Ezui, K.S. et al. (2018). Simulating drought impact and mitigation in 
 # cassava using the LINTUL model. Field Crops Research, 219, 256-272.
 #------------------------------------------------------------------------------------------------------#
 
 #LINTUL CASSAVA for WATER LIMITED PRODUCTION:
-LC_run <- function(wdata, crop, soil, management){
+LC_run <- function(weather, crop, soil, management){
 
-  wdata <- derive_wth_vars(wdata)
+  wdata <- derive_wth_vars(weather)
   # should use dates, not DOYS
   wdata$DOYS <- wdata$DOY[1] + (1:nrow(wdata))-1
 	
