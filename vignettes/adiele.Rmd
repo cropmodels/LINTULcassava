@@ -129,47 +129,47 @@ Fig_1(DATA = DATA_ACCUPAR, Modk)
 
 
 ```{r fig2}
-#READ IN THE DATA
-DATA <- read.csv(file.path(lcp, "ex/fPAR_Benue_Edo.csv"))
 
-#################################################################
+DAP_vs_IPAR <- function(d, loc, year, leg=FALSE) {
+    ly <- d$Location==loc & DATA$Year==year 
+    S1 <- d[ly & DATA$Treatment=="NfPfK1", ]
+    S2 <- d[ly & DATA$Treatment=="NfPfKf", ]
+    S3 <- d[ly & DATA$Treatment=="NfPfKfMn", ]
+    LOCYR=paste(loc, year, collapse=", ")
+    LEG=leg 
+    LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN')
 
-DAP_vs_IPAR <- function(Series1=TRT1,Series2=NULL,Series3=NULL, LOCYR, LEG=TRUE,
-                      LEGTEXT=c('NfPfKf', 'NfPfKf', 'NfPfKf', "Observed")){
-  red <- rgb(1, 0, 0, alpha = 0.8)
-  blue <- rgb(0, 0, 1, alpha = 0.8)
   
-  plot(Series1$DAP, Series1$fPAR, type="l", 
-        xlab = "Days after planting", ylab = "IPAR, f",
-        ylim = c(0,1), xlim=c(0,450), lwd = 1.5,
+    red <- rgb(1, 0, 0, alpha = 0.8)
+    blue <- rgb(0, 0, 1, alpha = 0.8)
+  
+  plot(S1$DAP, S1$fPAR, type="l", xlab = "Days after planting", 
+       ylab = "IPAR, f",  ylim = c(0,1), xlim=c(0,450), lwd = 1.5,
         cex.lab = 1.25, cex.axis= 1.1, mgp=c(2,0.5,0))
   text(x=100, y=0.05,labels=LOCYR,cex=1.5)
-  arrows(Series1$DAP, Series1$fPAR-Series1$fPAR_sd, 
-         Series1$DAP, Series1$fPAR+Series1$fPAR_sd, 
+  arrows(S1$DAP, S1$fPAR-S1$fPAR_sd, S1$DAP, S1$fPAR+S1$fPAR_sd, 
          length=0.05, angle=90, code=3)
-    points(x = Series1$DAP, y = Series1$fPAR, pch = 2)
+    points(x = S1$DAP, y = S1$fPAR, pch = 2)
     colLEG <- "black"
     colLWD <- 1.5
     colLTY <- 1
     colPCH <- 2
 
-  if(length(Series2)>1){
-    lines(Series2$DAP, Series2$fPAR, col = red, lwd = 1.5, lty = 2)
-    arrows(Series2$DAP+3, Series2$fPAR-Series2$fPAR_sd, 
-           Series2$DAP+3, Series2$fPAR+Series2$fPAR_sd, 
+  if(length(S2)>1){
+    lines(S2$DAP, S2$fPAR, col = red, lwd = 1.5, lty = 2)
+    arrows(S2$DAP+3, S2$fPAR-S2$fPAR_sd, S2$DAP+3, S2$fPAR+S2$fPAR_sd, 
            length=0.05, angle=90, code=3, col = red)
-    points(Series1$DAP, Series1$fPAR, pch = 5)
+    points(S1$DAP, S1$fPAR, pch = 5)
     colLEG <- c(colLEG, red)
     colLWD <- c(colLWD, 1.5)
     colLTY <- c(colLTY, 2)
     colPCH <- c(colPCH, 5)
   }
-  if(length(Series3)>1){
-      lines(Series3$DAP, Series3$fPAR, col=blue, lwd=1.5, lty=4)
-      arrows(Series3$DAP-3, Series3$fPAR-Series3$fPAR_sd, 
-             Series3$DAP-3, Series3$fPAR+Series3$fPAR_sd, 
+  if(length(S3)>1){
+      lines(S3$DAP, S3$fPAR, col=blue, lwd=1.5, lty=4)
+      arrows(S3$DAP-3, S3$fPAR-S3$fPAR_sd, S3$DAP-3, S3$fPAR+S3$fPAR_sd, 
              length=0.05, angle=90, code=3,col = blue)
-      points(Series3$DAP, Series3$fPAR, col = blue, pch = 19)
+      points(S3$DAP, S3$fPAR, col = blue, pch = 19)
       colLEG <- c(colLEG, blue)
       colLWD <- c(colLWD, 1.5)
       colLTY <- c(colLTY, 4)
@@ -181,29 +181,17 @@ DAP_vs_IPAR <- function(Series1=TRT1,Series2=NULL,Series3=NULL, LOCYR, LEG=TRUE,
   }
 }
 
+DATA <- read.csv(file.path(lcp, "ex/fPAR_Benue_Edo.csv"))
 
-Figure2 <- function(DATA){
-  one_plot <- function(loc, year, leg=FALSE) {
-    locyr <- DATA$Location==loc & DATA$Year==year 
-    i <- which(locyr & DATA$Treatment=="NfPfK1")
-    j <- which(locyr & DATA$Treatment=="NfPfKf")
-    k <- which(locyr & DATA$Treatment=="NfPfKfMn")
-    DAP_vs_IPAR(Series1=DATA[i,],Series2=DATA[j,],Series3=DATA[k,], 
-                LOCYR=paste(loc, year, collapse=", "),
-                LEG=leg, LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN'))
-  }
+par(mfrow=c(2,2), oma=c(3,3,1,1), mar=c(1.5,1.5,0,0))
+DAP_vs_IPAR(DATA, "Edo", 2016, TRUE)
+DAP_vs_IPAR(DATA, "Benue", 2016)
+DAP_vs_IPAR(DATA, "Edo", 2017)
+DAP_vs_IPAR(DATA, "Benue", 2017)
+mtext("Days after planting", side = 1, line = 1, outer = TRUE)
+mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.25)
+mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.75)
 
-  par(mfrow=c(2,2), oma=c(3,3,1,1), mar=c(1.5,1.5,0,0))
-  one_plot("Edo", 2016, TRUE)
-  one_plot("Benue", 2016)
-  one_plot("Edo", 2017)
-  one_plot("Benue", 2017)
-  mtext("Days after planting", side = 1, line = 1, outer = TRUE)
-  mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.25)
-  mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.75)
-}
-
-Figure2(DATA)  
 ```
 
 
@@ -264,20 +252,20 @@ Fig_3(Bio_cumIPAR, ModBE)
 #Analysing Simulated and observed yield 
 #Read in the data needed
 #plant parts g DM/m2
-BIOMASS   <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake.csv'))
-BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
-BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
-BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
-BIOM_BEN17 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
-BIOM_CRS16 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2016 & BIOMASS$Treatment == "NfPfKf"),]
-BIOM_CRS17 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2017 & BIOMASS$Treatment == "NfPfKf"),]
+BIOMASS <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake.csv'))
+BIOMASS <- BIOMASS[BIOMASS$Treatment == "NfPfKf", ]
+BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016), ]
+BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017),]
+BIOM_BEN16 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2016),]
+BIOM_BEN17 <- BIOMASS[which(BIOMASS$Location == 'Benue' & BIOMASS$Year == 2017),]
+BIOM_CRS16 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2016),]
+BIOM_CRS17 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2017),]
 
-LeavesStemRootDynamics <- function(Series1=Potential, Series2=NULL,
+# leaves
+LeavesStemRootDynamics <- function(Series1, Series2=NULL,
                     BIOMASS=NA, TITLE, LEG=FALSE, 
                     LEGTEXT=c('Potential', 'Water lim.', "Observed")){
-  
-  # leaves
-  
+
   red <- rgb(1, 0, 0, alpha = 0.8)
 
   plot(Series1$time, Series1$WLVG, type="l", xlab = "time (days)",
@@ -296,8 +284,8 @@ LeavesStemRootDynamics <- function(Series1=Potential, Series2=NULL,
     colPCH <- c(colPCH, NA)
   }
   if(length(BIOMASS)>1){
-    arrows(BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2-BIOMASS$std_DMLeaves.g.DM.m2, 
-           BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2+BIOMASS$std_DMLeaves.g.DM.m2, 
+    arrows(BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2 - BIOMASS$std_DMLeaves.g.DM.m2, 
+           BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2 + BIOMASS$std_DMLeaves.g.DM.m2, 
            length=0.05, angle=90, code=3)
     points(BIOMASS$time, BIOMASS$DMLeaves.g.DM.m2, lwd = 2.5, pch = 19)
     colLEG <- c(colLEG, "black")
@@ -322,7 +310,7 @@ LeavesStemRootDynamics <- function(Series1=Potential, Series2=NULL,
     arrows(BIOMASS$time, BIOMASS$DMstems.g.DM.m2-BIOMASS$std_DMstems.g.DM.m2, 
            BIOMASS$time, BIOMASS$DMstems.g.DM.m2+BIOMASS$std_DMstems.g.DM.m2, 
            length=0.05, angle=90, code=3)
-    points(x = BIOMASS$time, y = BIOMASS$DMstems.g.DM.m2, lwd = 2.5, pch = 19)
+    points(BIOMASS$time, BIOMASS$DMstems.g.DM.m2, lwd = 2.5, pch = 19)
   }
   if(LEG){
     legend("topleft", legend=LEGTEXT, col = colLEG, lwd = colLWD, 
@@ -350,15 +338,15 @@ LeavesStemRootDynamics <- function(Series1=Potential, Series2=NULL,
 
 Figure4 <- function(){
   par(mfcol=c(3,5),oma=c(3,3,1,1),mar=c(1.5,1.5,0,0))
-  LeavesStemRootDynamics(Series1=mod$Pot_Edo17, Series2=mod$Wlim_Edo17,
+  LeavesStemRootDynamics(mod$Pot_Edo17, mod$Wlim_Edo17,
                          BIOMASS=BIOM_Edo17, TITLE="Edo '17", LEG=TRUE)
-  LeavesStemRootDynamics(Series1=mod$Pot_CRS16,Series2=mod$Wlim_CRS16,
+  LeavesStemRootDynamics(mod$Pot_CRS16, mod$Wlim_CRS16,
                          BIOMASS=BIOM_CRS16,TITLE="CRS '16")
-  LeavesStemRootDynamics(Series1=mod$Pot_CRS17, Series2=mod$Wlim_CRS17,
+  LeavesStemRootDynamics(mod$Pot_CRS17, mod$Wlim_CRS17,
                          BIOMASS=BIOM_CRS17, TITLE="CRS '17")
-  LeavesStemRootDynamics(Series1=mod$Pot_Ben16, Series2=mod$Wlim_Ben16,
+  LeavesStemRootDynamics(mod$Pot_Ben16, mod$Wlim_Ben16,
                          BIOMASS=BIOM_BEN16, TITLE="BEN '16")
-  LeavesStemRootDynamics(Series1=mod$Pot_Ben17, Series2=mod$Wlim_Ben17,
+  LeavesStemRootDynamics(mod$Pot_Ben17, mod$Wlim_Ben17,
                          BIOMASS=BIOM_BEN17, TITLE="BEN '17")
   
   mtext("Days after planting", side = 1, line = 1, outer = TRUE, at = NA)
