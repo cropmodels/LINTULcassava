@@ -15,7 +15,8 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       RTSUM <- DTEFF * ifelse((Time - management$DOYPL) >= 0, 1, 0) # Deg. C 
       
       # Determine water content of rooted soil
-      WC <- 0.001 * S$WA/S$ROOTD       # (-) 
+      # RH: Use of WC  is confusing as it also a state variable 
+	  WC <- 0.001 * S$WA/S$ROOTD       # (-) 
       
       #-----------------------------------------EMERGENCE-----------------------------------------------#
       # emergence occurs (1) when the temperature sum exceeds the temperature sum needed for emergence. And (2)
@@ -305,23 +306,20 @@ LC_MODEL2 <- function(weather, crop, soil, management, control){
 	wth <- LINTULcassava:::derive_wth_vars(weather)
   # should use dates, not DOYS
 	wth$DOYS <- wth$DOY[1] + (1:nrow(wth))-1
-	#wth <- wth[wth$DOYS >= control$starttime, ]
+	wth <- wth[wth$DOYS >= control$starttime, ]
 	
 	steps <- seq(control$starttime, management$DOYHAR, by = DELT)
 
 	out <- vector(length=length(steps), mode="list")
 	S <- LINTULcassava:::LC_iniSTATES(pars)
 	for (i in 1:length(steps)) {
-#	for (i in 1:219) {
-		R <- get_rates(steps[i], wth[steps[i], ], as.list(S), crop, soil, DELT)
+		R <- get_rates(steps[i], wth[i, ], as.list(S), crop, soil, DELT)
 		S <- unlist(S)
-		out[[i]] <- c(S, unlist(R$aux), unlist(R$rates))
+		out[[i]] <- c(S, unlist(R$aux), R$rates)
 		S <- S + R$rates
     }
-
-
 	out <- do.call(rbind, out)
-	
-	out
+	j <- 1:length(steps)
+	data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=wth$DOYS[j], out)
 }
 

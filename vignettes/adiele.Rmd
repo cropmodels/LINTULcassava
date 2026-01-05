@@ -75,9 +75,8 @@ Fig_1A <- function(DATA, model){
   
   uLY <- unique(DATA[,"Loc_yr"])
   i <- DATA$Loc_yr == "Benue_2017"
-  plot(DATA[i,"LAI"], DATA[i,"ln_FLI"],  cex.lab=1.5,
-       xlab = 'Leaf area index (m²/m²)', ylab = '-ln (1-fLI)',
-       xlim = c(0,7), ylim = c(0,5), pch=15)
+  plot(DATA[i,"LAI"], DATA[i,"ln_FLI"], cex.lab=1.5, ylab = '-ln (1-fLI)',
+       xlab = 'Leaf area index (m²/m²)', xlim=c(0,7), ylim=c(0,5), pch=15)
   i <- DATA$Loc_yr=="Benue_2016"
   points(x=DATA[i,"LAI"], y=DATA[i,"ln_FLI"], pch=0)
   i <- DATA[,"Loc_yr"]=="Edo_2016"
