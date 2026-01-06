@@ -22,7 +22,7 @@ lcp <- system.file(package="LINTULcassava")
 #crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
-
+LC_run = LINTULcassava:::LC_MODEL2
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
   p <- Adiele("Edo", year)
@@ -39,7 +39,8 @@ for(year in c(2016, 2017)) {
 	  
   Wlim_CRS <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
-	  
+
+		  
 	#- Benue ----------------------------------------------------------------#
   p <- Adiele("Benue", year)
   Pot_Ben <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
@@ -49,9 +50,9 @@ for(year in c(2016, 2017)) {
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
-##saveRDS(mod, "mod2.rds")
-#m <- readRDS("mod2.rds")
-#all.equal(m, mod)
+##saveRDS(mod, "mod3.rds")
+m <- readRDS("mod3.rds")
+all.equal(m, mod)
 ```
 
 
