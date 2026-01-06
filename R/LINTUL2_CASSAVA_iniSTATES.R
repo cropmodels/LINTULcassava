@@ -37,8 +37,9 @@ LC_iniSTATES <-function(pars){
               PTRAN   = 0,    # mm    :    potential transpiration
               PEVAP   = 0,
               RUNOFF = 0,
-              RNINTC = 0, 
-              RDRAIN = 0,     # mm    :    potential evaporation
+              # two rate names changed to state names by removing R
+			  NINTC = 0, 
+			  DRAIN = 0,     # mm    :    potential evaporation
               REDISTLVG = 0,
               REDISTSO = 0,
               PUSHREDISTSUM = 0, # deg. C  :    Temperature sum of the redistribution after dormancy
