@@ -1,18 +1,40 @@
+# this is the same model but implementing it similar to how I would do it in C++
+# to test it prior to translation
+	   
+get_rates <- function(Time, W, S, crop, soil, management, DELT) {
 
-get_rates <- function(Time, W, S, crop, soil, DELT) {
-
-    #Daily weather data. Use the weather data from the last day 
-    #if smaller time-steps are taken
-    # Determine weather conditions
-	RTRAIN <- W$RAIN                   # mm d-1           : rain rate, mm d-1
-	DTEFF  <- max(0, W$DAVTMP - crop$TBASE) # Deg. C           : effective daily temperature
-	RPAR  <- crop$FPAR * W$DTR             # PAR MJ m-2 d-1   : PAR radiation
     
-    # Determine rates when crop is still growing
-    if (S$TSUM < crop$FINTSUM) {
-      
+    if (S$TSUM >= crop$FINTSUM) {
+		# If the plant is not growing anymore all plant related rates are set to 0.
+		return(as.list(c(
+			ROOTD=0,# m d-1
+			WA=0,   # mm d-1  
+			TSUM=0, RTSUMCROP=0, # Deg. C d-1
+			TSUMCROPLEAFAGE=0, DORMTSUM=0,# Deg. C d-1
+			PUSHDORMRECTSUM=0, PUSHREDISTENDTSUM=0, # Deg. C d-1
+			DORMTIME=0, # d d-1
+			WCUTTING=0, # g DM m-2 d-1
+			TRAIN=0,# mm d-1
+			PAR=0,# MJ m-2 d-1
+			LAI=0,# m2 m-2 d-1
+			WLVD=0, WLV=0, WST=0, WSO=0, WRT=0, WLVG=0, # g DM m-2 d-1
+			TRAN=0, EVAP=0, PTRAN=0, PEVAP=0, RUNOFF=0, NINTC=0, DRAIN=0, # mm d-1
+            REDISTLVG=0, REDISTSO=0,# g DM m-2 d-1
+            PUSHREDISTSUM=0,# Deg. C d-1
+            WSOFASTRANSLSO=0) # g DM m-2 d-1
+		))
+    } else {      
+		
+		R <- list()
+
+		#Daily weather data. Use the weather data from the last day if smaller time-steps are taken
+		R$TRAIN <- W$RAIN                   # mm d-1           : rain rate, mm d-1
+		DTEFF  <- max(0, W$DAVTMP - crop$TBASE) # Deg. C           : effective daily temperature
+		R$PAR  <- crop$FPAR * W$DTR             # PAR MJ m-2 d-1   : PAR radiation
+
+
       # Temperature sum after planting
-      RTSUM <- DTEFF * ifelse((Time - management$DOYPL) >= 0, 1, 0) # Deg. C 
+		R$TSUM <- DTEFF * ifelse((Time - management$DOYPL) >= 0, 1, 0) # Deg. C 
       
       # Determine water content of rooted soil
       # RH: Use of WC  is confusing as it also a state variable 
@@ -22,17 +44,10 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       # emergence occurs (1) when the temperature sum exceeds the temperature sum needed for emergence. And (2)
       # when enough water is available in the soil. 
       
-      if((WC-soil$WCWP) >= 0 && (S$TSUM-crop$OPTEMERGTSUM) >= 0) { 	
-        emerg1 <- 1} else { emerg1 <- 0 }
-      
-      # once the crop is established is does not disappear again
-      if(S$TSUMCROP > 0) {									
-        emerg2 <- 1 } else { emerg2 <- 0}
-      
-      EMERG  <- max(emerg1,emerg2) # (-)
+      EMERG <- ((S$TSUMCROP > 0) || ((WC-soil$WCWP) >= 0 && (S$TSUM-crop$OPTEMERGTSUM) >= 0))
       
       # Emergence of the crop is used to calculate the temperature sum of the crop.
-      RTSUMCROP <- DTEFF*EMERG      # Deg. C
+      R$TSUMCROP <- DTEFF*EMERG      # Deg. C
       
       #------------------------------------FIBROUS ROOT GROWTH------------------------------------------#
       # If the soil water content drops to, or below, wilting point fibrous root growth stops.
@@ -41,46 +56,46 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       # the emergence of the crop and the constraints mentioned above.
       
       if ((S$ROOTD-soil$ROOTDM) < 0 && (WC-soil$WCWP) >= 0) {
-        RROOTD <- crop$RRDMAX * EMERG               # mm d-1
+        R$ROOTD <- crop$RRDMAX * EMERG               # mm d-1
       }else{ 
-        RROOTD = 0
+        R$ROOTD = 0
       }
       
       
       #----------------------------------------WATER BALANCE---------------------------------------------#
       # Explored water of new soil water layers by the roots, explored soil is assumed to have a FC soil moisture
       # content).
-      EXPLOR <- 1000 * RROOTD * soil$WCFC                # mm d-1
+      EXPLOR <- 1000 * R$ROOTD * soil$WCFC                # mm d-1
       
       # Interception of the canopy, depends on the amount of rainfall and the LAI. 
-      RNINTC <- min(RTRAIN, (crop$FRACRNINTC * S$LAI))     # mm d-1
+      R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))     # mm d-1
       
       # Potential evaporation and transpiration are calculated using the Penman equation.
-      PENM   <- LINTULcassava:::penman(W$DAVTMP, W$VP, W$DTR, S$LAI, W$WN, RNINTC)
-      RPTRAN <- PENM$PTRAN                          # mm d-1
-      RPEVAP <- PENM$PEVAP                          # mm d-1
+      PENM   <- LINTULcassava:::penman(W$DAVTMP, W$VP, W$DTR, S$LAI, W$WN, R$NINTC)
+      R$PTRAN <- PENM$PTRAN                          # mm d-1
+      R$PEVAP <- PENM$PEVAP                          # mm d-1
       # Soil moisture content at severe drought and the critical soil moisture content are calculated to see if
       # drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
       WCSD <- soil$WCWP * crop$TWCSD
-      WCCR <- soil$WCWP + pmax(WCSD-soil$WCWP, (RPTRAN/(RPTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
+      WCCR <- soil$WCWP + pmax(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
 
       # The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.
-      EVA   <- LINTULcassava:::evaptr(RPEVAP, RPTRAN, S$ROOTD, S$WA, soil$WCAD,
+      EVA   <- LINTULcassava:::evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD,
 				soil$WCWP,crop$TWCSD,soil$WCFC, soil$WCWET, soil$WCST, crop$TRANCO, DELT)
-      RTRAN <- EVA$TRAN                             # mm d-1
-      REVAP <- EVA$EVAP                             # mm d-1
+      R$TRAN <- EVA$TRAN                             # mm d-1
+      R$EVAP <- EVA$EVAP                             # mm d-1
       
       # The transpiration reduction factor is defined as the ratio between actual and potential transpiration
-      TRANRF <- ifelse(RPTRAN <= 0, 1, RTRAN/RPTRAN) # (-)
+      TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
       
       # Drainage and Runoff is calculated using the drunir function.
-      DRUNIR  <- LINTULcassava:::drunir(RTRAIN, RNINTC, REVAP, RTRAN, management$IRRIGF, soil$DRATE,
+      DRUNIR  <- LINTULcassava:::drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, management$IRRIGF, soil$DRATE,
 	                                 DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
-      RDRAIN  <- DRUNIR$DRAIN                      # mm d-1
-      RRUNOFF <- DRUNIR$RUNOFF                     # mm d-1
+      R$DRAIN  <- DRUNIR$DRAIN                      # mm d-1
+      R$RUNOFF <- DRUNIR$RUNOFF                     # mm d-1
       
       # Rate of change of soil water amount
-      RWA <- (RTRAIN + EXPLOR + DRUNIR$IRRIG) - (RNINTC + RRUNOFF + RTRAN + REVAP + RDRAIN)  # mm d-1
+      R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
       WC  <- 0.001 * S$WA/S$ROOTD                      # (-)
       
       #-------------------------------------------DORMANCY AND RECOVERY-------------------------------------------#
@@ -110,11 +125,12 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       # (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum. 
       # (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM. 
       # (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching. 
+	  
       PUSHREDISTEND <- pmax(ifelse((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0, 1, 0), 
                             ifelse((S$REDISTLVG - crop$WLVGNEWN)>= 0, 1, 0),
                             ifelse((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0, 1, 0)) * ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
       
-      PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, 1, 0)* (1 - S$PUSHREDISTEND)  # (-)
+      PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, 1, 0) * (1 - PUSHREDISTEND)  # (-)
 	  
 	  
       PUSHDORMREC <- pushdor*ifelse(-S$DORMTSUM >= 0, 0, 1) * (1 - PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0) # (-)
@@ -122,25 +138,25 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       DORMANCY <- pmax(dormancy, PUSHDORMREC) * (1 - PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0)     # (-)
       
       # The temperature sums related to the dormancy and recovery periods.
-      RDORMTSUM = DTEFF * DORMANCY - (S$DORMTSUM/DELT) * PUSHREDIST # Deg. C
-      RPUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (1 - PUSHDORMREC) * (1 - PUSHREDIST)  # Deg. C
-      RPUSHREDISTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTSUM/DELT) * S$PUSHREDISTEND  # Deg. C
-      RPUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (1 - S$PUSHREDISTEND) # Deg. C   
+      R$DORMTSUM = DTEFF * DORMANCY - (S$DORMTSUM/DELT) * PUSHREDIST # Deg. C
+      R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (1 - PUSHDORMREC) * (1 - PUSHREDIST)  # Deg. C
+      R$PUSHREDISTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTSUM/DELT) * PUSHREDISTEND  # Deg. C
+      R$PUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (1 - PUSHREDISTEND) # Deg. C   
       
       # No. of days in dormancy
-      RDORMTIME = DORMANCY  # d
+      R$DORMTIME = DORMANCY  # d
       
       # Dry matter redistribution after dormancy. The rate of redistribution of the storage roots dry matter to 
       # leaf dry matter. A certain fraction is lost for the conversion of storage organs dry matter to leaf dry
       # matter.
-      RREDISTSO = crop$RRREDISTSO * S$WSO * PUSHREDIST - (S$REDISTSO/DELT) *ifelse(-S$DORMTSUM >= 0, 0, 1)  # g DM m-2 d-1
-      RREDISTLVG = crop$SO2LV * RREDISTSO * (1- DORMANCY)  # g DM m-2 d-1
-      RREDISTMAINTLOSS = (1 - crop$SO2LV) * RREDISTSO    # g DM m-2 d-1
+      R$REDISTSO = crop$RRREDISTSO * S$WSO * PUSHREDIST - (S$REDISTSO/DELT) *ifelse(-S$DORMTSUM >= 0, 0, 1)  # g DM m-2 d-1
+      R$REDISTLVG = crop$SO2LV * R$REDISTSO * (1- DORMANCY)  # g DM m-2 d-1
+      RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO    # g DM m-2 d-1
       
       
       #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
-      PARINT <- RPAR * (1 - exp(-crop$K_EXT * S$LAI))                             # MJ m-2 d-1
+      PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))                             # MJ m-2 d-1
       LUE <- crop$LUE_OPT * approx(crop$TTB[,1], crop$TTB[,2], W$DAVTMP)$y   # g DM m-2 d-1
       
       GTOTAL <- LUE * PARINT * TRANRF * (1 - DORMANCY)  # g DM m-2 d-1
@@ -149,7 +165,7 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       
       #-------- AGE
       # The calculation of the physiological leaf age.  
-      RTSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
+      R$TSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
       
       # Relative death rate due to aging depending on leaf age and the daily average temperature. 
       RDRDV = ifelse(S$TSUMCROPLEAFAGE - crop$TSUMLLIFE >= 0, approx(crop$RDRT[,1], crop$RDRT[,2], W$DAVTMP)$y, 0) # d-1
@@ -188,12 +204,12 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       SLA <- crop$SLA_MAX * FRACSLACROPAGE    # m2 g-1 DM
       
       # The rate of storage root DM production with DM supplied by the leaves before abscission. 
-      RWSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (1 - DORMANCY)        # g storage root DM m-2 d-1
+      R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (1 - DORMANCY)        # g storage root DM m-2 d-1
       
       # Decrease in leaf weight due to leaf senesence. 
       #      DLV <- (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)             # g leaves DM m-2 d-1
       DLV <- S$WLVG * RDR * (1 - DORMANCY)                                 # g leaves DM m-2 d-1
-      RWLVD <- (DLV - RWSOFASTRANSLSO)                                   # g leaves DM m-2 d-1
+      R$WLVD <- (DLV - R$WSOFASTRANSLSO)                                   # g leaves DM m-2 d-1
       
       
       #------------------------------------PARTITIONING---------------------------------------------------#
@@ -221,26 +237,26 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       
       # Stem cutting partioning at emergence. 
       if (EMERG == 1 && S$WST == 0) {
-        RWCUTTING <- S$WCUTTING *(-crop$FST_CUTT - crop$FRT_CUTT - crop$FLV_CUTT - crop$FSO_CUTT) 
-        RWRT <- crop$WCUTTINGIP * crop$FRT_CUTT      # g fibrous root DM m-2 d-1
-        RWST <- crop$WCUTTINGIP * crop$FST_CUTT      # g stem DM m-2 d-1
-        RWLVG <- crop$WCUTTINGIP * crop$FLV_CUTT     # g leaves DM m-2 d-1   
-        RWSO  <- crop$WCUTTINGIP * crop$FSO_CUTT     # g storage root DM m-2 d-1
+        R$WCUTTING <- S$WCUTTING *(-crop$FST_CUTT - crop$FRT_CUTT - crop$FLV_CUTT - crop$FSO_CUTT) 
+        R$WRT <- crop$WCUTTINGIP * crop$FRT_CUTT      # g fibrous root DM m-2 d-1
+        R$WST <- crop$WCUTTINGIP * crop$FST_CUTT      # g stem DM m-2 d-1
+        R$WLVG <- crop$WCUTTINGIP * crop$FLV_CUTT     # g leaves DM m-2 d-1   
+        R$WSO  <- crop$WCUTTINGIP * crop$FSO_CUTT     # g storage root DM m-2 d-1
       } else if (S$TSUM > crop$OPTEMERGTSUM) { 
-        RWCUTTING <- -crop$RDRWCUTTING * S$WCUTTING * ifelse((S$WCUTTING-WCUTTINGMIN) >= 0, 1, 0) * TRANRF * EMERG * (1 - DORMANCY)  # g stem cutting DM m-2 d-1
-        RWRT   <- (abs(GTOTAL)+abs(RWCUTTING)) * FRT	# g fibrous root DM m-2 d-1
-        RWST   <- (abs(GTOTAL)+abs(RWCUTTING)) * FST	# g stem DM m-2 d-1
-        RWLVG  <- (abs(GTOTAL)+abs(RWCUTTING)) * FLV - DLV + RREDISTLVG * PUSHREDIST # g leaves DM m-2 d-1 
-        RWSO   <- (abs(GTOTAL)+abs(RWCUTTING)) * FSO + RWSOFASTRANSLSO - RREDISTSO	 # g storage root DM m-2 d-1		  
+        R$WCUTTING <- -crop$RDRWCUTTING * S$WCUTTING * ifelse((S$WCUTTING-WCUTTINGMIN) >= 0, 1, 0) * TRANRF * EMERG * (1 - DORMANCY)  # g stem cutting DM m-2 d-1
+        R$WRT   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FRT	# g fibrous root DM m-2 d-1
+        R$WST   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FST	# g stem DM m-2 d-1
+        R$WLVG  <- (abs(GTOTAL)+abs(R$WCUTTING)) * FLV - DLV + R$REDISTLVG * PUSHREDIST # g leaves DM m-2 d-1 
+        R$WSO   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FSO + R$WSOFASTRANSLSO - R$REDISTSO	 # g storage root DM m-2 d-1		  
       } else{
-        RWCUTTING <- 0   # g stem cutting DM m-2 d-1
-        RWRT <- 0        # g fibrous root DM m-2 d-1
-        RWST <- 0        # g stem DM m-2 d-1
-        RWLVG <- 0       # g leaves DM m-2 d-1 
-        RWSO  <- 0       # g storage root DM m-2 d-1
+        R$WCUTTING <- 0   # g stem cutting DM m-2 d-1
+        R$WRT <- 0        # g fibrous root DM m-2 d-1
+        R$WST <- 0        # g stem DM m-2 d-1
+        R$WLVG <- 0       # g leaves DM m-2 d-1 
+        R$WSO  <- 0       # g storage root DM m-2 d-1
       }
       # Growth of the leaf weight
-      RWLV = RWLVG+RWLVD                  # g leaves DM m-2 d-1
+      R$WLV = R$WLVG + R$WLVD                  # g leaves DM m-2 d-1
       # Total biomass increase 
       #RH: this is total biomass (state) not the increase (rate) (apparently not used)
 	  #WGTOTAL = WLV+WST+WCUTTING+WSO+WRT  # g DM m-2 d-1
@@ -248,57 +264,24 @@ get_rates <- function(Time, W, S, crop, soil, DELT) {
       #--------------------------------------------LEAF GROWTH---------------------------------------------------#
       
       # Green leaf weight 
-      GLV <- FLV * (GTOTAL + abs(RWCUTTING)) + RREDISTLVG * PUSHREDIST  # g green leaves DM m-2 d-1
+      GLV <- FLV * (GTOTAL + abs(R$WCUTTING)) + R$REDISTLVG * PUSHREDIST  # g green leaves DM m-2 d-1
       
       # Growth of the leaf are index
       GLAI <- LINTULcassava:::gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
-				crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, RWCUTTING, FLV,
+				crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
                 crop$LAIEXPOEND, DORMANCY)     # m2 m-2 d-1
       
       # Change in LAI due to new growth of leaves
-      RLAI <- GLAI - DLAI    # m2 m-2 d-1
+      R$LAI <- GLAI - DLAI    # m2 m-2 d-1
 
       #Combined 30 rates
-      RATES <- c(RROOTD=RROOTD, RWA=RWA, RTSUM=RTSUM, RTSUMCROP=RTSUMCROP, 
-                 RTSUMCROPLEAFAGE=RTSUMCROPLEAFAGE,RDORMTSUM=RDORMTSUM,
-                 RPUSHDORMRECTSUM=RPUSHDORMRECTSUM,RPUSHREDISTENDTSUM=RPUSHREDISTENDTSUM, 
-                 RDORMTIME=RDORMTIME, RWCUTTING=RWCUTTING, 
-                 RTRAIN=RTRAIN,RPAR=RPAR,RLAI=RLAI,
-                 RWLVD=RWLVD, RWLV=RWLV,RWST=RWST,RWSO=RWSO,RWRT=RWRT, 
-                 RWLVG=RWLVG,RTRAN=RTRAN,REVAP=REVAP,RPTRAN=RPTRAN,RPEVAP=RPEVAP, RRUNOFF=RRUNOFF, RNINTC=RNINTC, RDRAIN=RDRAIN, 
-                 RREDISTLVG=RREDISTLVG,RREDISTSO=RREDISTSO,RPUSHREDISTSUM=RPUSHREDISTSUM,RWSOFASTRANSLSO=RWSOFASTRANSLSO) 
-      #Auxiliaries
-      #Converts g m-2 to t ha-1
-	  # RH these are computed prior to integration. Is that desirable?
-      AUX <- c(WSOTHA = S$WSO * 0.01, TRANRF = TRANRF, HI = S$WSO / (S$WSO + S$WLV + S$WST + S$WRT))
-      
-      
-    }else{
-      # If the plant is not growing anymore all plant related rates are set to 0.
-	   
-      RATES <- c(RROOTD=0,# m d-1
-                 RWA=0,   # mm d-1  
-                 RTSUM=0, RTSUMCROP=0, # Deg. C d-1
-                 RTSUMCROPLEAFAGE=0, RDORMTSUM=0,# Deg. C d-1
-                 RPUSHDORMRECTSUM=0, RPUSHREDISTENDTSUM=0, # Deg. C d-1
-                 RDORMTIME=0, # d d-1
-                 RWCUTTING=0, # g DM m-2 d-1
-                 RTRAIN=0,# mm d-1
-                 RPAR=0,# MJ m-2 d-1
-                 RLAI=0,# m2 m-2 d-1
-                 RWLVD=0, RWLV=0,RWST=0,RWSO=0,RWRT=0, RWLVG=0, # g DM m-2 d-1
-                 RTRAN=0,REVAP=0,RPTRAN=0,RPEVAP=0, RRUNOFF=0, RNINTC=0, RDRAIN=0, # mm d-1
-                 RREDISTLVG=0,RREDISTSO=0,# g DM m-2 d-1
-                 RPUSHREDISTSUM=0,# Deg. C d-1
-                 RWSOFASTRANSLSO=0) # g DM m-2 d-1
-                 
-      #Auxiliaries
-      AUX <- c(WSOTHA = 0, TRANRF = NULL, HI = NULL)
+      #RATES <- c(RROOTD=RROOTD, RWA=RWA, RTSUM=RTSUM, RTSUMCROP=RTSUMCROP, RTSUMCROPLEAFAGE=RTSUMCROPLEAFAGE, RDORMTSUM=RDORMTSUM, RPUSHDORMRECTSUM=RPUSHDORMRECTSUM, RPUSHREDISTENDTSUM=RPUSHREDISTENDTSUM,           RDORMTIME=RDORMTIME, RWCUTTING=RWCUTTING, RTRAIN=RTRAIN, RPAR=RPAR, RLAI=RLAI,                 RWLVD=RWLVD, RWLV=RWLV, RWST=RWST, RWSO=RWSO,RWRT=RWRT, RWLVG=RWLVG, RTRAN=RTRAN, REVAP=REVAP, RPTRAN=RPTRAN, RPEVAP=RPEVAP, RRUNOFF=RRUNOFF, RNINTC=RNINTC, RDRAIN=RDRAIN, RREDISTLVG=RREDISTLVG, RREDISTSO=RREDISTSO,RPUSHREDISTSUM=RPUSHREDISTSUM, RWSOFASTRANSLSO=RWSOFASTRANSLSO) 
+
     }
-	list(rates=RATES, aux=AUX)
+	R
 }
 
-
+	   
 LC_MODEL2 <- function(weather, crop, soil, management, control){
 
 	DELT <- control$timestep
@@ -313,13 +296,26 @@ LC_MODEL2 <- function(weather, crop, soil, management, control){
 	out <- vector(length=length(steps), mode="list")
 	S <- LINTULcassava:::LC_iniSTATES(pars)
 	for (i in 1:length(steps)) {
-		R <- get_rates(steps[i], wth[i, ], as.list(S), crop, soil, DELT)
+#	for (i in 1:405) {
+		R <- get_rates(steps[i], wth[i, ], as.list(S), crop, soil, management, DELT)
+		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
+				HI = S[["WSO"]] / sum(S[c("WSO", "WLV", "WST", "WRT")])) 
+		# order 
+		R <- R[names(S)]
+		rates <- unlist(R)
+		names(rates) <- paste0("R", names(rates))
 		S <- unlist(S)
-		out[[i]] <- c(S, unlist(R$aux), R$rates)
-		S <- S + R$rates
+		out[[i]] <- c(S, AUX, rates)
+		S <- S + rates
     }
 	out <- do.call(rbind, out)
+#	steps <- steps[1:405]
 	j <- 1:length(steps)
-	data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=wth$DOYS[j], out)
+	out <- data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=wth$DOYS[j], out)
+	out
 }
 
+#i = 405
+#Time <- steps[i]; W=wth[i, ]; S=as.list(S)
+#new[405, c(42, 44, 45, 50, 52, 54, 56, 64, 65, 66)]
+#old[405, c(42, 44, 45, 50, 52, 54, 56, 64, 65, 66)]
