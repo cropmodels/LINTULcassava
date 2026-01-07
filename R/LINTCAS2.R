@@ -37,10 +37,8 @@ get_states <- function(S, R) {
 	   
 get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 
-    
-    if (S$TSUM >= crop$FINTSUM) {
-		# If the plant is not growing anymore all plant related rates are set to 0.
-		return(as.list(c(
+
+	R <- as.list(c(
 			ROOTD=0,# m d-1
 			WA=0,   # mm d-1  
 			TSUM=0, RTSUMCROP=0, # Deg. C d-1
@@ -56,11 +54,14 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
             REDISTLVG=0, REDISTSO=0,# g DM m-2 d-1
             PUSHREDISTSUM=0,# Deg. C d-1
             WSOFASTRANSLSO=0) # g DM m-2 d-1
-		))
+		)
+
+    
+    if (S$TSUM >= crop$FINTSUM) {
+		# If the plant is not growing anymore all plant related rates are set to 0.
+		return(R)
     } else {      
 		
-		R <- list()
-
 		#Daily weather data. 
 		SatVP_TMMN = 0.611 * exp(17.4 * W$TMIN / (W$TMIN + 239)) 
 		SatVP_TMMX = 0.611 * exp(17.4 * W$TMAX / (W$TMAX + 239)) 
@@ -89,7 +90,7 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       EMERG <- ((S$TSUMCROP > 0) || ((WC-soil$WCWP) >= 0 && (S$TSUM-crop$OPTEMERGTSUM) >= 0))
       
       # Emergence of the crop is used to calculate the temperature sum of the crop.
-      R$TSUMCROP <- DTEFF*EMERG      # Deg. C
+      R$TSUMCROP <- DTEFF * EMERG      # Deg. C
       
       #------------------------------------FIBROUS ROOT GROWTH------------------------------------------#
       # If the soil water content drops to, or below, wilting point fibrous root growth stops.
@@ -99,10 +100,9 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       
       if ((S$ROOTD-soil$ROOTDM) < 0 && (WC-soil$WCWP) >= 0) {
         R$ROOTD <- crop$RRDMAX * EMERG               # mm d-1
-      }else{ 
+      } else { 
         R$ROOTD = 0
       }
-      
       
       #----------------------------------------WATER BALANCE---------------------------------------------#
       # Explored water of new soil water layers by the roots, explored soil is assumed to have a FC soil moisture
@@ -139,29 +139,21 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       # Rate of change of soil water amount
       R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
       WC  <- 0.001 * S$WA/S$ROOTD                      # (-)
+
+	if (!EMERG) return(R)
+
       
-      #-------------------------------------------DORMANCY AND RECOVERY-------------------------------------------#
+      #------------------------DORMANCY AND RECOVERY-------------------------------------------#
       # The crop enters the dormancy phase as the soil water content is lower than the soil water content at 
       # severe drought and as the LAI is lower than the minimal LAI. 
-      if ((WC-WCSD) <= 0 && (S$LAI - crop$LAI_MIN) <= 0){
-        dormancy = 1
-      } else {
-        dormancy = 0
-      }
+      dormancy <- ((WC-WCSD) <= 0) && ((S$LAI - crop$LAI_MIN) <= 0)
       
       # The crop goes out of dormancy if the water content is higher than a certain recovery water content and as the water content is larger than the wilting point soil moisture content. 
-      if ((WC - crop$RECOV * WCCR) >= 0 && (WC - soil$WCWP) >= 0){
-        pushdor = 1
-      } else {
-        pushdor = 0
-      }
+      pushdor <- ((WC - crop$RECOV * WCCR) >= 0) && ((WC - soil$WCWP) >= 0)
       
       # The redistributed fraction of storage root DM to the leaves.  
-      if (S$WSO == 0) {
-        WSOREDISTFRAC = 1
-      } else {
-        WSOREDISTFRAC = S$REDISTSO/S$WSO
-      }
+      WSOREDISTFRAC <- ifelse(S$WSO == 0, 1, S$REDISTSO/S$WSO)
+ 
       
       # Three push functions are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
       # (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum. 
@@ -172,22 +164,17 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 					((S$REDISTLVG - crop$WLVGNEWN)>= 0) || 
 					((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0)) && 
 					(S$PUSHREDISTSUM > 0))
-	  
-#		PUSHREDISTEND <- max(ifelse((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0, 1, 0), 
-#                            ifelse((S$REDISTLVG - crop$WLVGNEWN)>= 0, 1, 0),
-#                            ifelse((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0, 1, 0)) * 
-#							ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
-      
- 
+
       PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, !PUSHREDISTEND, FALSE)  # (-)
 	  
-      PUSHDORMREC <- pushdor*ifelse(-S$DORMTSUM >= 0, 0, 1) * (!PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0) # (-)
+      PUSHDORMREC <- pushdor && (S$DORMTSUM > 0) && (!PUSHREDIST) && ((S$TSUMCROP - crop$TSUMSBR) >= 0) # (-)
       
-      DORMANCY <- pmax(dormancy, PUSHDORMREC) * (!PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0)     # (-)
+      DORMANCY <- (dormancy || PUSHDORMREC) && (!PUSHREDIST) && ((S$TSUMCROP - crop$TSUMSBR) >= 0)     # (-)
       
       # The temperature sums related to the dormancy and recovery periods.
       R$DORMTSUM = DTEFF * DORMANCY - (S$DORMTSUM/DELT) * PUSHREDIST # Deg. C
-      R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (1 - PUSHDORMREC) * (!PUSHREDIST)  # Deg. C
+      R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (!(PUSHDORMREC || PUSHREDIST))  # Deg. C
+	  
       R$PUSHREDISTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTSUM/DELT) * PUSHREDISTEND  # Deg. C
       R$PUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (!PUSHREDISTEND) # Deg. C   
       
@@ -198,7 +185,7 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       # leaf dry matter. A certain fraction is lost for the conversion of storage organs dry matter to leaf dry
       # matter.
       R$REDISTSO = crop$RRREDISTSO * S$WSO * PUSHREDIST - (S$REDISTSO/DELT) *ifelse(-S$DORMTSUM >= 0, 0, 1)  # g DM m-2 d-1
-      R$REDISTLVG = crop$SO2LV * R$REDISTSO * (1- DORMANCY)  # g DM m-2 d-1
+      R$REDISTLVG = crop$SO2LV * R$REDISTSO * (!DORMANCY)  # g DM m-2 d-1
       RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO    # g DM m-2 d-1
       
       
@@ -207,7 +194,7 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))                             # MJ m-2 d-1
       LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
       
-      GTOTAL <- LUE * PARINT * TRANRF * (1 - DORMANCY)  # g DM m-2 d-1
+      GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
       
       #-------------------------------------LEAF SENESCENCE------------------------------------------------------#
       
@@ -223,40 +210,34 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       # Relative death rate due to self shading, depending on a critical leaf area index at which leaf shedding is
       # induced. Leaf shedding is limited to a maximum leaf shedding per day. 
       RDRSH <- crop$RDRSHM * (S$LAI-crop$LAICR) / crop$LAICR          # d-1
-      
-      if(RDRSH < 0) {
-        RDRSH <- 0                    # d-1
-      } else if (RDRSH >=crop$RDRSHM) {
-        RDRSH <- crop$RDRSHM               # d-1
-      }
+      RDRSH <- min(max(0, RDRSH), crop$RDRSHM)  
       #--------
       
       #-------- DROUGHT
       # ENSHED triggers enhanced leaf senescence due to severe drought or excessive soil water. It assumes that drought or excessive water does not affect young leaves. It only affects leaves that have a reached a given fraction of the leaf age. 
 
-      ENHSHED <- max(ifelse((WC-WCSD) >= 0, 0, 1), 
-				ifelse((WC-soil$WCWET) >= 0, 1, 0)) *
-				ifelse((S$TSUMCROPLEAFAGE - crop$FRACTLLFENHSH * crop$TSUMLLIFE) >= 0, 1, 0)    # (-)
+      ENHSHED <- (((WC-WCSD) < 0) || ((WC-soil$WCWET) >= 0)) && 
+				((S$TSUMCROPLEAFAGE - crop$FRACTLLFENHSH * crop$TSUMLLIFE) >= 0)    # (-)
       
       # Relative death rate due to severe drought
-      RDRSD <- crop$RDRB  * ENHSHED    # d-1
+      RDRSD <- crop$RDRB * ENHSHED    # d-1
       #--------
       
       # Effective relative death rate and the resulting decrease in LAI.
       RDR <- ifelse((S$TSUMCROPLEAFAGE - crop$TSUMLLIFE) >= 0, max(RDRDV, RDRSH, RDRSD), 0) 	# d-1
       #      DLAI  <- LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    # m2 m-2 d-1
-      DLAI  <- S$LAI * RDR * (1 - DORMANCY)    # m2 m-2 d-1
+      DLAI  <- S$LAI * RDR * (!DORMANCY)    # m2 m-2 d-1
       
       # Fraction of the maximum specific leaf area index depending on the temperature sum of the crop. And its specific leaf area index. 
       FRACSLACROPAGE <- stats::approx(crop$FRACSLATB[,1], crop$FRACSLATB[,2], S$TSUMCROP)$y  # (-)
       SLA <- crop$SLA_MAX * FRACSLACROPAGE    # m2 g-1 DM
       
       # The rate of storage root DM production with DM supplied by the leaves before abscission. 
-      R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (1 - DORMANCY)        # g storage root DM m-2 d-1
+      R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (!DORMANCY)        # g storage root DM m-2 d-1
       
       # Decrease in leaf weight due to leaf senesence. 
       #      DLV <- (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)             # g leaves DM m-2 d-1
-      DLV <- S$WLVG * RDR * (1 - DORMANCY)                                 # g leaves DM m-2 d-1
+      DLV <- S$WLVG * RDR * (!DORMANCY)                                 # g leaves DM m-2 d-1
       R$WLVD <- (DLV - R$WSOFASTRANSLSO)                                   # g leaves DM m-2 d-1
       
       
@@ -275,7 +256,7 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       
       #When plants emerge from dormancy, leaf growth may go far too quickly. 
       #Adjust partitioning if LAI too large
-      FLV_ADJ  <- FLV * max(0, min(1,(S$LAI-crop$LAICR) / crop$LAICR))
+      FLV_ADJ  <- FLV * max(0, min(1, (S$LAI-crop$LAICR) / crop$LAICR))
       FLV <- FLV - FLV_ADJ
       FSO <- FSO + 0.66 * FLV_ADJ #Not used assimilated go for 2/3 to storage roots
       FST <- FST + 0.34 * FLV_ADJ #Not used assimilated go for 1/3 to stem
@@ -284,19 +265,19 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       WCUTTINGMIN <- crop$WCUTTINGMINPRO * crop$WCUTTINGIP
       
       # Stem cutting partioning at emergence. 
-      if (EMERG == 1 && S$WST == 0) {
+      if (EMERG && (S$WST == 0)) {
         R$WCUTTING <- S$WCUTTING *(-crop$FST_CUTT - crop$FRT_CUTT - crop$FLV_CUTT - crop$FSO_CUTT) 
         R$WRT <- crop$WCUTTINGIP * crop$FRT_CUTT      # g fibrous root DM m-2 d-1
         R$WST <- crop$WCUTTINGIP * crop$FST_CUTT      # g stem DM m-2 d-1
         R$WLVG <- crop$WCUTTINGIP * crop$FLV_CUTT     # g leaves DM m-2 d-1   
         R$WSO  <- crop$WCUTTINGIP * crop$FSO_CUTT     # g storage root DM m-2 d-1
       } else if (S$TSUM > crop$OPTEMERGTSUM) { 
-        R$WCUTTING <- -crop$RDRWCUTTING * S$WCUTTING * ifelse((S$WCUTTING-WCUTTINGMIN) >= 0, 1, 0) * TRANRF * EMERG * (1 - DORMANCY)  # g stem cutting DM m-2 d-1
+        R$WCUTTING <- -crop$RDRWCUTTING * S$WCUTTING * ((S$WCUTTING-WCUTTINGMIN) >= 0) * TRANRF * EMERG * (!DORMANCY)  # g stem cutting DM m-2 d-1
         R$WRT   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FRT	# g fibrous root DM m-2 d-1
         R$WST   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FST	# g stem DM m-2 d-1
         R$WLVG  <- (abs(GTOTAL)+abs(R$WCUTTING)) * FLV - DLV + R$REDISTLVG * PUSHREDIST # g leaves DM m-2 d-1 
         R$WSO   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FSO + R$WSOFASTRANSLSO - R$REDISTSO	 # g storage root DM m-2 d-1		  
-      } else{
+      } else {
         R$WCUTTING <- 0   # g stem cutting DM m-2 d-1
         R$WRT <- 0        # g fibrous root DM m-2 d-1
         R$WST <- 0        # g stem DM m-2 d-1

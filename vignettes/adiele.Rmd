@@ -22,7 +22,7 @@ lcp <- system.file(package="LINTULcassava")
 #crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
-#LINTCAS = LINTULcassava:::LINTCAS2
+LINTCAS = LINTULcassava:::LINTCAS2
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
   p <- Adiele("Edo", year)
