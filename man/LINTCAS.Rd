@@ -1,6 +1,6 @@
-\name{LC_run}
+\name{LINTCAS}
 
-\alias{LC_run}
+\alias{LINTCAS}
 
 \title{run the model}
 
@@ -9,7 +9,7 @@ Run the model
 }
 
 \usage{
-LC_run(weather, crop, soil, management, control)
+LINTCAS(weather, crop, soil, management, control)
 }
 
 \arguments{
@@ -29,6 +29,6 @@ data.frame
 crop <- LC_crop("Adiele")
 p <- Adiele("Edo", 2016)
 
-pot <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
-wlim <- LC_run(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
+pot <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
+wlim <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
 }
