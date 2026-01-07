@@ -13,18 +13,18 @@
 # cassava using the LINTUL model. Field Crops Research, 219, 256-272.
 #
 #--------------------------------------------------------------------------------------------------#
-penman <-function(DAVTMP,VP,DTR,LAI,WN,RNINTC) {
+penman <-function(TAVG,VAPR,SRAD,LAI,WIND,RNINTC) {
   
-  DTRJM2 <-DTR * 1E6        # J m-2 d-1     :    Daily radiation in Joules 
+  DTRJM2 <-SRAD * 1E6        # J m-2 d-1     :    Daily radiation in Joules 
   BOLTZM <-5.668E-8 	      # J m-1 s-1 K-4 :    Stefan-Boltzmann constant 
   LHVAP  <-2.4E6            # J kg-1        :    Latent heat of vaporization 
   PSYCH  <-0.067            # kPa deg. C-1  :    Psychrometric constant
   
-  BBRAD  <-BOLTZM * (DAVTMP+273)^4 * 86400                 # J m-2 d-1   :     Black body radiation 
-  SVP    <-0.611 * exp(17.4 * DAVTMP / (DAVTMP + 239))     # kPa         :     Saturation vapour pressure
-  SLOPE  <-4158.6 * SVP / (DAVTMP + 239)^2                 # kPa dec. C-1:     Change of SVP per degree C
-  RLWN   <-BBRAD * pmax(0, 0.55 * (1 - VP / SVP))     # J m-2 d-1   :     Net outgoing long-wave radiation
-  WDF    <-2.63 * (1.0 + 0.54 * WN)                  # kg m-2 d-1  :     Wind function in the Penman equation
+  BBRAD  <-BOLTZM * (TAVG+273)^4 * 86400                 # J m-2 d-1   :     Black body radiation 
+  SVP    <-0.611 * exp(17.4 * TAVG / (TAVG + 239))     # kPa         :     Saturation vapour pressure
+  SLOPE  <-4158.6 * SVP / (TAVG + 239)^2                 # kPa dec. C-1:     Change of SVP per degree C
+  RLWN   <-BBRAD * pmax(0, 0.55 * (1 - VAPR / SVP))     # J m-2 d-1   :     Net outgoing long-wave radiation
+  WDF    <-2.63 * (1.0 + 0.54 * WIND)                  # kg m-2 d-1  :     Wind function in the Penman equation
   
   # Net radiation (J m-2 d-1) for soil (1) and crop (2)
   NRADS  <-DTRJM2 * (1 - 0.15) - RLWN     # (1)
@@ -35,7 +35,7 @@ penman <-function(DAVTMP,VP,DTR,LAI,WN,RNINTC) {
   PENMRC <-NRADC * SLOPE / (SLOPE + PSYCH)    # (2)
   
   # Drying power term (J m-2 d-1) of the Penman equation
-  PENMD  <-LHVAP * WDF * (SVP - VP) * PSYCH / (SLOPE + PSYCH)
+  PENMD  <-LHVAP * WDF * (SVP - VAPR) * PSYCH / (SLOPE + PSYCH)
   
   # Potential evaporation and transpiration are weighed by a factor representing the plant canopy (exp(-0.5 * LAI)).
   PEVAP  <-exp(-0.5 * LAI)  * (PENMRS + PENMD) / LHVAP       # mm d-1

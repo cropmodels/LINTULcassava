@@ -53,7 +53,7 @@ LINTUL2_CASSAVA_DEFAUL_PARAMETERS <-function() {
     RDRWCUTTING  = 0.017,  # g d-1                  :    Relative decrease rate of cutting weight
     
     # Light interception and conversion to assimilates
-    FPAR         = 0.5,    # (-)         :     Fraction PAR, MJ PAR/MJ DTR
+    FPAR         = 0.5,    # (-)         :     Fraction PAR, MJ PAR/MJ SRAD
     K_EXT        = 0.67,   # (-)         :     extinction coefficient for PAR
     LUE_OPT      = 1.5,    # g MJ PAR-1  :    Light use effeciency at optimum growing conditions
     

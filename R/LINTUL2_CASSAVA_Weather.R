@@ -1,5 +1,5 @@
 
-derive_wth_vars <- function(w) {
+not_used_derive_wth_vars <- function(w) {
   # kPa: Saturation vapour pressure at tmin and tmax
   SatVP_TMMN = 0.611 * exp(17.4 * w$TMIN / (w$TMIN + 239)) 
   SatVP_TMMX = 0.611 * exp(17.4 * w$TMAX / (w$TMAX + 239)) 
@@ -11,15 +11,16 @@ derive_wth_vars <- function(w) {
     NAME = w$NAME,
     STNID = w$STNID,
     YEAR = w$YEAR,  # year           
-    DOYS = w$DOY,  # day number since 1 Jan in the year of planting         
-    VP 	 = w$VAPR,    # kPa        : vapour pressure            
-    WN 	 = w$WIND,    # m s-1      : wind speed                 
-    RAIN = w$PREC,    # mm         : precipitation              
-    DTR  = w$SRAD / 1000, # MJ m-2 d-1 :   incoming radiation (converted from kJ to MJ)
-    DAVTMP = 0.5 * (w$TMIN + w$TMAX),   # Deg. C     :     daily average temperature
+    DOY = w$DOY,  # day number since 1 Jan
+    VAPR = w$VAPR,    # kPa        : vapour pressure            
+    WIND = w$WIND,    # m s-1      : wind speed                 
+    PREC = w$PREC,    # mm         : precipitation              
+    SRAD = w$SRAD / 1000, # MJ m-2 d-1 :   incoming radiation (converted from kJ to MJ)
+    TAVG = 0.5 * (w$TMIN + w$TMAX),   # Deg. C     :     daily average temperature
     VPD_MN  = VPD_MN,    # xPascal : VPD at daily minimum temperature  
     VPD_MX  = VPD_MX    #  xPascal: VPD at daily maximum temperature  
   )
+
 }
 
 read_CABO_wth <- function(fname) {
@@ -127,12 +128,12 @@ get_weather_old <- function(directory="./Weather/",country="Edo",station="1",yea
   
   WDATA <- data.frame(
     YEAR 	  = as.vector(weather[,2]),  # year           
-    DOYS 	  = as.vector(weather[,3]),  # day number since 1 Jan in the year of planting         
-    VP 	  = as.vector(weather[,7]),    # kPa        :     vapour pressure            
-    WN 	  = as.vector(weather[,8]),    # m s-1      :     wind speed                 
-    RAIN  = as.vector(weather[,9]),    # mm         :     precipitation              
-    DTR    = RDD / 1e+03,              # MJ m-2 d-1 :     incoming radiation (converted from kJ to MJ)
-    DAVTMP = 0.5 * (TMMN + TMMX),       # Deg. C     :     daily average temperature
+    DAYS 	  = as.vector(weather[,3]),  # day number since 1 Jan in the year of planting         
+    VAPR 	  = as.vector(weather[,7]),    # kPa        :     vapour pressure            
+    WIND 	  = as.vector(weather[,8]),    # m s-1      :     wind speed                 
+    PREC  = as.vector(weather[,9]),    # mm         :     precipitation              
+    SRAD    = RDD / 1e+03,              # MJ m-2 d-1 :     incoming radiation (converted from kJ to MJ)
+    TAVG = 0.5 * (TMMN + TMMX),       # Deg. C     :     daily average temperature
     VPD_MN  = as.vector(VPD_MN),    # deg. C   :     daily minimum temperature  
     VPD_MX  = as.vector(VPD_MX)    # deg. C   :     daily maximum temperature  
   )

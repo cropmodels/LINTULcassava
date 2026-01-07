@@ -31,12 +31,20 @@ LC_model <- function(Time, State, Pars, WDATA){
   with(as.list(c(State, Pars)), {
     #Daily weather data. Use the weather data from the last day 
     #if smaller time-steps are taken
-    WDATA <- subset(WDATA, DOYS == floor(Time))
+    WDATA <- subset(WDATA, DAYS == floor(Time))
+	
+	SatVP_TMMN = 0.611 * exp(17.4 * WDATA$TMIN / (WDATA$TMIN + 239)) 
+	SatVP_TMMX = 0.611 * exp(17.4 * WDATA$TMAX / (WDATA$TMAX + 239)) 
+  # vapour pressure deficits
+	WDATA$VPD_MN = pmax(0, SatVP_TMMN - WDATA$VAPR)
+	WDATA$VPD_MX = pmax(0, SatVP_TMMX - WDATA$VAPR)
+	WDATA$SRAD = WDATA$SRAD / 1000
+	WDATA$TAVG = 0.5 * (WDATA$TMIN + WDATA$TMAX)   # Deg. C     :     daily average temperature
 
     # Determine weather conditions
-    RTRAIN <- WDATA$RAIN                   # mm d-1           : rain rate, mm d-1
-    DTEFF  <- max(0, WDATA$DAVTMP - TBASE) # Deg. C           : effective daily temperature
-    RPAR   <- FPAR * WDATA$DTR             # PAR MJ m-2 d-1   : PAR radiation
+    RTRAIN <- WDATA$PREC                   # mm d-1           : rain rate, mm d-1
+    DTEFF  <- max(0, WDATA$TAVG - TBASE) # Deg. C           : effective daily temperature
+    RPAR   <- FPAR * WDATA$SRAD             # PAR MJ m-2 d-1   : PAR radiation
     
     # Determine rates when crop is still growing
     if(TSUM < FINTSUM){
@@ -85,7 +93,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       RNINTC <- min(RTRAIN, (FRACRNINTC * LAI))     # mm d-1
       
       # Potential evaporation and transpiration are calculated using the Penman equation.
-      PENM   <- penman(WDATA$DAVTMP,WDATA$VP,WDATA$DTR,LAI,WDATA$WN,RNINTC)
+      PENM   <- penman(WDATA$TAVG,WDATA$VAPR,WDATA$SRAD,LAI,WDATA$WIND,RNINTC)
       RPTRAN <- PENM$PTRAN                          # mm d-1
       RPEVAP <- PENM$PEVAP                          # mm d-1
       # Soil moisture content at severe drought and the critical soil moisture content are calculated to see if
@@ -174,7 +182,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
       PARINT <- RPAR * (1 - exp(-K_EXT * LAI))                             # MJ m-2 d-1
-      LUE    <- LUE_OPT * approx(TTB[,1], TTB[,2], WDATA$DAVTMP)$y   # g DM m-2 d-1
+      LUE    <- LUE_OPT * approx(TTB[,1], TTB[,2], WDATA$TAVG)$y   # g DM m-2 d-1
       
       GTOTAL <- LUE * PARINT * TRANRF * (1 - DORMANCY)  # g DM m-2 d-1
       
@@ -185,7 +193,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       RTSUMCROPLEAFAGE <- DTEFF * EMERG - (TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
       
       # Relative death rate due to aging depending on leaf age and the daily average temperature. 
-      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, approx(RDRT[,1], RDRT[,2], WDATA$DAVTMP)$y, 0) # d-1
+      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, approx(RDRT[,1], RDRT[,2], WDATA$TAVG)$y, 0) # d-1
       #--------
       
       #-------- SHEDDING

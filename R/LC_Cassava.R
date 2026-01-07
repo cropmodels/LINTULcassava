@@ -27,10 +27,18 @@ get_rates <- function(Time, W, S, crop, soil, management, DELT) {
 		
 		R <- list()
 
-		#Daily weather data. Use the weather data from the last day if smaller time-steps are taken
-		R$TRAIN <- W$RAIN                   # mm d-1           : rain rate, mm d-1
-		DTEFF  <- max(0, W$DAVTMP - crop$TBASE) # Deg. C           : effective daily temperature
-		R$PAR  <- crop$FPAR * W$DTR             # PAR MJ m-2 d-1   : PAR radiation
+		#Daily weather data. 
+		SatVP_TMMN = 0.611 * exp(17.4 * W$TMIN / (W$TMIN + 239)) 
+		SatVP_TMMX = 0.611 * exp(17.4 * W$TMAX / (W$TMAX + 239)) 
+  # vapour pressure deficits
+		W$VPD_MN = pmax(0, SatVP_TMMN - W$VAPR)
+		W$VPD_MX = pmax(0, SatVP_TMMX - W$VAPR)
+		W$SRAD = W$SRAD / 1000
+		W$TAVG = 0.5 * (W$TMIN + W$TMAX)   # Deg. C     :     daily average temperature
+		
+		R$TRAIN <- W$PREC                   # mm d-1           : rain rate, mm d-1
+		DTEFF  <- max(0, W$TAVG - crop$TBASE) # Deg. C           : effective daily temperature
+		R$PAR  <- crop$FPAR * W$SRAD             # PAR MJ m-2 d-1   : PAR radiation
 
 
       # Temperature sum after planting
@@ -71,7 +79,7 @@ get_rates <- function(Time, W, S, crop, soil, management, DELT) {
       R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))     # mm d-1
       
       # Potential evaporation and transpiration are calculated using the Penman equation.
-      PENM   <- LINTULcassava:::penman(W$DAVTMP, W$VP, W$DTR, S$LAI, W$WN, R$NINTC)
+      PENM   <- LINTULcassava:::penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
       R$PTRAN <- PENM$PTRAN                          # mm d-1
       R$PEVAP <- PENM$PEVAP                          # mm d-1
       # Soil moisture content at severe drought and the critical soil moisture content are calculated to see if
@@ -157,7 +165,7 @@ get_rates <- function(Time, W, S, crop, soil, management, DELT) {
       #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
       PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))                             # MJ m-2 d-1
-      LUE <- crop$LUE_OPT * approx(crop$TTB[,1], crop$TTB[,2], W$DAVTMP)$y   # g DM m-2 d-1
+      LUE <- crop$LUE_OPT * approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
       
       GTOTAL <- LUE * PARINT * TRANRF * (1 - DORMANCY)  # g DM m-2 d-1
       
@@ -168,7 +176,7 @@ get_rates <- function(Time, W, S, crop, soil, management, DELT) {
       R$TSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
       
       # Relative death rate due to aging depending on leaf age and the daily average temperature. 
-      RDRDV = ifelse(S$TSUMCROPLEAFAGE - crop$TSUMLLIFE >= 0, approx(crop$RDRT[,1], crop$RDRT[,2], W$DAVTMP)$y, 0) # d-1
+      RDRDV = ifelse(S$TSUMCROPLEAFAGE - crop$TSUMLLIFE >= 0, approx(crop$RDRT[,1], crop$RDRT[,2], W$TAVG)$y, 0) # d-1
       #--------
       
       #-------- SHEDDING
@@ -286,17 +294,16 @@ LC_MODEL2 <- function(weather, crop, soil, management, control){
 
 	DELT <- control$timestep
 	pars <- c(crop, soil, management$IRRIGF, DELT=DELT)
-	wth <- LINTULcassava:::derive_wth_vars(weather)
-  # should use dates, not DOYS
-	wth$DOYS <- wth$DOY[1] + (1:nrow(wth))-1
-	wth <- wth[wth$DOYS >= control$starttime, ]
+	#wth <- LINTULcassava:::derive_wth_vars(weather)
+  # should use dates, not DAYS
+	DAYS <- weather$DOY[1] + (1:nrow(weather))-1
+	wth <- weather[DAYS >= control$starttime, ]
 	
 	steps <- seq(control$starttime, management$DOYHAR, by = DELT)
 
 	out <- vector(length=length(steps), mode="list")
 	S <- LINTULcassava:::LC_iniSTATES(pars)
 	for (i in 1:length(steps)) {
-#	for (i in 1:405) {
 		R <- get_rates(steps[i], wth[i, ], as.list(S), crop, soil, management, DELT)
 		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
 				HI = S[["WSO"]] / sum(S[c("WSO", "WLV", "WST", "WRT")])) 
@@ -309,9 +316,8 @@ LC_MODEL2 <- function(weather, crop, soil, management, control){
 		S <- S + rates
     }
 	out <- do.call(rbind, out)
-#	steps <- steps[1:405]
 	j <- 1:length(steps)
-	out <- data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=wth$DOYS[j], out)
+	out <- data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=DAYS[steps], out)
 	out
 }
 
