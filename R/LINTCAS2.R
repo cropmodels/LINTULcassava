@@ -178,9 +178,8 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 #                            ifelse((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0, 1, 0)) * 
 #							ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
       
-	  
+ 
       PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, !PUSHREDISTEND, FALSE)  # (-)
-	  
 	  
       PUSHDORMREC <- pushdor*ifelse(-S$DORMTSUM >= 0, 0, 1) * (!PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0) # (-)
       
