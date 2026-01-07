@@ -182,7 +182,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
       PARINT <- RPAR * (1 - exp(-K_EXT * LAI))                             # MJ m-2 d-1
-      LUE    <- LUE_OPT * approx(TTB[,1], TTB[,2], WDATA$TAVG)$y   # g DM m-2 d-1
+      LUE    <- LUE_OPT * stats::approx(TTB[,1], TTB[,2], WDATA$TAVG)$y   # g DM m-2 d-1
       
       GTOTAL <- LUE * PARINT * TRANRF * (1 - DORMANCY)  # g DM m-2 d-1
       
@@ -193,7 +193,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       RTSUMCROPLEAFAGE <- DTEFF * EMERG - (TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
       
       # Relative death rate due to aging depending on leaf age and the daily average temperature. 
-      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, approx(RDRT[,1], RDRT[,2], WDATA$TAVG)$y, 0) # d-1
+      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, stats::approx(RDRT[,1], RDRT[,2], WDATA$TAVG)$y, 0) # d-1
       #--------
       
       #-------- SHEDDING
@@ -226,7 +226,7 @@ LC_model <- function(Time, State, Pars, WDATA){
       
       # Fraction of the maximum specific leaf area index depending on the temperature sum of the crop. And its specific leaf
       # area index. 
-      FRACSLACROPAGE <- approx(FRACSLATB[,1], FRACSLATB[,2], TSUMCROP)$y  # (-)
+      FRACSLACROPAGE <- stats::approx(FRACSLATB[,1], FRACSLATB[,2], TSUMCROP)$y  # (-)
       SLA <- SLA_MAX *FRACSLACROPAGE                                      # m2 g-1 DM
       
       # The rate of storage root DM production with DM supplied by the leaves before abscission. 
@@ -242,14 +242,14 @@ LC_model <- function(Time, State, Pars, WDATA){
       # Allocation of assimilates to the different organs. The fractions are modified for water availability.
       FRTMOD <- max(1, 1/(TRANRF+0.5))			                             # (-)
       # Fibrous roots
-      FRT    <- approx(FRTTB[,1],FRTTB[,2],TSUMCROP)$y * FRTMOD		       # (-)
+      FRT    <- stats::approx(FRTTB[,1],FRTTB[,2],TSUMCROP)$y * FRTMOD		       # (-)
       FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)                           # (-)
       # Leaves
-      FLV    <- approx(FLVTB[,1],FLVTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FLV    <- stats::approx(FLVTB[,1],FLVTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
       # Stems
-      FST    <- approx(FSTTB[,1],FSTTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FST    <- stats::approx(FSTTB[,1],FSTTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
       # Storage roots
-      FSO    <- approx(FSOTB[,1],FSOTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FSO    <- stats::approx(FSOTB[,1],FSOTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
       
       #When plants emerge from dormancy, leaf growth may go far too quickly. 
       #Adjust partitioning if LAI too large
