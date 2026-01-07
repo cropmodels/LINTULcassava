@@ -170,7 +170,8 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 	  
 		PUSHREDISTEND <- ((((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0) || 
 					((S$REDISTLVG - crop$WLVGNEWN)>= 0) || 
-					((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0)) && (-S$PUSHREDISTSUM < 0))
+					((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0)) && 
+					(S$PUSHREDISTSUM > 0))
 	  
 #		PUSHREDISTEND <- max(ifelse((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0, 1, 0), 
 #                            ifelse((S$REDISTLVG - crop$WLVGNEWN)>= 0, 1, 0),
@@ -178,18 +179,18 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 #							ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
       
 	  
-      PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, (1 - PUSHREDISTEND), 0)  # (-)
+      PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, !PUSHREDISTEND, FALSE)  # (-)
 	  
 	  
-      PUSHDORMREC <- pushdor*ifelse(-S$DORMTSUM >= 0, 0, 1) * (1 - PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0) # (-)
+      PUSHDORMREC <- pushdor*ifelse(-S$DORMTSUM >= 0, 0, 1) * (!PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0) # (-)
       
-      DORMANCY <- pmax(dormancy, PUSHDORMREC) * (1 - PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0)     # (-)
+      DORMANCY <- pmax(dormancy, PUSHDORMREC) * (!PUSHREDIST) * ifelse((S$TSUMCROP - crop$TSUMSBR) >= 0, 1, 0)     # (-)
       
       # The temperature sums related to the dormancy and recovery periods.
       R$DORMTSUM = DTEFF * DORMANCY - (S$DORMTSUM/DELT) * PUSHREDIST # Deg. C
-      R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (1 - PUSHDORMREC) * (1 - PUSHREDIST)  # Deg. C
+      R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (1 - PUSHDORMREC) * (!PUSHREDIST)  # Deg. C
       R$PUSHREDISTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTSUM/DELT) * PUSHREDISTEND  # Deg. C
-      R$PUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (1 - PUSHREDISTEND) # Deg. C   
+      R$PUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (!PUSHREDISTEND) # Deg. C   
       
       # No. of days in dormancy
       R$DORMTIME = DORMANCY  # d
