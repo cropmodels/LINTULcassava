@@ -168,10 +168,16 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       # (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM. 
       # (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching. 
 	  
-      PUSHREDISTEND <- pmax(ifelse((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0, 1, 0), 
-                            ifelse((S$REDISTLVG - crop$WLVGNEWN)>= 0, 1, 0),
-                            ifelse((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0, 1, 0)) * ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
+		PUSHREDISTEND <- ((((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0) || 
+					((S$REDISTLVG - crop$WLVGNEWN)>= 0) || 
+					((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0)) && (-S$PUSHREDISTSUM < 0))
+	  
+#		PUSHREDISTEND <- max(ifelse((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0, 1, 0), 
+#                            ifelse((S$REDISTLVG - crop$WLVGNEWN)>= 0, 1, 0),
+#                            ifelse((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0, 1, 0)) * 
+#							ifelse(-S$PUSHREDISTSUM >= 0, 0, 1)     # (-)
       
+	  
       PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, (1 - PUSHREDISTEND), 0)  # (-)
 	  
 	  
