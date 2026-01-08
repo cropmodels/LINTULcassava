@@ -6,6 +6,8 @@ Date: 2026-01-06
 Imports: deSolve
 Depends: R (>= 3.5.0)
 Suggests: litedown
+LinkingTo: Rcpp
+Imports: Rcpp (>= 1.0-10)
 VignetteBuilder: litedown 
 Author: Joy Adiele, Rob van den Beuken, Guillaume Ezui, Peter Leffelaar, Tom Schut
 Maintainer: Robert Hijmans <r.hijmans@gmail.com>
