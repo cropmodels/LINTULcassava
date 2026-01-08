@@ -15,23 +15,19 @@
 #--------------------------------------------------------------------------------------------------#
 gla <-function(DTEFF,TSUMCROP,LAII,RGRL,DELT,SLA,LAI,GLV,TSUMLA_MIN,TRANRF,WC,WCWP,RWCUTTING,FLV,LAIEXPOEND,DORMANCY) {
   
-  # Growth during maturation stage
-  GLAI <-SLA * GLV * (1-DORMANCY)  # m2 m-2 d-1
-  
-  # Growth during juvenile stage
-  if(TSUMCROP < TSUMLA_MIN && LAI < LAIEXPOEND) {
-    GLAI <-((LAI * (exp(RGRL * DTEFF * DELT) - 1) / DELT) +abs(RWCUTTING)*FLV*SLA) * TRANRF  # m2 m-2 d-1
-  }
-  
-  # Growth at day of seedling emergence
-  if(TSUMCROP > 0 && LAI == 0 && WC > WCWP) {
-    GLAI <- LAII / DELT  # m2 m-2 d-1
-  }
-  
   # Growth before seedling emergence
   if(TSUMCROP == 0) {
-    GLAI <- 0     # m2 m-2 d-1
+    GLAI <- 0    # m2 m-2 d-1
+  } else if (LAI == 0 && WC > WCWP) {
+  # Growth at day of seedling emergence  
+    GLAI <- LAII / DELT  # m2 m-2 d-1
+  } else if (TSUMCROP < TSUMLA_MIN && LAI < LAIEXPOEND) {  
+  # Growth during juvenile stage
+    GLAI <-((LAI * (exp(RGRL * DTEFF * DELT) - 1) / DELT) +abs(RWCUTTING)*FLV*SLA) * TRANRF  # m2 m-2 d-1
+  } else { 
+# Growth during maturation stage
+	GLAI <-SLA * GLV * (1-DORMANCY)  # m2 m-2 d-1
   }
   
-  return(GLAI)
+  GLAI
 }

@@ -1,6 +1,27 @@
 # this is the same model but implementing it similar to how I would do it in C++
 # to test it prior to translation
 
+iniRates <- function() {
+	as.list(c(
+		ROOTD=0,# m d-1
+		WA=0,   # mm d-1  
+		TSUM=0, TSUMCROP=0, # Deg. C d-1
+		TSUMCROPLEAFAGE=0, DORMTSUM=0,# Deg. C d-1
+		PUSHDORMRECTSUM=0, PUSHREDISTENDTSUM=0, # Deg. C d-1
+		DORMTIME=0, # d d-1
+		WCUTTING=0, # g DM m-2 d-1
+		TRAIN=0,# mm d-1
+		PAR=0,# MJ m-2 d-1
+		LAI=0,# m2 m-2 d-1
+		WLVD=0, WLV=0, WST=0, WSO=0, WRT=0, WLVG=0, # g DM m-2 d-1
+		TRAN=0, EVAP=0, PTRAN=0, PEVAP=0, RUNOFF=0, NINTC=0, DRAIN=0, # mm d-1
+        REDISTLVG=0, REDISTSO=0,# g DM m-2 d-1
+        PUSHREDISTSUM=0,# Deg. C d-1
+        WSOFASTRANSLSO=0) # g DM m-2 d-1
+	)
+}
+
+
 get_states <- function(S, R) {
 	S$ROOTD <- S$ROOTD + R$ROOTD
 	S$WA <- S$WA + R$WA
@@ -35,26 +56,7 @@ get_states <- function(S, R) {
 	S
 }	   
 	   
-get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
-
-
-	R <- as.list(c(
-			ROOTD=0,# m d-1
-			WA=0,   # mm d-1  
-			TSUM=0, RTSUMCROP=0, # Deg. C d-1
-			TSUMCROPLEAFAGE=0, DORMTSUM=0,# Deg. C d-1
-			PUSHDORMRECTSUM=0, PUSHREDISTENDTSUM=0, # Deg. C d-1
-			DORMTIME=0, # d d-1
-			WCUTTING=0, # g DM m-2 d-1
-			TRAIN=0,# mm d-1
-			PAR=0,# MJ m-2 d-1
-			LAI=0,# m2 m-2 d-1
-			WLVD=0, WLV=0, WST=0, WSO=0, WRT=0, WLVG=0, # g DM m-2 d-1
-			TRAN=0, EVAP=0, PTRAN=0, PEVAP=0, RUNOFF=0, NINTC=0, DRAIN=0, # mm d-1
-            REDISTLVG=0, REDISTSO=0,# g DM m-2 d-1
-            PUSHREDISTSUM=0,# Deg. C d-1
-            WSOFASTRANSLSO=0) # g DM m-2 d-1
-		)
+get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 
     
     if (S$TSUM >= crop$FINTSUM) {
@@ -66,8 +68,8 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
 		SatVP_TMMN = 0.611 * exp(17.4 * W$TMIN / (W$TMIN + 239)) 
 		SatVP_TMMX = 0.611 * exp(17.4 * W$TMAX / (W$TMAX + 239)) 
   # vapour pressure deficits
-		W$VPD_MN = pmax(0, SatVP_TMMN - W$VAPR)
-		W$VPD_MX = pmax(0, SatVP_TMMX - W$VAPR)
+		W$VPD_MN = max(0, SatVP_TMMN - W$VAPR)
+		W$VPD_MX = max(0, SatVP_TMMX - W$VAPR)
 		W$SRAD = W$SRAD / 1000
 		W$TAVG = 0.5 * (W$TMIN + W$TMAX)   # Deg. C     :     daily average temperature
 		
@@ -116,10 +118,9 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       PENM <- penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
       R$PTRAN <- PENM$PTRAN                          # mm d-1
       R$PEVAP <- PENM$PEVAP                          # mm d-1
-      # Soil moisture content at severe drought and the critical soil moisture content are calculated to see if
-      # drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
+      # Soil moisture content at severe drought and the critical soil moisture content are calculated to see if drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
       WCSD <- soil$WCWP * crop$TWCSD
-      WCCR <- soil$WCWP + pmax(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
+      WCCR <- soil$WCWP + max(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
 
       # The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.
       EVA <- evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD,
@@ -138,6 +139,8 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       
       # Rate of change of soil water amount
       R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
+
+# again?
       WC  <- 0.001 * S$WA/S$ROOTD                      # (-)
 
 	if (!EMERG) return(R)
@@ -155,7 +158,7 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       WSOREDISTFRAC <- ifelse(S$WSO == 0, 1, S$REDISTSO/S$WSO)
  
       
-      # Three push functions are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
+ # Three push functions are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
       # (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum. 
       # (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM. 
       # (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching. 
@@ -181,22 +184,22 @@ get_rates <- function(today, W, S, crop, soil, management, DELT=1) {
       # No. of days in dormancy
       R$DORMTIME = DORMANCY  # d
       
-      # Dry matter redistribution after dormancy. The rate of redistribution of the storage roots dry matter to 
-      # leaf dry matter. A certain fraction is lost for the conversion of storage organs dry matter to leaf dry
-      # matter.
-      R$REDISTSO = crop$RRREDISTSO * S$WSO * PUSHREDIST - (S$REDISTSO/DELT) *ifelse(-S$DORMTSUM >= 0, 0, 1)  # g DM m-2 d-1
+      # Dry matter redistribution after dormancy. The rate of redistribution of the storage roots dry matter to leaf dry matter. A certain fraction is lost for the conversion of storage organs dry matter to leaf dry matter.
+      R$REDISTSO = crop$RRREDISTSO * S$WSO * PUSHREDIST - (S$REDISTSO/DELT) * (S$DORMTSUM > 0)  # g DM m-2 d-1
       R$REDISTLVG = crop$SO2LV * R$REDISTSO * (!DORMANCY)  # g DM m-2 d-1
-      RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO    # g DM m-2 d-1
       
+	  #RH not used
+	  #RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO    # g DM m-2 d-1
+  
       
-      #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
+      #----------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
       PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))                             # MJ m-2 d-1
       LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
       
       GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
       
-      #-------------------------------------LEAF SENESCENCE------------------------------------------------------#
+      #----------LEAF SENESCENCE------------------------------------------------------#
       
       #-------- AGE
       # The calculation of the physiological leaf age.  
@@ -315,16 +318,14 @@ LINTCAS2 <- function(weather, crop, soil, management, control){
 
 	DELT <- control$timestep
 	pars <- c(crop, soil, management$IRRIGF, DELT=DELT)
-	#wth <- LINTULcassava:::derive_wth_vars(weather)
- 	
+	iR <- iniRates() 	
 	wth <- weather[weather$DATE >= control$startDATE, ]
 	
 	season <- seq(control$startDATE, management$HVDATE, by = DELT)
 	out <- vector(length=length(season), mode="list")
 	S <- as.list(LC_iniSTATES(pars))
-	
 	for (i in 1:length(season)) {
-		R <- get_rates(season[i], wth[i, ], as.list(S), crop, soil, management, DELT)
+		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, DELT)
 		states <- unlist(S)
 		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
 				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))

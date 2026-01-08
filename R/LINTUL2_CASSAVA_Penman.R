@@ -23,7 +23,7 @@ penman <-function(TAVG,VAPR,SRAD,LAI,WIND,RNINTC) {
   BBRAD  <-BOLTZM * (TAVG+273)^4 * 86400                 # J m-2 d-1   :     Black body radiation 
   SVP    <-0.611 * exp(17.4 * TAVG / (TAVG + 239))     # kPa         :     Saturation vapour pressure
   SLOPE  <-4158.6 * SVP / (TAVG + 239)^2                 # kPa dec. C-1:     Change of SVP per degree C
-  RLWN   <-BBRAD * pmax(0, 0.55 * (1 - VAPR / SVP))     # J m-2 d-1   :     Net outgoing long-wave radiation
+  RLWN   <-BBRAD * max(0, 0.55 * (1 - VAPR / SVP))     # J m-2 d-1   :     Net outgoing long-wave radiation
   WDF    <-2.63 * (1.0 + 0.54 * WIND)                  # kg m-2 d-1  :     Wind function in the Penman equation
   
   # Net radiation (J m-2 d-1) for soil (1) and crop (2)
@@ -40,9 +40,7 @@ penman <-function(TAVG,VAPR,SRAD,LAI,WIND,RNINTC) {
   # Potential evaporation and transpiration are weighed by a factor representing the plant canopy (exp(-0.5 * LAI)).
   PEVAP  <-exp(-0.5 * LAI)  * (PENMRS + PENMD) / LHVAP       # mm d-1
   PTRAN  <-(1 - exp(-0.5 * LAI)) * (PENMRC + PENMD) / LHVAP  # mm d-1
-  PTRAN  <-pmax(0, PTRAN - 0.5 * RNINTC)                     # mm d-1
+  PTRAN  <-max(0, PTRAN - 0.5 * RNINTC)                     # mm d-1
 
-  PENM = data.frame(cbind(PEVAP,PTRAN))
-  
-  return(PENM)
+  data.frame(cbind(PEVAP,PTRAN))
 }

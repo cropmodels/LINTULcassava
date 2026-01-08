@@ -19,18 +19,19 @@ evaptr <-function(PEVAP,PTRAN,ROOTD,WA,WCAD,WCWP,TWCSD,WCFC,WCWET,WCST,TRANCO,DE
     WC   <-0.001 * WA / ROOTD   # m3 m-3
     # The amount of soil water at air dryness (AD) and field capacity (FC).
     WAAD <-1000 * WCAD * ROOTD   # mm
-    WAFC <-1000 * WCFC * ROOTD   # mm
+    #RH not used
+	#WAFC <-1000 * WCFC * ROOTD   # mm
     
     # Evaporation is decreased when water content is below field capacity, 
     # but continues until WC = WCAD. It is ensured to stay within 0-1 range
     limit.evap <-(WC-WCAD)/(WCFC-WCAD)         # (-)
-    limit.evap <- pmin(1,pmax(0,limit.evap))   # (-)
+    limit.evap <- min(1,pmax(0,limit.evap))   # (-)
     EVAP <-PEVAP * limit.evap                  # mm d-1
     
     # Water content at severe drought
     WCSD <- WCWP * TWCSD
     # Critical water content
-    WCCR <- WCWP + pmax(WCSD-WCWP, PTRAN/(PTRAN+TRANCO) * (WCFC-WCWP))
+    WCCR <- WCWP + max(WCSD-WCWP, PTRAN/(PTRAN+TRANCO) * (WCFC-WCWP))
 
     # If water content is below the critical soil water content a correction factor is calculated
     #that reduces the transpiration until it stops at WC = WCWP.
@@ -41,20 +42,18 @@ evaptr <-function(PEVAP,PTRAN,ROOTD,WA,WCAD,WCWP,TWCSD,WCFC,WCWET,WCST,TRANCO,DE
     FRW <- (WCST-WC) / (WCST - WCWET)  # (-)
     
     #Replace values for wet days with a higher water content than the critical water content.
-    FR[WC > WCCR] <- FRW[WC > WCCR]    # (-)
-    
+    #FR[WC > WCCR] <- FRW[WC > WCCR]    # (-)
+    FR <- ifelse(WC > WCCR, FRW, FR)
     #Ensure to stay within the 0-1 range
-    FR=pmin(1,pmax(0,FR))   # (-)
+    FR <- min(1, max(0,FR))   # (-)
     
     # Actual transpration
-    TRAN <-PTRAN * FR # mm d-1
+    TRAN <- PTRAN * FR # mm d-1
 
-    # A final correction term is calculated to reduce evaporation and transpiration when evapotranspiration exceeds 
-    # the amount of water in soil present in excess of air dryness.
-    aux <- EVAP+TRAN    # mm d-1
-    aux[aux <= 0] <- 1  # mm d-1
-    AVAILF <- pmin(1, (WA-WAAD)/(DELT*aux)) # mm
-    EVA <- data.frame(EVAP = EVAP * AVAILF,
-                      TRAN = TRAN * AVAILF)
-    return(EVA)
+    # A final correction term is calculated to reduce evaporation and transpiration when evapotranspiration exceeds the amount of water in soil present in excess of air dryness.
+    aux <- EVAP + TRAN    # mm d-1
+    #aux[aux <= 0] <- 1  # mm d-1
+    aux = ifelse(aux <= 0, 1, aux)
+	AVAILF <- min(1, (WA-WAAD)/(DELT*aux)) # mm
+    data.frame(EVAP = EVAP * AVAILF, TRAN = TRAN * AVAILF)
   }    

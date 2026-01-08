@@ -13,7 +13,8 @@
 drunir <-function(PREC,RNINTC,EVAP,TRAN,IRRIGF,DRATE,DELT,WA,ROOTD,WCFC,WCST) {
   
   # Soil water content      
-  WC   <-0.001 * WA / ROOTD   # m3 m-3
+  ##RH not used
+  ##WC   <-0.001 * WA / ROOTD   # m3 m-3
   # The amount of soil water at air dryness (AD) and field capacity (FC).
   WAFC <- 1000 * WCFC * ROOTD   # mm
   WAST <- 1000 * WCST * ROOTD # mm
@@ -23,8 +24,7 @@ drunir <-function(PREC,RNINTC,EVAP,TRAN,IRRIGF,DRATE,DELT,WA,ROOTD,WCFC,WCST) {
   # water above field capacity.
   DRAIN <-(WA-WAFC)/DELT + (PREC - (RNINTC + EVAP + TRAN))  # mm d-1
   
-  DRAIN <- ifelse(DRAIN < 0, 0, DRAIN)                      # mm d-1
-  DRAIN <- ifelse(DRAIN > DRATE, DRATE, DRAIN)              # mm d-1
+  DRAIN <- max(0, min(DRATE, DRAIN))              # mm d-1
   
   # Surface runoff occurs when the amount of soil water exceeds total saturation or when the amount
   # of rainfall in excess of interception, evapotranspiration and drainage fills up soil water
@@ -38,7 +38,5 @@ drunir <-function(PREC,RNINTC,EVAP,TRAN,IRRIGF,DRATE,DELT,WA,ROOTD,WCFC,WCST) {
   # IRRIGF = 0 implies rainfed conditions.
   IRRIG  = IRRIGF * max(0, (WAFC - WA) / DELT - (PREC - (RNINTC + EVAP + TRAN + DRAIN + RUNOFF))) # mm d-1
   
-  DRUNIR <- data.frame(DRAIN = DRAIN,RUNOFF=RUNOFF, IRRIG=IRRIG)
-  
-  return(DRUNIR)
+  data.frame(DRAIN = DRAIN,RUNOFF=RUNOFF, IRRIG=IRRIG)
 }
