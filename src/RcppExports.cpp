@@ -10,10 +10,26 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// LC
+Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List control);
+RcppExport SEXP _LINTULcassava_LC(SEXP cropSEXP, SEXP weatherSEXP, SEXP soilSEXP, SEXP managementSEXP, SEXP controlSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type crop(cropSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type weather(weatherSEXP);
+    Rcpp::traits::input_parameter< List >::type soil(soilSEXP);
+    Rcpp::traits::input_parameter< List >::type management(managementSEXP);
+    Rcpp::traits::input_parameter< List >::type control(controlSEXP);
+    rcpp_result_gen = Rcpp::wrap(LC(crop, weather, soil, management, control));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 RcppExport SEXP _rcpp_module_boot_LINcas();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_LINTULcassava_LC", (DL_FUNC) &_LINTULcassava_LC, 5},
     {"_rcpp_module_boot_LINcas", (DL_FUNC) &_rcpp_module_boot_LINcas, 0},
     {NULL, NULL, 0}
 };

@@ -7,7 +7,6 @@ License: GNU General Public License (GNU GPL) v. 2
 #include <vector>
 #include <cmath>
 #include <string>
-#include "SimUtil.h"
 
 class LINcasWeather {
 public:
@@ -19,6 +18,7 @@ public:
 class LINcasAtmosphere {
 public:
 	virtual ~LINcasAtmosphere(){}
+	long date;
 	double TAVG, PREC, VPD_MN, VPD_MX, SRAD, VAPR, WIND; 
 };
 
@@ -27,11 +27,10 @@ class LINcasControl {
 public:
 	virtual ~LINcasControl(){}
 	double DELT=1;
-	bool IRRIGF=false;
 	long modelstart;
-	long cropstart, cropend;
+	bool IRRIGF=false;	
+	std::string outvars;
 };
-
 
 
 class LINcasCropParameters {
@@ -88,7 +87,6 @@ public:
 class LINcasSoilParameters {
 public:
 	virtual ~LINcasSoilParameters(){}
-
 	double ROOTDM, WCAD, WCWP, WCFC, WCWET, WCST, DRATE;
 };
 
@@ -104,8 +102,7 @@ public:
 class LINcasManagement {
 public:
 	virtual ~LINcasManagement(){}
-	double PLDATE;
-	bool IRRIGF;
+	long PLDATE, HVDATE;
 };
 
 
@@ -113,12 +110,12 @@ class LINcasModel {
 public:
 	virtual ~LINcasModel(){}
 
-	unsigned step, time, maxdur, cropstart, cropend;
+	unsigned step, time;
 
 	std::vector<std::string> messages;
 	bool fatalError=false;
 
-	LINcasWeather W;
+	LINcasWeather weather;
 	LINcasAtmosphere A;
 	LINcasRates R;
 	LINcasStates S;
@@ -127,24 +124,19 @@ public:
 	LINcasManagement management;
 	LINcasControl control;
 
-	LINcasWeather wth;
-	
 	LINcasOutput out;
 	
 	bool weather_step();
-
 	void rates();
 	void states();
 	void output();
-	void initialize();
+	void initialize(long int maxdur);
 	void run();
 
 	void Penman();
 	void evaptr();
 	void GLAI();
 	void drunir();
-
-	
 };
 
 

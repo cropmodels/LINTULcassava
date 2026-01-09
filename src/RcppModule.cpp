@@ -16,12 +16,13 @@ void setWeather(LINcasModel* m, Rcpp::NumericVector date, Rcpp::NumericVector tm
 	wth.vapr = Rcpp::as<std::vector<double>>(vapr);
 	wth.prec = Rcpp::as<std::vector<double>>(prec);
 	wth.date = Rcpp::as<std::vector<long>>(date);
-	m->wth = wth;
+	m->weather = wth;
 }
 
 RCPP_EXPOSED_CLASS(LINcasWeather)
 RCPP_EXPOSED_CLASS(LINcasCropParameters)
 RCPP_EXPOSED_CLASS(LINcasSoilParameters)
+RCPP_EXPOSED_CLASS(LINcasManagement)
 RCPP_EXPOSED_CLASS(LINcasControl)
 RCPP_EXPOSED_CLASS(LINcasModel)
 RCPP_EXPOSED_CLASS(LINcasOutput)
@@ -31,9 +32,15 @@ RCPP_MODULE(LINcas){
 
     class_<LINcasControl>("LINcasControl")
 		.field("modelstart", &LINcasControl::modelstart) 
-		.field("cropstart", &LINcasControl::cropstart)  		
-		.field("cropend", &LINcasControl::cropend) 
+		.field("IRRIGF",  &LINcasControl::IRRIGF)
+		.field("outvars",  &LINcasControl::outvars)
 	;
+
+    class_<LINcasManagement>("LINcasManagement")
+		.field("PLDATE", &LINcasManagement::PLDATE) 
+		.field("HVDATE", &LINcasManagement::HVDATE)
+	;
+
     class_<LINcasWeather>("LINcasWeather")
 		.constructor()
 		.field("date", &LINcasWeather::date) 
@@ -118,7 +125,7 @@ RCPP_MODULE(LINcas){
 		.method("run", &LINcasModel::run, "run the model")		
 //		.method("run_batch", &LINcasModel::run_batch, "run the model")		
 		.field("control", &LINcasModel::control, "control")
-		.field("weather", &LINcasModel::wth, "weather")
+		.field("weather", &LINcasModel::weather, "weather")
 		.field("output", &LINcasModel::out, "output")
 		.field("messages", &LINcasModel::messages, "messages")
 //		.field("fatalError", &LINcasModel::fatalError, "fatalError")

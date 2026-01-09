@@ -8,10 +8,51 @@ Orignally developed by: Ezui, K. S. et al. (2018). Simulating drought impact and
 Original R code by Rob van den Beuken; rob.vandenbeuken@wur.nl; (c) 2019, PPS
 
 */
-
-
 #include "LINTcas.h"
-#include "SimUtil.h"
+
+
+// not needed but included to get _exactly_ the same results as with the original R model 
+// to facilitate comparison but can be omitted for use independent of R 
+#include "Rcpp.h"
+
+
+inline double approx(std::vector<std::vector<double>> tb, double x) {
+	int n = tb[0].size();
+	double y = NAN;
+	if (x <= tb[0][0]) {
+		y = tb[1][0];
+	} else if (x >= tb[0][n-1]) {
+		y = tb[1][n-1];
+	} else {
+		for(int i=1; i<n; i++) {
+			if (tb[0][i] >= x) {
+				double slope = (tb[1][i] - tb[1][i-1]) / (tb[0][i] - tb[0][i-1]);
+				y = tb[1][i-1] + (x - tb[0][i-1]) * slope;
+				break;
+			}
+		}
+	}
+	return(y);
+}	
+
+
+
+void LINcasModel::initialize(long maxdur) {
+
+	S.ROOTD = crop.ROOTDI; 
+	S.WA = 1000 * crop.ROOTDI * soil.WCFC; 
+	S.WCUTTING = crop.WCUTTINGUNIT * crop.NCUTTINGS; 
+	
+	if (control.outvars == "batch") {
+		out.names = {"step", "WSO"};
+	} else {
+		out.names = {"step", "ROOTD", "WA", "TSUM", "TSUMCROP", "TSUMCROPLEAFAGE", "DORMTSUM", "PUSHDORMRECTSUM", "PUSHREDISTENDTSUM", "DORMTIME", "WCUTTING", "PAR", "LAI", "WLVD", "WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", "PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", "REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "IRRIG"};
+		if (control.outvars == "full") {
+			out.names.insert(out.names.end(), {"RROOTD", "RWA", "RTSUM", "RTSUMCROP", "RTSUMCROPLEAFAGE", "RDORMTSUM", "RPUSHDORMRECTSUM", "RPUSHREDISTENDTSUM", "RDORMTIME", "RWCUTTING", "RPAR", "RLAI", "RWLVD", "RWLV", "RWST", "RWSO", "RWRT", "RWLVG", "RTRAN", "REVAP", "RPTRAN", "RPEVAP", "RRUNOFF", "RNINTC", "RDRAIN", "RREDISTLVG", "RREDISTSO", "RPUSHREDISTSUM", "RWSOFASTRANSLSO", "RIRRIG"} );
+		}
+	}	
+	out.values.reserve(maxdur * out.names.size());
+}
 
 void LINcasModel::states() {
 	S.ROOTD = S.ROOTD + R.ROOTD;
@@ -48,14 +89,27 @@ void LINcasModel::states() {
 }
 
 void LINcasModel::output(){
-	out.values.insert(out.values.end(),
-		{ double(step), 
-			S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
+	
+	if (control.outvars == "batch") {
+		out.values.insert(out.values.end(), {double(step), S.WSO});
+	} else if (control.outvars == "states") {
+		out.values.insert(out.values.end(),
+			{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
 			S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.PAR, S.LAI, 
 			S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
-			S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG
-		}
-	);
+			S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG });
+	} else { // full
+		out.values.insert(out.values.end(),
+			{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
+			S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.PAR, S.LAI, 
+			S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
+			S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG,
+
+			R.ROOTD, R.WA, R.TSUM, R.TSUMCROP, R.TSUMCROPLEAFAGE, R.DORMTSUM, 
+			R.PUSHDORMRECTSUM, R.PUSHREDISTENDTSUM, R.DORMTIME, R.WCUTTING, R.PAR, R.LAI, 
+			R.WLVD, R.WLV, R.WST, R.WSO, R.WRT, R.WLVG, R.TRAN, R.EVAP, R.PTRAN, R.PEVAP, 
+			R.RUNOFF, R.NINTC, R.DRAIN, R.REDISTLVG, R.REDISTSO, R.PUSHREDISTSUM, R.WSOFASTRANSLSO, R.IRRIG	});
+	}
 }
 
 
@@ -65,17 +119,20 @@ inline double SatVP(const double &tmp) {
 }
 
 bool LINcasModel::weather_step() {
-	A.SRAD = W.srad[time] / 1000.;
-	A.WIND = W.wind[time];
-	A.VAPR = W.vapr[time] * 10;
-	A.PREC = W.prec[time] / 10 ; // cm !
+	A.date = weather.date[time];
 
-	double SatVP_TMMN = SatVP(W.tmin[time]);
-	double SatVP_TMMX = SatVP(W.tmax[time]);
+	A.SRAD = weather.srad[time] / 1000.;
+	A.WIND = weather.wind[time];
+	A.VAPR = weather.vapr[time];
+	A.PREC = weather.prec[time];
+
+	double SatVP_TMMN = SatVP(weather.tmin[time]);
+	double SatVP_TMMX = SatVP(weather.tmax[time]);
   // vapour pressure deficits;
 	A.VPD_MN = std::max(0., SatVP_TMMN - A.VAPR);
 	A.VPD_MX = std::max(0., SatVP_TMMX - A.VAPR);
-	A.TAVG = 0.5 * (W.tmin[time] + W.tmax[time]);   // Deg. C     :     daily average temperature
+	A.TAVG = 0.5 * (weather.tmin[time] + weather.tmax[time]);   // Deg. C     :     daily average temperature
+
 	return true;
 }
 
@@ -90,7 +147,7 @@ void LINcasModel::rates() {
 	R.PAR  = crop.FPAR * A.SRAD;        // PAR MJ m-2 d-1   : PAR radiation
 
     // Temperature sum after planting;
-	R.TSUM = ((time - management.PLDATE) >= 0) ? DTEFF : 0; // Deg. C 
+	R.TSUM = (management.PLDATE <= A.date) ? DTEFF : 0; // Deg. C 
 
 	// Determine water content of rooted soil
 	double WC = 0.001 * S.WA/S.ROOTD;	 // (-) 
@@ -102,7 +159,7 @@ void LINcasModel::rates() {
 	bool EMERG = ((S.TSUMCROP > 0) || ((WC-soil.WCWP) >= 0 && (S.TSUM-crop.OPTEMERGTSUM) >= 0));
 
 	// Emergence of the crop is used to calculate the temperature sum of the crop.
-	R.TSUMCROP = DTEFF * EMERG ;     // Deg. C
+	R.TSUMCROP = EMERG ? DTEFF : 0;     // Deg. C
 
 //---FIBROUS ROOT GROWTH------------------------------------------//;
 	// If the soil water content drops to, or below, wilting point fibrous root growth stops.;
@@ -126,6 +183,7 @@ void LINcasModel::rates() {
 
 	// Potential evaporation and transpiration are calculated using the Penman equation.
 	Penman();
+
 	//	std::vector<double> PENM = Penman(A.TAVG, A.VAPR, A.SRAD, S.LAI, A.WIND, R.NINTC);
 	//	R.PTRAN = PENM[0];				// mm d-1
 	//	R.PEVAP = PENM[1];				// mm d-1
@@ -167,21 +225,20 @@ void LINcasModel::rates() {
 	bool pushdor = ((WC - crop.RECOV * WCCR) >= 0) && ((WC - soil.WCWP) >= 0);
 
 	// The redistributed fraction of storage root DM to the leaves. 
-	bool WSOREDISTFRAC = S.WSO == 0 ? 1 : S.REDISTSO/S.WSO;
+	double WSOREDISTFRAC = S.WSO == 0 ? 1 : S.REDISTSO/S.WSO;
 
 	// Three push functions are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
 	// (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum.
 	// (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM.
 	// (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching.
 	bool PUSHREDISTEND = ((((WSOREDISTFRAC - crop.WSOREDISTFRACMAX) >= 0) ||
-			((S.REDISTLVG - crop.WLVGNEWN)>= 0) ||
+			((S.REDISTLVG - crop.WLVGNEWN) >= 0) ||
 			((S.PUSHREDISTSUM - crop.TSUMREDISTMAX) >= 0)) &&
 			(S.PUSHREDISTSUM > 0));
 
-	bool PUSHREDIST  = (S.PUSHDORMRECTSUM - crop.DELREDIST) >= 0 ? !PUSHREDISTEND : false;  // (-)
-	bool PUSHDORMREC = pushdor && (S.DORMTSUM > 0) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0); // (-)
-
-	bool DORMANCY = (dormancy || PUSHDORMREC) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0); // (-)
+	bool PUSHREDIST  = (S.PUSHDORMRECTSUM - crop.DELREDIST) >= 0 ? (!PUSHREDISTEND) : false; 
+	bool PUSHDORMREC = pushdor && (S.DORMTSUM > 0) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0); 
+	bool DORMANCY = (dormancy || PUSHDORMREC) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0);
 
 	// The temperature sums related to the dormancy and recovery periods.
 	R.DORMTSUM = DTEFF * DORMANCY - (S.DORMTSUM/control.DELT) * PUSHREDIST; // Deg. C
@@ -210,8 +267,10 @@ void LINcasModel::rates() {
 	// The calculation of the physiological leaf age.  ;
 	R.TSUMCROPLEAFAGE = DTEFF * EMERG - (S.TSUMCROPLEAFAGE/control.DELT) * PUSHREDIST;     // Deg. C
 
+
 	// Relative death rate due to aging depending on leaf age and the daily average temperature.
 	double RDRDV = (S.TSUMCROPLEAFAGE - crop.TSUMLLIFE >= 0) ? approx(crop.RDRT, A.TAVG) : 0; // d-1
+
 
 //--- SHEDDING;
 	// Relative death rate due to self shading, depending on a critical leaf area index at which leaf shedding is;
@@ -231,6 +290,7 @@ void LINcasModel::rates() {
 
 	// Effective relative death rate and the resulting decrease in LAI.
 	double RDR = ((S.TSUMCROPLEAFAGE - crop.TSUMLLIFE) >= 0) ? std::max(RDRDV, std::max(RDRSH, RDRSD)) : 0; 	// d-1
+
 	//	DLAI  = LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    // m2 m-2 d-1
 	double DLAI  = S.LAI * RDR * (!DORMANCY);    // m2 m-2 d-1
 
@@ -240,6 +300,7 @@ void LINcasModel::rates() {
 
 	// The rate of storage root DM production with DM supplied by the leaves before abscission.
 	R.WSOFASTRANSLSO = S.WLVG * RDR * crop.FASTRANSLSO * (!DORMANCY);   // g storage root DM m-2 d-1
+
 
 	// Decrease in leaf weight due to leaf senesence.
 	//	DLV = (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)  // g leaves DM m-2 d-1
@@ -276,7 +337,7 @@ void LINcasModel::rates() {
 		R.WST = crop.WCUTTINGIP * crop.FST_CUTT;	// g stem DM m-2 d-1
 		R.WLVG = crop.WCUTTINGIP * crop.FLV_CUTT;     // g leaves DM m-2 d-1
 		R.WSO  = crop.WCUTTINGIP * crop.FSO_CUTT;     // g storage root DM m-2 d-1
-	} else if (S.TSUM > crop.OPTEMERGTSUM) { ;
+	} else if (S.TSUM > crop.OPTEMERGTSUM) {	
 		R.WCUTTING = -crop.RDRWCUTTING * S.WCUTTING * ((S.WCUTTING-WCUTTINGMIN) >= 0) * TRANRF * EMERG * (!DORMANCY);  // g stem cutting DM m-2 d-1;
 		R.WRT   = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FRT;	// g fibrous root DM m-2 d-1
 		R.WST   = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FST;	// g stem DM m-2 d-1
@@ -289,6 +350,8 @@ void LINcasModel::rates() {
 		R.WLVG = 0;	 // g leaves DM m-2 d-1
 		R.WSO  = 0;	 // g storage root DM m-2 d-1
 	};
+
+
 	// Growth of the leaf weight
 	R.WLV = R.WLVG + R.WLVD;			// g leaves DM m-2 d-1
 
@@ -311,16 +374,41 @@ void LINcasModel::rates() {
 	} else {
 		GLAI = SLA * GLV * (!DORMANCY);  // m2 m-2 d-1  
 	}
+	
 	// Change in LAI due to new growth of leaves
 	R.LAI = GLAI - DLAI;    // m2 m-2 d-1
 }
 
 
-
 void LINcasModel::run() {
-	step = 1;
-	//unsigned cropstart_step = step + control.cropstart;
-	while (step < maxdur) {
+
+
+// start time (relative to weather data)
+	if (control.modelstart < weather.date[0]) {
+		std::string m = "model cannot start before beginning of the weather data";
+	    messages.push_back(m);
+	    fatalError = true;
+		return;
+	} else if (control.modelstart > weather.date[weather.date.size()-1]) {
+		std::string m = "model cannot start after the end of the weather data";
+	    messages.push_back(m);
+	    fatalError = true;
+		return;
+	} else {
+		time=0;
+		// use find instead!
+		while (weather.date[time] < control.modelstart) {
+			time++;
+		}
+	}
+
+
+	step = 1;	
+	// should check that HVDATE > PLDATE >= modelstart
+	unsigned maxdur = management.HVDATE - control.modelstart + 1;
+
+	initialize(maxdur);
+	while (step <= maxdur) {
 		if (! weather_step()) break;
 		rates();
 		output();
@@ -330,10 +418,8 @@ void LINcasModel::run() {
 		if (fatalError) {
 			return;
 		}
-	}
+	}	
 }
-
-
 
 
 /*
