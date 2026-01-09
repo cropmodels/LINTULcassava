@@ -7,10 +7,10 @@ LC_crop <- function(x) {
 	} else { #if (x == "Ezui") {
 		p <- LINTUL2_CASSAVA_PARAMETERS_EZUI() 
 	}
-	#p[["IRRIGF"]] <- as.integer(as.logical(irri))
-	p$IRRIGF <- NULL #management paramter 
+	p$IRRIGF <- NULL #control parameter 
 	p$ROOTDM <- NULL  # soil parameter
 	p$DELT <- NULL # control paramter
+	p$WSOREDISTFRAC <- NULL # not a crop parameter 
 	p
 }
 

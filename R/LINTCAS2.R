@@ -56,7 +56,7 @@ get_states <- function(S, R) {
 	S
 }	   
 	   
-get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
+get_rates <- function(today, W, S, R, crop, soil, management, control, DELT=1) {
 
     if (S$TSUM >= crop$FINTSUM) {
 		# If the plant is not growing anymore all plant related rates are set to 0.
@@ -78,7 +78,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 
 
     # Temperature sum after planting
-	R$TSUM <- ifelse((today - management$PLDATE) >= 0, DTEFF, 0) # Deg. C 
+	R$TSUM <- ifelse(management$PLDATE <= today, DTEFF, 0) # Deg. C 
       
     # Determine water content of rooted soil
 	WC <- 0.001 * S$WA/S$ROOTD       # (-) 
@@ -90,7 +90,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	EMERG <- ((S$TSUMCROP > 0) || ((WC-soil$WCWP) >= 0 && (S$TSUM-crop$OPTEMERGTSUM) >= 0))
 	
 	# Emergence of the crop is used to calculate the temperature sum of the crop.
-	R$TSUMCROP <- DTEFF * EMERG	# Deg. C
+	R$TSUMCROP <- ifelse(EMERG, DTEFF, 0) # Deg. C
 	
 #---FIBROUS ROOT GROWTH------------------------------------------#
 	# If the soil water content drops to, or below, wilting point fibrous root growth stops.
@@ -129,7 +129,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
 	
 	# Drainage and Runoff is calculated using the drunir function.
-	DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, management$IRRIGF, soil$DRATE,
+	DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, control$IRRIGF, soil$DRATE,
 						   DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
 	R$DRAIN  <- DRUNIR$DRAIN			    # mm d-1
 	R$RUNOFF <- DRUNIR$RUNOFF			   # mm d-1
@@ -161,7 +161,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	# (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching. 
 	  
 	PUSHREDISTEND <- ((((WSOREDISTFRAC - crop$WSOREDISTFRACMAX) >= 0) || 
-					((S$REDISTLVG - crop$WLVGNEWN)>= 0) || 
+					((S$REDISTLVG - crop$WLVGNEWN) >= 0) || 
 					((S$PUSHREDISTSUM - crop$TSUMREDISTMAX) >= 0)) && 
 					(S$PUSHREDISTSUM > 0))
 
@@ -200,14 +200,17 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	#--- AGE
 	# The calculation of the physiological leaf age.  
 	R$TSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
+
 	
 	# Relative death rate due to aging depending on leaf age and the daily average temperature. 
 	RDRDV = ifelse(S$TSUMCROPLEAFAGE - crop$TSUMLLIFE >= 0, stats::approx(crop$RDRT[,1], crop$RDRT[,2], W$TAVG)$y, 0) # d-1
+
 	
 	#--- SHEDDING
 	# Relative death rate due to self shading, depending on a critical leaf area index at which leaf shedding is induced. Leaf shedding is limited to a maximum leaf shedding per day. 
 	RDRSH <- crop$RDRSHM * (S$LAI-crop$LAICR) / crop$LAICR	    # d-1
 	RDRSH <- min(max(0, RDRSH), crop$RDRSHM)  
+
 	
 	#--- DROUGHT
 	# ENSHED triggers enhanced leaf senescence due to severe drought or excessive soil water. It assumes that drought or excessive water does not affect young leaves. It only affects leaves that have a reached a given fraction of the leaf age. 
@@ -220,6 +223,8 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	
 	# Effective relative death rate and the resulting decrease in LAI.
 	RDR <- ifelse((S$TSUMCROPLEAFAGE - crop$TSUMLLIFE) >= 0, max(RDRDV, RDRSH, RDRSD), 0) 	# d-1
+	
+	
 	#	DLAI  <- LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    # m2 m-2 d-1
 	DLAI  <- S$LAI * RDR * (!DORMANCY)    # m2 m-2 d-1
 	
@@ -229,6 +234,8 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	
 	# The rate of storage root DM production with DM supplied by the leaves before abscission. 
 	R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (!DORMANCY)	  # g storage root DM m-2 d-1
+
+
 	
 	# Decrease in leaf weight due to leaf senesence. 
 	#	DLV <- (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)		 # g leaves DM m-2 d-1
@@ -258,14 +265,15 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	     
 	# Minimal stem cutting weight. 
 	WCUTTINGMIN <- crop$WCUTTINGMINPRO * crop$WCUTTINGIP
-	
+
+
 	# Stem cutting partioning at emergence. 
 	if (EMERG && (S$WST == 0)) {
 		R$WCUTTING <- S$WCUTTING *(-crop$FST_CUTT - crop$FRT_CUTT - crop$FLV_CUTT - crop$FSO_CUTT) 
 		R$WRT <- crop$WCUTTINGIP * crop$FRT_CUTT	# g fibrous root DM m-2 d-1
 		R$WST <- crop$WCUTTINGIP * crop$FST_CUTT	# g stem DM m-2 d-1
-		R$WLVG <- crop$WCUTTINGIP * crop$FLV_CUTT     # g leaves DM m-2 d-1   
-		R$WSO  <- crop$WCUTTINGIP * crop$FSO_CUTT     # g storage root DM m-2 d-1
+		R$WLVG <- crop$WCUTTINGIP * crop$FLV_CUTT   # g leaves DM m-2 d-1   
+		R$WSO  <- crop$WCUTTINGIP * crop$FSO_CUTT   # g storage root DM m-2 d-1
 	} else if (S$TSUM > crop$OPTEMERGTSUM) { 
 		R$WCUTTING <- -crop$RDRWCUTTING * S$WCUTTING * ((S$WCUTTING-WCUTTINGMIN) >= 0) * TRANRF * EMERG * (!DORMANCY)  # g stem cutting DM m-2 d-1
 		R$WRT   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FRT	# g fibrous root DM m-2 d-1
@@ -279,6 +287,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 		R$WLVG <- 0	 # g leaves DM m-2 d-1 
 		R$WSO  <- 0	 # g storage root DM m-2 d-1
 	}
+
 	# Growth of the leaf weight
 	R$WLV = R$WLVG + R$WLVD				  # g leaves DM m-2 d-1
 	# Total biomass increase 
@@ -294,7 +303,7 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 	GLAI <- gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 				crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
 				crop$LAIEXPOEND, DORMANCY)     # m2 m-2 d-1
-	
+		
 	# Change in LAI due to new growth of leaves
 	R$LAI <- GLAI - DLAI    # m2 m-2 d-1
 
@@ -302,10 +311,10 @@ get_rates <- function(today, W, S, R, crop, soil, management, DELT=1) {
 }
 
 
-LINTCAS2 <- function(weather, crop, soil, management, control){
+LINTCAS2 <- function(weather, crop, soil, management, control) {
 
 	DELT <- control$timestep
-	pars <- c(crop, soil, management$IRRIGF, DELT=DELT)
+	pars <- c(crop, soil, DELT=DELT)
 	iR <- iniRates() 	
 	wth <- weather[weather$DATE >= control$startDATE, ]
 	
@@ -313,7 +322,7 @@ LINTCAS2 <- function(weather, crop, soil, management, control){
 	out <- vector(length=length(season), mode="list")
 	S <- as.list(LC_iniSTATES(pars))
 	for (i in 1:length(season)) {
-		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, DELT)
+		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
 		states <- unlist(S)
 		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
 				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))

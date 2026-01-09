@@ -14,12 +14,12 @@
 #------------------------------------------------------------------------------------------------------#
 
 #LINTUL CASSAVA for WATER LIMITED PRODUCTION:
-LINTCAS <- function(weather, crop, soil, management, control){
+LINTCAS1 <- function(weather, crop, soil, management, control){
 
 # should use dates, not DAYS
   weather$DAYS <- weather$DOY[1] + (1:nrow(weather))-1
 	
-  pars <- c(crop, soil, management, DELT=control$timestep)
+  pars <- c(crop, soil, management, IRRIGF=control$IRRIGF, DELT=control$timestep)
 
   ini_states <- LC_iniSTATES(pars)
   steps <- seq(control$startDOY, management$DOYHAR, by = control$timestep)

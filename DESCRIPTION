@@ -1,8 +1,8 @@
 Package: LINTULcassava
 Type: Package
 Title: LINTUL CASSAVA crop growth simulation model
-Version: 0.0-5
-Date: 2026-01-08
+Version: 0.1-0
+Date: 2026-01-09
 Imports: deSolve
 Depends: R (>= 3.5.0)
 Suggests: litedown

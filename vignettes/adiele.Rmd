@@ -22,36 +22,35 @@ lcp <- system.file(package="LINTULcassava")
 #crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
-LINTCAS = LINTULcassava:::LINTCAS2
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
   p <- Adiele("Edo", year)
-  Pot_Edo <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
+  Pot_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
 	  
-  Wlim_Edo <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
+  Wlim_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=FALSE))
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
 	
 	# CRS, cross river ---------------------------------------------------------#
   p <- Adiele("Cross River", year)
-  Pot_CRS <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
+  Pot_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
 	  
-  Wlim_CRS <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
+  Wlim_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=FALSE))
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
 
 		  
 	#- Benue ----------------------------------------------------------------#
   p <- Adiele("Benue", year)
-  Pot_Ben <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=TRUE), p$control)
+  Pot_Ben <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
 	  
-  Wlim_Ben <- LINTCAS(p$weather, crop, p$soil, c(p$management, IRRIGF=FALSE), p$control)
+  Wlim_Ben <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=FALSE))
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
-##saveRDS(mod, "mod3.rds")
-#m <- readRDS("mod3.rds")
+##saveRDS(mod, "mod4.rds")
+#m <- readRDS("mod4.rds")
 #all.equal(m, mod)
 ```
 
