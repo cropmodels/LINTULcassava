@@ -1,5 +1,5 @@
 useDynLib(LINTULcassava, .registration=TRUE)
-import(methods, Rcpp) #,meteor
+import(Rcpp) #,methods, meteor
 #exportMethods("crop<-", "soil<-", "control<-", "weather<-", "run")
 export(LC_crop, LINTCAS, Adiele)
 

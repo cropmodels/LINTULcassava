@@ -49,8 +49,9 @@ Adiele <- function(site, year) {
 
 	PLDATE <- as.Date(paste0(year, "-01-01")) + x$DOYPL - 1
 	HVDATE <- PLDATE + (x$DOYHAR-x$DOYPL)
-	mng <- list(DOYPL=x$DOYPL, DOYHAR=x$DOYHAR, PLDATE=PLDATE, HVDATE=HVDATE)
-	cntr <- list(timestep=1, startDOY=x$DOYPL-100, startDATE=PLDATE - 100)
+	#mng <- list(DOYPL=x$DOYPL, DOYHAR=x$DOYHAR, PLDATE=PLDATE, HVDATE=HVDATE)
+	mng <- list(PLDATE=PLDATE, HVDATE=HVDATE)
+	cntr <- list(timestep=1, startDATE=PLDATE-100)
 	x$DOYPL <- x$DOYHAR <- NULL
 	
 	if (site=="Edo") {

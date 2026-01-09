@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 <!--
 %\VignetteEngine{litedown::vignette}
 %\VignetteIndexEntry{Adiele}
@@ -248,6 +253,7 @@ BIOM_CRS16 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2016),]
 BIOM_CRS17 <- BIOMASS[which(BIOMASS$Location == 'CRS' & BIOMASS$Year == 2017),]
 
 # leaves
+
 LeavesStemRootDynamics <- function(Series1, Series2=NULL,
                     BIOMASS=NA, TITLE, LEG=FALSE, 
                     LEGTEXT=c('Potential', 'Water lim.', "Observed")){
@@ -341,6 +347,12 @@ Figure4 <- function(){
   mtext("Leaves, gDM/m2 ", side = 2, line = 1, outer = TRUE, at = 0.86)
 }
 
+mod <- lapply(mod, \(m) {
+    m$time <- as.integer(format(m$date[1], "%j")) + (1:nrow(m)-1)
+    m
+})
+
+
 Figure4()
 ```
 
@@ -357,8 +369,13 @@ measured <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake.csv"))
 measured <- measured[measured$Treatment == "NfPfKf", c("Year","Location","time","DMRoots.g.DM.m2")]
 measured[,"DMRoots.t.ha"] <- measured[,"DMRoots.g.DM.m2"] * 0.01 #1E4*1E-6
 
-modelled <- do.call(rbind, mod)[, c("Location", "year", "time","WSOTHA")]
-names(modelled) <- gsub("year", "Year", names(modelled))
+mod <- lapply(mod, \(m) {
+    m$WSOTHA <- m$WSO / 100
+    m$Year <- as.integer(format(m$date, "%Y"))
+    m
+})
+
+modelled <- do.call(rbind, mod)[, c("Location", "Year", "time", "WSOTHA")]
 
 dcomb <- merge(measured, modelled, by=c("time", "Year", "Location"))
 

@@ -337,15 +337,13 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 	out <- do.call(rbind, out)
 
 # for compatability with the original output
-	steps <- seq(control$startDOY, management$DOYHAR, by = DELT)
+	startDOY <- as.integer(format(control$startDATE, "%j"))
+	DOYPL <- as.integer(format(management$PLDATE, "%j"))
+	DOYHAR <- DOYPL + as.integer(management$HVDATE - management$PLDATE)	
+	steps <- seq(startDOY, DOYHAR, by = DELT)
 	j <- 1:length(steps)
 	DAYS <- (weather$DOY[1] + (1:nrow(weather))-1)[steps]
 
 	out <- data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=DAYS, out)
 	out
 }
-
-#i = 405
-#today <- steps[i]; W=wth[i, ]; S=as.list(S)
-#new[405, c(42, 44, 45, 50, 52, 54, 56, 64, 65, 66)]
-#old[405, c(42, 44, 45, 50, 52, 54, 56, 64, 65, 66)]
