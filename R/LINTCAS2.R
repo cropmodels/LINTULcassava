@@ -330,6 +330,7 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 		out[[i]] <- c(states, AUX, rates)
 		#S <- S + rates
 		S <- get_states(S, R)
+		if (S$TSUM >= crop$FINTSUM) break
     }
 	out <- do.call(rbind, out)
 

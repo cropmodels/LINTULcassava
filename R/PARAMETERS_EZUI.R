@@ -84,10 +84,11 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
     RRREDISTSO       = 0.01,     # d-1                      :    Relative rate of redistribution of dry matter from storage roots to leaves
     DELREDIST        = 12       # deg. C d                 :    Delay for redistribution of dry matter
   )
-  #Look-up tables:
-  
+  p <- as.list(PARAM)
+
+  #Look-up tables: 
   # Fraction of SLA_MAX at different physiological times 
-  FRACSLATB <- matrix(c(0,     0.57, 
+  p$FRACSLATB <- matrix(c(0,     0.57, 
                         1440,  0.57, 
                         2880,  0.65, 
                         3864,  1, 
@@ -95,14 +96,14 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                         8000,  1),ncol=2,byrow=TRUE)  # (-)
   
   # Relative death rate of the leaves at different temperatures 
-  RDRT <- matrix(c(-10, 0.02 * (1 - 0.45), #NEEDS A COMMENT. WHERE DID 1- 0.45 come from??? 
+  p$RDRT <- matrix(c(-10, 0.02 * (1 - 0.45), #NEEDS A COMMENT. WHERE DID 1- 0.45 come from??? 
                    10,  0.02 * (1 - 0.45), 
                    15,  0.03 * (1 - 0.45), 
                    30,  0.06 * (1 - 0.45), 
                    50,  0.06 * (1 - 0.45)),ncol = 2,byrow = TRUE)  # d-1
   
   # fraction of LUE_OPT at different temperatures
-  TTB  <- matrix(c(-10, 0, 
+  p$TTB  <- matrix(c(-10, 0, 
                    15,  0, 
                    25,  1, 
                    29,  1,
@@ -110,7 +111,7 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                    50,  0),ncol=2,byrow=TRUE)   # (-)
   
   #Partitioning of the adventious roots at different physiological times
-  FRTTB <- matrix(c(   0,    0.11,   
+  p$FRTTB <- matrix(c(  0,    0.11,   
                       540,  0.10,   
                       720,  0.094,   
                       900,  0.01,
@@ -122,7 +123,7 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                       8000, 0.01),ncol=2,byrow=TRUE)  # (-)
   
   #Partitioning of the leaves at different physiological times 
-  FLVTB <- matrix(c(   0,    0.71,   
+  p$FLVTB <- matrix(c(   0,    0.71,   
                       540,  0.515,   
                       720,  0.393,   
                       900,  0.24,
@@ -134,7 +135,7 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                       8000, 0.21),ncol=2,byrow=TRUE)  # (-)
   
   #Partitioning of the stems at different physiological times 
-  FSTTB <- matrix(c(   0,    0.18,   
+  p$FSTTB <- matrix(c(  0,    0.18,   
                       540,  0.385,   
                       720,  0.393,   
                       900,  0.26, 
@@ -146,7 +147,7 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                       8000, 0.29),ncol=2,byrow=TRUE)   # (-)
   
   #Partitioning of the storage organs at different physiological times 
-  FSOTB <- matrix(c(   0,    0,
+  p$FSOTB <- matrix(c(  0,    0,
                       540,  0,  
                       720,  0.12,  
                       900,  0.49,  
@@ -157,14 +158,7 @@ LINTUL2_CASSAVA_PARAMETERS_EZUI <- function() {
                       4320, 0.49,
                       8000, 0.49),ncol=2,byrow=TRUE)  # (-)  
   
-  return( c(PARAM,
-            list(FRACSLATB = FRACSLATB, 
-                 RDRT = RDRT,
-                 TTB = TTB),
-            list(FLVTB = FLVTB,
-                FSTTB = FSTTB,
-                FSOTB = FSOTB,
-                FRTTB = FRTTB)))
+	p
 }
 
 

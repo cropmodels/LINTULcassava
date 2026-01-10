@@ -1,21 +1,16 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
 <!--
 %\VignetteEngine{litedown::vignette}
 %\VignetteIndexEntry{Adiele}
 %\VignetteEncoding{UTF-8}
 -->
 
-## Title 
+## LINTCAS model
 
-This document shows how to produces the figures shown in 
+This document shows how to run the LINTUL-Cassava model and how to produce the figures shown in 
 
 Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
 
-### run model 
+### Run model 
 
 We first run the model for three locations and two years
 
@@ -24,11 +19,13 @@ library(LINTULcassava)
 mod <- list()
 lcp <- system.file(package="LINTULcassava")
 
-#crop parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
+#parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
 for(year in c(2016, 2017)) {
   yr <- substr(year, 3, 4)
+  
+  ## Edo
   p <- Adiele("Edo", year)
   Pot_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
@@ -36,7 +33,7 @@ for(year in c(2016, 2017)) {
   Wlim_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=FALSE))
 	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
 	
-	# CRS, cross river ---------------------------------------------------------#
+	## Cross River
   p <- Adiele("Cross River", year)
   Pot_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
@@ -44,8 +41,7 @@ for(year in c(2016, 2017)) {
   Wlim_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=FALSE))
 	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
 
-		  
-	#- Benue ----------------------------------------------------------------#
+	## Benue
   p <- Adiele("Benue", year)
   Pot_Ben <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
 	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
@@ -54,9 +50,9 @@ for(year in c(2016, 2017)) {
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
-#saveRDS(m, "mod4.rds")
-m <- readRDS("mod4.rds")
-all.equal(m, mod)
+##saveRDS(m, "mod4.rds")
+#m <- readRDS("mod4.rds")
+#all.equal(m, mod)
 ```
 
 

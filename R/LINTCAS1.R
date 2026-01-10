@@ -15,6 +15,7 @@
 
 LINTCAS1 <- function(weather, crop, soil, management, control){
 
+  names(weather) <- toupper(names(weather))
   weather$DAYS <- weather$DOY[1] + (1:nrow(weather))-1
   management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
   management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
@@ -23,11 +24,12 @@ LINTCAS1 <- function(weather, crop, soil, management, control){
   startDOY <- as.integer(format(control$startDATE, "%j"))
   ini_states <- LC_iniSTATES(pars)
   steps <- seq(startDOY, management$DOYHAR, by = control$timestep)
-  state_wlim <- deSolve::euler(ini_states, steps, LC_model, pars, WDATA = weather)
+  state_wlim <- deSolve::euler(ini_states, steps, LINTULcassava:::LC_model, pars, WDATA = weather)
   
   i <- which(weather$DATE == control$startDATE)
   i <- i:(i+nrow(state_wlim)-1)
  
-  data.frame(year_planting=weather$YEAR[1], year=weather$YEAR[i], DOY=weather$DOY[i], state_wlim)
+#  data.frame(year_planting=weather$YEAR[1], year=weather$YEAR[i], DOY=weather$DOY[i], state_wlim)
+  data.frame(date=weather$DATE[i], state_wlim)
 }
 

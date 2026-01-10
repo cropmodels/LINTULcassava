@@ -91,7 +91,8 @@ void LINcasModel::states() {
 void LINcasModel::output(){
 	
 	if (control.outvars == "batch") {
-		out.values.insert(out.values.end(), {double(step), S.WSO});
+		return;
+//		out.values.insert(out.values.end(), {double(step), S.WSO});
 	} else if (control.outvars == "states") {
 		out.values.insert(out.values.end(),
 			{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
@@ -286,7 +287,6 @@ void LINcasModel::rates() {
 	// The rate of storage root DM production with DM supplied by the leaves before abscission.
 	R.WSOFASTRANSLSO = S.WLVG * RDR * crop.FASTRANSLSO * (!DORMANCY);   // g storage root DM m-2 d-1
 
-
 	// Decrease in leaf weight due to leaf senesence.
 	//	DLV = (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)  // g leaves DM m-2 d-1
 	double DLV = S.WLVG * RDR * (!DORMANCY);			   // g leaves DM m-2 d-1
@@ -367,8 +367,6 @@ void LINcasModel::rates() {
 
 void LINcasModel::run() {
 
-
-// start time (relative to weather data)
 	if (control.modelstart < weather.date[0]) {
 		std::string m = "model cannot start before beginning of the weather data";
 	    messages.push_back(m);
@@ -380,11 +378,13 @@ void LINcasModel::run() {
 	    fatalError = true;
 		return;
 	} else {
-		time=0;
-		// use find instead!
-		while (weather.date[time] < control.modelstart) {
-			time++;
-		}
+// get start time relative to weather data
+		auto it = std::find(weather.date.begin(), weather.date.end(), control.modelstart);
+		if (it != weather.date.end()) {
+			time = std::distance(weather.date.begin(), it);
+		} else {
+			messages.push_back("startdate not found in weather file");
+		}		
 	}
 
 	if (control.modelstart > management.PLDATE) {
@@ -393,24 +393,32 @@ void LINcasModel::run() {
 		return;		
 	}		
 	if (management.PLDATE >= management.HVDATE) {
-		messages.push_back("harvest data must be after the planting date");
+		messages.push_back("harvest date must be after the planting date");
 	    fatalError = true;
 		return;
 	}
 
 	unsigned maxdur = management.HVDATE - control.modelstart + 1;
+	if (weather.date.size() < (time + maxdur)) {
+		messages.push_back("harvest date beyond the end of weather data");
+	    fatalError = true;
+		return;		
+	}
+	
 	initialize(maxdur);
 	step = 1;	
 	while (step <= maxdur) {
-		if (! weather_step()) break;
+		if (!weather_step()) break;
 		rates();
 		output();
 		states();
+		if (S.TSUM >= crop.FINTSUM) break;
 		time++;
 		step++;
-		if (fatalError) {
-			return;
-		}
-	}	
+		if (fatalError) return;
+	}
+	if (control.outvars == "batch") {
+		out.values = {double(step), S.WSO};		
+	}
 }
 
