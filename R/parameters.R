@@ -32,13 +32,13 @@ Adiele <- function(site, year) {
 	ss <- readRDS(file.path(lcp, "ex/fields.rds"))
 	if (site == "Benue") {
 		site <- "Benue2"
-	} else if (site == "Cross River") {
+	} else if (site %in% c("CRS", "Cross River")) {
 		if (year == 2016) {
 			site <- "Cross River1"
 		} else {
 			site <- "Cross River2"
 		}
-	}
+	} 
 	s <- ss[(ss$Location==site) & (ss$Year_of_planting==year), ]
 	if (nrow(s) == 0) {
 		stop("no parameters data available for this site/year")
@@ -73,7 +73,8 @@ Adiele <- function(site, year) {
 Adiele_weather <- function(site, year) { 
 	lcp <- system.file(package="LINTULcassava")
 	wth <- readRDS(file.path(lcp, "ex/weather.rds"))
-	w <- wth[(wth$NAME==site) & (wth$YEAR >= year), ]
+	Y <- as.integer(format(wth$date, "%Y"))
+	w <- wth[(wth$name==site) & (Y >= year), ]
 	if (nrow(w) == 0) {
 		stop("no weather data available for this site/year")
 	}

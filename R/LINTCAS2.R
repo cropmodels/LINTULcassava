@@ -313,35 +313,27 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 	DELT <- control$timestep
 	pars <- c(crop, soil, DELT=DELT)
 	iR <- iniRates() 	
-	wth <- weather[weather$DATE >= control$startDATE, ]
-	
+	wth <- weather[weather$date >= control$startDATE, ]
+	names(wth) <- toupper(names(wth))
 	season <- seq(control$startDATE, management$HVDATE, by = DELT)
 	out <- vector(length=length(season), mode="list")
 	S <- as.list(LC_iniSTATES(pars))
 	for (i in 1:length(season)) {
 		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
 		states <- unlist(S)
-		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
-				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))
+#		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
+#				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))
 		# order 
 		R <- R[names(S)]
 		rates <- unlist(R)
 		names(rates) <- paste0("R", names(rates))
-		out[[i]] <- c(states, AUX, rates)
+		#out[[i]] <- c(states, AUX, rates)
 		#S <- S + rates
+		out[[i]] <- c(states, rates)
 		S <- get_states(S, R)
 		if (S$TSUM >= crop$FINTSUM) break
     }
 	out <- do.call(rbind, out)
-
-# for compatability with the original output
-	startDOY <- as.integer(format(control$startDATE, "%j"))
-	DOYPL <- as.integer(format(management$PLDATE, "%j"))
-	DOYHAR <- DOYPL + as.integer(management$HVDATE - management$PLDATE)	
-	steps <- seq(startDOY, DOYHAR, by = DELT)
-	j <- 1:length(steps)
-	DAYS <- (weather$DOY[1] + (1:nrow(weather))-1)[steps]
-
-	out <- data.frame(year_planting=wth$YEAR[1], year=wth$YEAR[j], DOY=weather$DOY[steps], time=DAYS, out)
+	out <- data.frame(date=wth$DATE[1:nrow(out)], step=1:nrow(out), out)
 	out
 }

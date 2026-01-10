@@ -16,57 +16,39 @@ We first run the model for three locations and two years
 
 ```{r run_model}
 library(LINTULcassava)
-mod <- list()
-lcp <- system.file(package="LINTULcassava")
 
 #parameters defined by Ezui et al. and estimated by Adiele et al. EJA 2021
 crop <- LC_crop("Adiele")
 
-for(year in c(2016, 2017)) {
-  yr <- substr(year, 3, 4)
-  
-  ## Edo
-  p <- Adiele("Edo", year)
-  Pot_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=TRUE))
-	mod[[paste0("Pot_Edo", yr)]] <- data.frame(Location="Edo", Pot_Edo)
-	  
-  Wlim_Edo <- LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=FALSE))
-	mod[[paste0("Wlim_Edo", yr)]] <- data.frame(Location="Edo", Wlim_Edo)
-	
-	## Cross River
-  p <- Adiele("Cross River", year)
-  Pot_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
-	mod[[paste0("Pot_CRS", yr)]] <- data.frame(Location="CRS", Pot_CRS)
-	  
-  Wlim_CRS <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=FALSE))
-	mod[[paste0("Wlim_CRS", yr)]] <- data.frame(Location="CRS", Wlim_CRS)
+x <- expand.grid(IRRI=c(TRUE, FALSE), site=c("Edo", "CRS", "Benue"), year = c(2016, 2017), stringsAsFactors=FALSE)
 
-	## Benue
-  p <- Adiele("Benue", year)
-  Pot_Ben <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=TRUE))
-	mod[[paste0("Pot_Ben", yr)]] <- data.frame(Location="Benue", Pot_Ben)
-	  
-  Wlim_Ben <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, IRRIGF=FALSE))
-	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
-}
-
-##saveRDS(m, "mod4.rds")
-#m <- readRDS("mod4.rds")
-#all.equal(m, mod)
+mod <- lapply(1:nrow(x), function(i)  {
+	  p <- Adiele(x$site[i], x$year[i])
+	  data.frame(Location=x$site[i], LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=x$IRRI[i])))
+})
+names(mod) <- apply(x, 1, function(i) paste0(c(ifelse(i[1], "pot", "wlim"), i[2:3]), collapse="_"))
 ```
 
 
 ### Figure 1A
 
+Helper function to read example data
+```{r helper}
+lcp <- function(f) file.path(system.file(package="LINTULcassava"), f)
+```
+
+Read data and fit regression model
 
 ```{r anova}
+
 #Data measured with an AccuPar below and above canopy
-DATA_ACCUPAR <- read.csv(file.path(lcp, "ex/AccuPAR_and_caculated_LAI_k.csv"))
+DATA_ACCUPAR <- read.csv(lcp("ex/AccuPAR_and_caculated_LAI_k.csv"))
 Modk <- lm(ln_FLI ~ -1 + LAI, data=DATA_ACCUPAR)
 print(summary(Modk))
 print(anova(Modk))
 ```
 
+Make figure
 
 ```{r figure1A}
 
@@ -168,7 +150,7 @@ DAP_vs_IPAR <- function(d, loc, year, leg=FALSE) {
   }
 }
 
-DATA <- read.csv(file.path(lcp, "ex/fPAR_Benue_Edo.csv"))
+DATA <- read.csv(lcp("ex/fPAR_Benue_Edo.csv"))
 
 par(mfrow=c(2,2), oma=c(3,3,1,1), mar=c(1.5,1.5,0,0))
 DAP_vs_IPAR(DATA, "Edo", 2016, TRUE)
@@ -191,7 +173,7 @@ First the regression model
 
 
 ```{r anova_fig3}
-Bio_cumIPAR <- read.csv(file.path(lcp, "ex/Bio_cumIPAR_NFPFKF_BenueEdo.csv"))
+Bio_cumIPAR <- read.csv(lcp("ex/Bio_cumIPAR_NFPFKF_BenueEdo.csv"))
 
 i <- which(Bio_cumIPAR$Loc_yr == "Edo_2016")
 ModBE <- lm(BiomassDM.gm.2 ~ -1 + Cum_PAR.MJm.2, data=Bio_cumIPAR[i,])
@@ -239,7 +221,7 @@ Fig_3(Bio_cumIPAR, ModBE)
 #Analysing Simulated and observed yield 
 #Read in the data needed
 #plant parts g DM/m2
-BIOMASS <- read.csv(file.path(lcp, 'ex/Biomass_NPKuptake.csv'))
+BIOMASS <- read.csv(lcp('ex/Biomass_NPKuptake.csv'))
 BIOMASS <- BIOMASS[BIOMASS$Treatment == "NfPfKf", ]
 BIOM_Edo16 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2016), ]
 BIOM_Edo17 <- BIOMASS[which(BIOMASS$Location == 'Edo' & BIOMASS$Year == 2017),]
@@ -326,15 +308,15 @@ LeavesStemRootDynamics <- function(Series1, Series2=NULL,
 
 Figure4 <- function(){
   par(mfcol=c(3,5),oma=c(3,3,1,1),mar=c(1.5,1.5,0,0))
-  LeavesStemRootDynamics(mod$Pot_Edo17, mod$Wlim_Edo17,
+  LeavesStemRootDynamics(mod$pot_Edo_2017, mod$wlim_Edo_2017,
                          BIOMASS=BIOM_Edo17, TITLE="Edo '17", LEG=TRUE)
-  LeavesStemRootDynamics(mod$Pot_CRS16, mod$Wlim_CRS16,
+  LeavesStemRootDynamics(mod$pot_CRS_2016, mod$wlim_CRS_2016,
                          BIOMASS=BIOM_CRS16,TITLE="CRS '16")
-  LeavesStemRootDynamics(mod$Pot_CRS17, mod$Wlim_CRS17,
+  LeavesStemRootDynamics(mod$pot_CRS_2017, mod$Wlim_CRS17,
                          BIOMASS=BIOM_CRS17, TITLE="CRS '17")
-  LeavesStemRootDynamics(mod$Pot_Ben16, mod$Wlim_Ben16,
+  LeavesStemRootDynamics(mod$pot_Benue_2016, mod$wlim_Benue_2016,
                          BIOMASS=BIOM_BEN16, TITLE="BEN '16")
-  LeavesStemRootDynamics(mod$Pot_Ben17, mod$Wlim_Ben17,
+  LeavesStemRootDynamics(mod$pot_Benue_2017, mod$wlim_Benue_2017,
                          BIOMASS=BIOM_BEN17, TITLE="BEN '17")
   
   mtext("Days after planting", side = 1, line = 1, outer = TRUE, at = NA)
@@ -360,7 +342,7 @@ Plotting simulated versus observed storage root yield NfPfKf for all years in Be
 
 ```{r fig5}
 #Get the data
-measured <- read.csv(file.path(lcp, "ex/Biomass_NPKuptake.csv"))
+measured <- read.csv(lcp("ex/Biomass_NPKuptake.csv"))
 
 measured <- measured[measured$Treatment == "NfPfKf", c("Year","Location","time","DMRoots.g.DM.m2")]
 measured[,"DMRoots.t.ha"] <- measured[,"DMRoots.g.DM.m2"] * 0.01 #1E4*1E-6
