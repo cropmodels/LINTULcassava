@@ -8,7 +8,7 @@ Suggests: deSolve, litedown, tinytest
 LinkingTo: Rcpp
 Imports: Rcpp (>= 1.0-10)
 VignetteBuilder: litedown 
-Authors@R: c(person("Guillaume", "Ezui", role="aut"), person("Rob", "van den Beuken", role = "aut"), person("Joy", "Adiele", role="aut"), person("Tom", "Schut", role="aut"), person("Robert J.", "Hijmans", role= c("cre", "aut"),  email="r.hijmans@gmail.com"))
+Authors@R: c(person("Guillaume", "Ezui", role="aut"), person("Peter", "Leffelaar", role = "aut"), person("Rob", "van den Beuken", role = "aut"), person("Joy", "Adiele", role="aut"), person("Tom", "Schut", role="aut"), person("Robert J.", "Hijmans", role= c("cre", "aut"),  email="r.hijmans@gmail.com"))
 Maintainer: Robert J. Hijmans <r.hijmans@gmail.com>
 Description: This package contains a very fast implementation of the LINTUL crop growth model to simulate water-limited growth and development of cassava. The model was developed by Ezui et al. (2018) <doi:10.1016/j.fcr.2018.01.033> and callibrated by Adiele et al. (2021) <doi:10.1016/j.eja.2021.126242>. 
 License: EUPL
