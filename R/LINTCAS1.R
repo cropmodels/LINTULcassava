@@ -2,7 +2,7 @@
 # FUNCTION LINTUL_CASSAVA_RUN  
 #
 # Author:       Rob van den Beuken
-# Modified:     AGT Schut
+# Modified:     AGT Schut, RJ Hijmans
 # Copyright:    Copyright 2019, PPS
 # Email:        tom.schut@wur.nl
 #
@@ -13,12 +13,9 @@
 # cassava using the LINTUL model. Field Crops Research, 219, 256-272.
 #------------------------------------------------------------------------------------------------------#
 
-#LINTUL CASSAVA for WATER LIMITED PRODUCTION:
 LINTCAS1 <- function(weather, crop, soil, management, control){
 
-# should use dates, not DAYS
   weather$DAYS <- weather$DOY[1] + (1:nrow(weather))-1
-	
   management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
   management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
   pars <- c(crop, soil, management, IRRIGF=control$IRRIGF, DELT=control$timestep)

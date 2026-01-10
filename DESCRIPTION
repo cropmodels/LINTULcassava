@@ -10,5 +10,5 @@ Imports: Rcpp (>= 1.0-10)
 VignetteBuilder: litedown 
 Author: Guillaume Ezui, Rob van den Beuken, Joy Adiele, Peter Leffelaar, Tom Schut
 Maintainer: Robert Hijmans <r.hijmans@gmail.com>
-Description: This package implements a LINTUL crop growth simulation model for cassava described by Ezui et al. It contains a C++ implementation of the model as well as the R implementation also available in the scripts available here https://models.pps.wur.nl/index.php/lintulcassavanpk (2024-10-2100) -- with minor tweaks in the user interface to make it easier to use. 
+Description: This package implements a LINTUL crop growth simulation model for cassava described by <Ezui et al., 2018. Simulating drought impact and mitigation in cassava using the LINTUL model. Field Crops Research 219: 256-272>. The package contains a C++ implementation of the model as well as the R implementation in the scripts available here https://models.pps.wur.nl/index.php/lintulcassavanpk (2024-10-2100), with minor tweaks in the user interface to make it easier to use. 
 License: EUPL

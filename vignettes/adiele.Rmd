@@ -54,9 +54,9 @@ for(year in c(2016, 2017)) {
 	mod[[paste0("Wlim_Ben", yr)]] <- data.frame(Location="Benue", Wlim_Ben)
 }
 
-##saveRDS(mod, "mod4.rds")
-#m <- readRDS("mod4.rds")
-#all.equal(m, mod)
+#saveRDS(m, "mod4.rds")
+m <- readRDS("mod4.rds")
+all.equal(m, mod)
 ```
 
 

@@ -156,7 +156,7 @@ void LINcasModel::rates() {
 	// emergence occurs (1) when the temperature sum exceeds the temperature sum needed for emergence. And (2)
 	// when enough water is available in the soil. 
 
-	bool EMERG = ((S.TSUMCROP > 0) || ((WC-soil.WCWP) >= 0 && (S.TSUM-crop.OPTEMERGTSUM) >= 0));
+	bool EMERG = (S.TSUMCROP > 0) || ((WC > soil.WCWP) && (S.TSUM >= crop.OPTEMERGTSUM));
 
 	// Emergence of the crop is used to calculate the temperature sum of the crop.
 	R.TSUMCROP = EMERG ? DTEFF : 0;     // Deg. C
@@ -167,7 +167,7 @@ void LINcasModel::rates() {
 	// The rooting depth (m) is calculated from a maximum rate of change in rooting depth, ;
 	// the emergence of the crop and the constraints mentioned above.;
 
-	if (((S.ROOTD-soil.ROOTDM) < 0) && ((WC-soil.WCWP) >= 0)) {
+	if (EMERG && (S.ROOTD < soil.ROOTDM) && (WC >= soil.WCWP)) {
 		R.ROOTD = crop.RRDMAX * EMERG;		 // mm d-1;
 	} else { 
 		R.ROOTD = 0;
@@ -182,62 +182,49 @@ void LINcasModel::rates() {
 	R.NINTC = std::min(A.PREC, (crop.FRACRNINTC * S.LAI)) ;    // mm d-1
 
 	// Potential evaporation and transpiration are calculated using the Penman equation.
-	Penman();
+	Penman(); // compute R.PTRAN and R.PEVAP   mm d-1
 
-	//	std::vector<double> PENM = Penman(A.TAVG, A.VAPR, A.SRAD, S.LAI, A.WIND, R.NINTC);
-	//	R.PTRAN = PENM[0];				// mm d-1
-	//	R.PEVAP = PENM[1];				// mm d-1
 	// Soil moisture content at severe drought and the critical soil moisture content are calculated to see if drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. ;
 	double WCSD = soil.WCWP * crop.TWCSD;
 	double WCCR = soil.WCWP + std::max(WCSD-soil.WCWP, 
 		(R.PTRAN/(R.PTRAN+crop.TRANCO) * (soil.WCFC-soil.WCWP)));
 
 	// The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.;
-	//double EVA = evaptr(R.PEVAP, R.PTRAN, S.ROOTD, S.WA, soil.WCAD,
-	// soil.WCWP,crop.TWCSD,soil.WCFC, soil.WCWET, soil.WCST, crop.TRANCO, control.DELT);
-	//R.TRAN = EVA[0];				   // mm d-1
-	//R.EVAP = EVA[1];				   // mm d-1
-
-	evaptr();
-
+	evaptr(); // compute R.TRAN and R.EVAP  mm d-1
+	
 	// The transpiration reduction factor is defined as the ratio between actual and potential transpiration;
 	double TRANRF = R.PTRAN <= 0 ? 1 : R.TRAN/R.PTRAN; // (-)
 
-	// Drainage and Runoff is calculated using the drunir function.;
-	//	std::vector<double> DRUNIR  = drunir(A.PREC, R.NINTC, R.EVAP, R.TRAN, management.IRRIGF, 
-	//			soil.DRATE, control.DELT, S.WA, S.ROOTD, soil.WCFC, soil.WCST);
-	//	R.DRAIN  = DRUNIR[0];			  // mm d-1
-	//	R.RUNOFF = DRUNIR[1];			 // mm d-1
-	drunir();
+	// Drainage and Runoff is calculated using the drunir function.
+	drunir(); // compute R.DRAIN and R.RUNOFF  // mm d-1
 	
 	// Rate of change of soil water amount;
 	R.WA = (A.PREC + EXPLOR + R.IRRIG) - (R.NINTC + R.RUNOFF + R.TRAN + R.EVAP + R.DRAIN);  // mm d-1;
 
 	if (!EMERG) return;
 
-
 //---DORMANCY AND RECOVERY-------------------------------------------//;
 	// The crop enters the dormancy phase as the soil water content is lower than the soil water content at ;
 	// severe drought and as the LAI is lower than the minimal LAI.
-	bool dormancy = ((WC-WCSD) <= 0) && ((S.LAI - crop.LAI_MIN) <= 0);
+	bool dormancy = (WC <= WCSD) && (S.LAI <= crop.LAI_MIN);
 
 	// The crop goes out of dormancy if the water content is higher than a certain recovery water content and as the water content is larger than the wilting point soil moisture content. 
-	bool pushdor = ((WC - crop.RECOV * WCCR) >= 0) && ((WC - soil.WCWP) >= 0);
+	bool pushdor = (WC >= (crop.RECOV * WCCR)) && (WC >= soil.WCWP);
 
 	// The redistributed fraction of storage root DM to the leaves. 
 	double WSOREDISTFRAC = S.WSO == 0 ? 1 : S.REDISTSO/S.WSO;
 
-	// Three push functions are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
+	// Three Boolen variables are used to determine the redistribution and recovery from dormancy, a final function DORMANCY is used to indicate if the crop is still in dormancy:
 	// (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum.
 	// (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM.
 	// (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching.
-	bool PUSHREDISTEND = ((((WSOREDISTFRAC - crop.WSOREDISTFRACMAX) >= 0) ||
-			((S.REDISTLVG - crop.WLVGNEWN) >= 0) ||
-			((S.PUSHREDISTSUM - crop.TSUMREDISTMAX) >= 0)) &&
-			(S.PUSHREDISTSUM > 0));
+	bool PUSHREDISTEND = ((WSOREDISTFRAC >= crop.WSOREDISTFRACMAX) ||
+			(S.REDISTLVG >= crop.WLVGNEWN) || (S.PUSHREDISTSUM >= crop.TSUMREDISTMAX)) &&
+			(S.PUSHREDISTSUM > 0);
 
-	bool PUSHREDIST  = (S.PUSHDORMRECTSUM - crop.DELREDIST) >= 0 ? (!PUSHREDISTEND) : false; 
+	bool PUSHREDIST  = (S.PUSHDORMRECTSUM >= crop.DELREDIST) ? (!PUSHREDISTEND) : false; 
 	bool PUSHDORMREC = pushdor && (S.DORMTSUM > 0) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0); 
+	
 	bool DORMANCY = (dormancy || PUSHDORMREC) && (!PUSHREDIST) && ((S.TSUMCROP - crop.TSUMSBR) >= 0);
 
 	// The temperature sums related to the dormancy and recovery periods.
@@ -267,10 +254,8 @@ void LINcasModel::rates() {
 	// The calculation of the physiological leaf age.  ;
 	R.TSUMCROPLEAFAGE = DTEFF * EMERG - (S.TSUMCROPLEAFAGE/control.DELT) * PUSHREDIST;     // Deg. C
 
-
 	// Relative death rate due to aging depending on leaf age and the daily average temperature.
-	double RDRDV = (S.TSUMCROPLEAFAGE - crop.TSUMLLIFE >= 0) ? approx(crop.RDRT, A.TAVG) : 0; // d-1
-
+	double RDRDV = (S.TSUMCROPLEAFAGE >= crop.TSUMLLIFE) ? approx(crop.RDRT, A.TAVG) : 0; // d-1
 
 //--- SHEDDING;
 	// Relative death rate due to self shading, depending on a critical leaf area index at which leaf shedding is;
@@ -281,15 +266,15 @@ void LINcasModel::rates() {
 //--- DROUGHT;
 	// ENSHED triggers enhanced leaf senescence due to severe drought or excessive soil water. It assumes that drought or excessive water does not affect young leaves. It only affects leaves that have a reached a given fraction of the leaf age.
 
-	bool ENHSHED = (((WC-WCSD) < 0) || ((WC-soil.WCWET) >= 0)) && 
-		((S.TSUMCROPLEAFAGE - crop.FRACTLLFENHSH * crop.TSUMLLIFE) >= 0);    // (-)
+	bool ENHSHED = ((WC < WCSD) || (WC >= soil.WCWET)) && 
+		(S.TSUMCROPLEAFAGE >= (crop.FRACTLLFENHSH * crop.TSUMLLIFE)); 
 
 	// Relative death rate due to severe drought
 	double RDRSD = crop.RDRB * ENHSHED;    // d-1
 	//---;
 
 	// Effective relative death rate and the resulting decrease in LAI.
-	double RDR = ((S.TSUMCROPLEAFAGE - crop.TSUMLLIFE) >= 0) ? std::max(RDRDV, std::max(RDRSH, RDRSD)) : 0; 	// d-1
+	double RDR = (S.TSUMCROPLEAFAGE >= crop.TSUMLLIFE) ? std::max(RDRDV, std::max(RDRSH, RDRSD)) : 0; 	// d-1
 
 	//	DLAI  = LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    // m2 m-2 d-1
 	double DLAI  = S.LAI * RDR * (!DORMANCY);    // m2 m-2 d-1
@@ -339,10 +324,10 @@ void LINcasModel::rates() {
 		R.WSO  = crop.WCUTTINGIP * crop.FSO_CUTT;     // g storage root DM m-2 d-1
 	} else if (S.TSUM > crop.OPTEMERGTSUM) {	
 		R.WCUTTING = -crop.RDRWCUTTING * S.WCUTTING * ((S.WCUTTING-WCUTTINGMIN) >= 0) * TRANRF * EMERG * (!DORMANCY);  // g stem cutting DM m-2 d-1;
-		R.WRT   = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FRT;	// g fibrous root DM m-2 d-1
-		R.WST   = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FST;	// g stem DM m-2 d-1
-		R.WLVG  = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FLV - DLV + R.REDISTLVG * PUSHREDIST; // g leaves DM m-2 d-1 
-		R.WSO   = (std::abs(GTOTAL)+std::abs(R.WCUTTING)) * FSO + R.WSOFASTRANSLSO - R.REDISTSO; // g storage root DM m-2 d-1
+		R.WRT   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FRT;	// g fibrous root DM m-2 d-1
+		R.WST   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FST;	// g stem DM m-2 d-1
+		R.WLVG  = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FLV - DLV + R.REDISTLVG * PUSHREDIST; // g leaves DM m-2 d-1 
+		R.WSO   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FSO + R.WSOFASTRANSLSO - R.REDISTSO; // g storage root DM m-2 d-1
 	} else {
 		R.WCUTTING = 0;   // g stem cutting DM m-2 d-1
 		R.WRT = 0;	// g fibrous root DM m-2 d-1
@@ -364,10 +349,10 @@ void LINcasModel::rates() {
 	if (S.TSUMCROP == 0) {
 		// Growth before seedling emergence
 		GLAI =  0;     // m2 m-2 d-1
-	} else if (S.LAI == 0 && WC > soil.WCWP) {
+	} else if ((S.LAI == 0) && (WC > soil.WCWP)) {
 		// Growth at day of seedling emergence
 		GLAI =  crop.LAII / control.DELT;  // m2 m-2 d-1
-	} else if (S.TSUMCROP < crop.TSUMLA_MIN && S.LAI < crop.LAIEXPOEND) {
+	} else if ((S.TSUMCROP < crop.TSUMLA_MIN) && (S.LAI < crop.LAIEXPOEND)) {
 		 // Growth during juvenile stage
 		GLAI = ((S.LAI * (std::exp(crop.RGRL * DTEFF * control.DELT) - 1) / control.DELT) 
 				+ std::abs(R.WCUTTING) * FLV * SLA) * TRANRF;  // m2 m-2 d-1
@@ -402,12 +387,20 @@ void LINcasModel::run() {
 		}
 	}
 
+	if (control.modelstart > management.PLDATE) {
+		messages.push_back("model cannot start after the planting date");
+	    fatalError = true;
+		return;		
+	}		
+	if (management.PLDATE >= management.HVDATE) {
+		messages.push_back("harvest data must be after the planting date");
+	    fatalError = true;
+		return;
+	}
 
-	step = 1;	
-	// should check that HVDATE > PLDATE >= modelstart
 	unsigned maxdur = management.HVDATE - control.modelstart + 1;
-
 	initialize(maxdur);
+	step = 1;	
 	while (step <= maxdur) {
 		if (! weather_step()) break;
 		rates();
@@ -421,40 +414,3 @@ void LINcasModel::run() {
 	}	
 }
 
-
-/*
-LINTCAS2 = function(weather, crop, soil, management, control){;
-
-	control.DELT = control.timestep;
-	pars = c(crop, soil, management.IRRIGF, control.DELT=control.DELT);
-	iR = iniRates() 	;
-	wth = weather[weather.DATE >= control.startDATE, ];
-	;
-	season = seq(control.startDATE, management.HVDATE, by = control.DELT);
-	out = vector(length=length(season), mode="list");
-	S = as.list(LC_iniSTATES(pars));
-	for (i in 1:length(season)) {;
-		R = get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control.DELT);
-		states = unlist(S);
-		AUX = c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R.PTRAN <= 0, 1, R.TRAN/R.PTRAN), ;
-				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]));
-		// order ;
-		R = R[names(S)];
-		rates = unlist(R);
-		names(rates) = paste0("R", names(rates));
-		out[[i]] = c(states, AUX, rates);
-		//S = S + rates;
-		S = get_states(S, R);
-    };
-	out = do.call(rbind, out);
-
-// for compatability with the original output;
-	steps = seq(control.startDOY, management.DOYHAR, by = control.DELT);
-	j = 1:length(steps);
-	DAYS = (weather.DOY[1] + (1:nrow(weather))-1)[steps];
-
-	out = data.frame(year_planting=wth.YEAR[1], year=wth.YEAR[j], DOY=weather.DOY[steps], time=DAYS, out);
-	out;
-};
-
-*/
