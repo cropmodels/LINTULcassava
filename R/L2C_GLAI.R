@@ -13,7 +13,7 @@
 # cassava using the LINTUL model. Field Crops Research, 219, 256-272.
 #
 #--------------------------------------------------------------------------------------------------#
-gla <-function(DTEFF,TSUMCROP,LAII,RGRL,DELT,SLA,LAI,GLV,TSUMLA_MIN,TRANRF,WC,WCWP,RWCUTTING,FLV,LAIEXPOEND,DORMANCY) {
+gla <-function(DTEFF, TSUMCROP, LAII, RGRL, DELT, SLA, LAI, GLV, TSUMLA_MIN, TRANRF, WC, WCWP, RWCUTTING, FLV,LAIEXPOEND, DORMANCY, NLAI=1, NPKI=1) {
   
   # Growth before seedling emergence
   if(TSUMCROP == 0) {
@@ -23,11 +23,10 @@ gla <-function(DTEFF,TSUMCROP,LAII,RGRL,DELT,SLA,LAI,GLV,TSUMLA_MIN,TRANRF,WC,WC
     GLAI <- LAII / DELT  # m2 m-2 d-1
   } else if (TSUMCROP < TSUMLA_MIN && LAI < LAIEXPOEND) {  
   # Growth during juvenile stage
-    GLAI <-((LAI * (exp(RGRL * DTEFF * DELT) - 1) / DELT) +abs(RWCUTTING)*FLV*SLA) * TRANRF  # m2 m-2 d-1
+    GLAI <-((LAI * (exp(RGRL * DTEFF * DELT) - 1) / DELT) +abs(RWCUTTING)*FLV*SLA) * TRANRF *  exp(-NLAI * (1 - NPKI))  # m2 m-2 d-1
   } else { 
 # Growth during maturation stage
 	GLAI <-SLA * GLV * (1-DORMANCY)  # m2 m-2 d-1
   }
-  
   GLAI
 }
