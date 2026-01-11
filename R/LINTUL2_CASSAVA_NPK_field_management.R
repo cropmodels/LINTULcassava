@@ -62,50 +62,29 @@ LINTUL2_CASSAVA_FIELD_MANAGEMENT_NPK <- function(SiteInfo, MODEL_PARAM, fertiliz
   # Note: that the days when fertilizers should be surrounded with the values
   # of the day before. Because an interpolation function is used. 
 
-  FERNTAB <- matrix(c(  0,   0,
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"N"] * MODEL_PARAM[["N_RECOV"]],                       
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"N"] * MODEL_PARAM[["N_RECOV"]],                       
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"N"] * MODEL_PARAM[["N_RECOV"]],                       
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"N"] * MODEL_PARAM[["N_RECOV"]],                       
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] + 1, 0,
-                        2000, 0), ncol = 2, byrow=TRUE)  # kg N/ha as function of day number
+  N_rec <- MODEL_PARAM[["N_RECOV"]]	
+  FERNTAB <- matrix(c(
+		SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"N"] * N_rec,
+		SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"N"] * N_rec,                       
+		SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"N"] * N_rec,                       
+		SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"N"] * N_rec), 
+		ncol=2, byrow=TRUE)
+		
+  P_rec <- MODEL_PARAM[["P_RECOV"]]	
+  FERPTAB <- matrix(c(
+		SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"P"] * P_rec,
+		SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"P"] * P_rec,                       
+		SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"P"] * P_rec,                       
+		SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"P"] * P_rec),
+		ncol = 2, byrow=TRUE)  # kg P/ha as function of day number
   
-  FERPTAB <- matrix(c(  0,   0,
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"P"] * MODEL_PARAM[["P_RECOV"]],                       
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"P"] * MODEL_PARAM[["P_RECOV"]],                       
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"P"] * MODEL_PARAM[["P_RECOV"]],                       
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"P"] * MODEL_PARAM[["P_RECOV"]],                       
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] + 1, 0,
-                        2000, 0), ncol = 2, byrow=TRUE)  # kg P/ha as function of day number
-  
-  FERKTAB <- matrix(c(  0,   0,
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"K"] * MODEL_PARAM[["K_RECOV"]],                       
-                        SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"K"] * MODEL_PARAM[["K_RECOV"]],                       
-                        SiteInfo[1,"Day_of_first_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"K"] * MODEL_PARAM[["K_RECOV"]],                       
-                        SiteInfo[1,"Day_of_second_topdressing.DOY"] + 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] - 1, 0, 
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"K"] * MODEL_PARAM[["K_RECOV"]],                       
-                        SiteInfo[1,"Day_of_third_topdressing.DOY"] + 1, 0,
-                        2000, 0), ncol = 2, byrow=TRUE)  # kg K/ha as function of day number
+  K_rec <- MODEL_PARAM[["K_RECOV"]]	
+  FERKTAB <- matrix(c(
+		SiteInfo[1,"Day_of_basal_fertilizer_application.DOY"], fertilizerNPK[1,"K"] * K_rec,
+		SiteInfo[1,"Day_of_first_topdressing.DOY"], fertilizerNPK[2,"K"] * K_rec,                       
+		SiteInfo[1,"Day_of_second_topdressing.DOY"], fertilizerNPK[3,"K"] * K_rec,                       
+		SiteInfo[1,"Day_of_third_topdressing.DOY"], fertilizerNPK[4,"K"] * K_rec),
+		ncol = 2, byrow=TRUE)  # kg K/ha as function of day number
   
   fertilizer=list(FERNTAB = FERNTAB, FERPTAB = FERPTAB, FERKTAB = FERKTAB)
   

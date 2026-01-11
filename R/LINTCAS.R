@@ -50,6 +50,18 @@ LINTCAS1 <- function(weather, crop, soil, management, control){
 LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 # Author: AGT Schut
 # modfied by RH
+
+	surround_days <- function(d) {
+		if (is.null(d)) return(d)
+		d <- d[rep(1:nrow(d), each=3), ]
+		d[,1] <- d[,1] + c(-1:1)
+		d[-seq(2, nrow(d), by=3), 2] = 0
+		rbind(cbind(0,0), d, cbind(2000,0))
+	}
+	for (v in c("FERNTAB", "FERPTAB", "FERKTAB")) {
+		management[[v]] <- surround_days(management[[v]])
+	}
+
 	names(wdata) <- toupper(names(wdata))
 	wdata$DOYS <- 1:nrow(wdata)
 	pars <- c(management, soil, crop, control)
