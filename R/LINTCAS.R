@@ -51,21 +51,40 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 # Author: AGT Schut
 # modfied by RH
 
-	surround_days <- function(d) {
+	management$FERNTAB <- management$FERTAB[,1:2]
+	management$FERPTAB <- management$FERTAB[,c(1,3)]
+	management$FERKTAB <- management$FERTAB[,c(1,4)]
+	surround_days <- function(d, recovery) {
 		if (is.null(d)) return(d)
+		d[,2] <- d[,2] * recovery
 		d <- d[rep(1:nrow(d), each=3), ]
 		d[,1] <- d[,1] + c(-1:1)
 		d[-seq(2, nrow(d), by=3), 2] = 0
 		rbind(cbind(0,0), d, cbind(2000,0))
 	}
 	for (v in c("FERNTAB", "FERPTAB", "FERKTAB")) {
-		management[[v]] <- surround_days(management[[v]])
+		management[[v]] <- surround_days(management[[v]], crop[[paste0(substr(v, 4, 4), "_RECOV")]])
 	}
+
+
+  #Uptake of control treatment should be taken up in period to harvest. Assumed that all becomes gradually available with fixed rate per day. Available nutrients can be taken up in 90% of the season
+  
+  ## RH. What about very short or long seasons. Probably better use a decay function in the model
+ 
+  season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
+  soil[["RTNMINS"]] =  (1/0.9) * soil[["NMINI"]] / season_length # gN m-2 d-1
+  soil[["RTPMINS"]] =  (1/0.9) * soil[["PMINI"]] / season_length # gP m-2 d-1
+  soil[["RTKMINS"]] =  (1/0.9) * soil[["KMINI"]] / season_length # gK m-2 d-1
+
+
+  ## initial soil water content set at field capacity
+  soil$WCI = soil[["WCFC"]]    # m3 m-3 
 
 	names(wdata) <- toupper(names(wdata))
 	wdata$DOYS <- 1:nrow(wdata)
 	pars <- c(management, soil, crop, control)
-	state_res <- deSolve::euler(LINTUL2_CASSAVA_NPK_iniSTATES(pars), 
+	
+	state_res <- deSolve::euler(LC_NPK_iniSTATES(pars), 
                     seq(control$starttime, control$endtime, by = control$DELT), 
                     LINTUL2_CASSAVA_NPK, pars, WDATA = wdata)
 	state_res <- data.frame(state_res)    

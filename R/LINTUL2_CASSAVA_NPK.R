@@ -56,14 +56,11 @@ LINTUL2_CASSAVA_NPK <- function(Time, State, Pars, WDATA){
     RPAR   <- FPAR * WDATA$SRAD             # PAR MJ m-2 d-1   : PAR radiation
    
     # Determine rates when crop is still growing
+	
+	## RH: Time >= DOYPL below is not correct. 
+	## Simulation should start before planting to initialize the water balance
     if(Time >= DOYPL && TSUM < FINTSUM){
-      
-      # if(Time == DOYPL){
-      #   print("LINTUL-CASSAVA-NPK")
-      #   print("Build on version as used in Adiele et al. 2020 Eur. J. Agronomy")
-      #   print("Plant Production Systems, WU, 2020")
-      # }
-      
+          
       # Temperature sum after planting. Should integrate to dC
       RTSUM <- (DTEFF / DELT) *ifelse((Time-DOYPL) >= 0, 1, 0) # Deg. C d-1
       
@@ -456,6 +453,10 @@ LINTUL2_CASSAVA_NPK <- function(Time, State, Pars, WDATA){
       
       # Change in LAI due to new growth of leaves
       RLAI <- GLAI - DLAI    # m2 m-2 d-1
+
+
+           #RANLVG <- RANLVD <- RANST  <- RANRT <- RANSO <- RAPLVG <- RAPLVD <- RAPST  <- RAPRT <- RAPSO <-    RAKLVG <- RAKLVD <- RAKST  <- RAKRT <- RAKSO <- RNMINT <- RPMINT <- RKMINT <- RNMINS <- RPMINS <-RKMINS <- RNMINF <- RPMINF <- RKMINF <- 0
+		   #NPKICAL <- list(NNI=0, PNI=0, KNI=0)
       
       #Combined rates
       RATES <- c(RROOTD=RROOTD,RWA=RWA,
