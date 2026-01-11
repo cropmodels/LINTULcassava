@@ -4,7 +4,7 @@
 %\VignetteEncoding{UTF-8}
 -->
 
-## LINTCAS model
+## LINTULcassava model
 
 This document shows how to run the LINTUL-Cassava model and how to produce the figures shown in 
 
@@ -27,11 +27,10 @@ x <- expand.grid(IRRI=c(TRUE, FALSE), site=c("Edo", "CRS", "Benue"),
 mod <- lapply(1:nrow(x), function(i)  {
     p <- Adiele(x$site[i], x$year[i])
     data.frame(Location=x$site[i], 
-      LINTCAS(p$weather, crop, p$soil, p$management, 
-              control=c(p$control, IRRIGF=x$IRRI[i])))
-  })
-names(mod) <- apply(x, 1, function(i) 
-              paste0(c(ifelse(i[1], "pot", "wlim"), i[2:3]), collapse="_"))
+        LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=x$IRRI[i]))
+    )
+})
+names(mod) <- apply(x, 1, function(i) paste0(c(ifelse(i[1], "pot", "wlim"), i[2:3]), collapse="_"))
 ```
 
 
@@ -55,7 +54,7 @@ print(anova(Modk))
 
 Make figure
 
-```{r figure1A}
+```{r figure1A, fig.width=7, fig.height=7}
 
 Fig_1A <- function(DATA, model){
   par(oma=c(2,2,2,2),mar=c(5,5,0,0))
@@ -83,7 +82,7 @@ Fig_1A(DATA = DATA_ACCUPAR, Modk)
 
 ### Figure 1
 
-```{r figure1}
+```{r figure1, fig.width=7, fig.height=7}
 Fig_1 <- function(DATA, model){
 
   par(oma=c(2,2,2,2),mar=c(5,5,0,0))
@@ -112,43 +111,33 @@ DAP_vs_IPAR <- function(d, loc, year, leg=FALSE) {
     LOCYR=paste(loc, year, collapse=", ")
     LEG=leg 
     LEGTEXT=c('NfPfK240', 'NfPfKf', 'NfPfKfMN')
-
   
     red <- rgb(1, 0, 0, alpha = 0.8)
     blue <- rgb(0, 0, 1, alpha = 0.8)
   
   plot(S1$DAP, S1$fPAR, type="l", xlab = "Days after planting", 
-       ylab = "IPAR, f",  ylim = c(0,1), xlim=c(0,450), lwd = 1.5,
+        ylab = "IPAR, f",  ylim = c(0,1), xlim=c(0,450), lwd = 1.5,
         cex.lab = 1.25, cex.axis= 1.1, mgp=c(2,0.5,0))
-  text(x=100, y=0.05,labels=LOCYR,cex=1.5)
-  arrows(S1$DAP, S1$fPAR-S1$fPAR_sd, S1$DAP, S1$fPAR+S1$fPAR_sd, 
-         length=0.05, angle=90, code=3)
+    text(x=100, y=0.05,labels=LOCYR,cex=1.5)
+    arrows(S1$DAP, S1$fPAR-S1$fPAR_sd, S1$DAP, S1$fPAR+S1$fPAR_sd, 
+           length=0.05, angle=90, code=3)
     points(x = S1$DAP, y = S1$fPAR, pch = 2)
-    colLEG <- "black"
-    colLWD <- 1.5
-    colLTY <- 1
-    colPCH <- 2
+    colLEG <- "black"; colLWD <- 1.5; colLTY <- 1; colPCH <- 2
 
   if(length(S2)>1){
     lines(S2$DAP, S2$fPAR, col = red, lwd = 1.5, lty = 2)
     arrows(S2$DAP+3, S2$fPAR-S2$fPAR_sd, S2$DAP+3, S2$fPAR+S2$fPAR_sd, 
            length=0.05, angle=90, code=3, col = red)
     points(S1$DAP, S1$fPAR, pch = 5)
-    colLEG <- c(colLEG, red)
-    colLWD <- c(colLWD, 1.5)
-    colLTY <- c(colLTY, 2)
-    colPCH <- c(colPCH, 5)
+    colLEG <- c(colLEG, red); colLWD <- c(colLWD, 1.5); colLTY <- c(colLTY, 2); colPCH <- c(colPCH, 5)
   }
   if(length(S3)>1){
       lines(S3$DAP, S3$fPAR, col=blue, lwd=1.5, lty=4)
       arrows(S3$DAP-3, S3$fPAR-S3$fPAR_sd, S3$DAP-3, S3$fPAR+S3$fPAR_sd, 
              length=0.05, angle=90, code=3,col = blue)
       points(S3$DAP, S3$fPAR, col = blue, pch = 19)
-      colLEG <- c(colLEG, blue)
-      colLWD <- c(colLWD, 1.5)
-      colLTY <- c(colLTY, 4)
-      colPCH <- c(colPCH, 19)
-    }    
+      colLEG <- c(colLEG, blue); colLWD <- c(colLWD, 1.5); colLTY <- c(colLTY, 4); colPCH <- c(colPCH, 19)
+  }    
   if(LEG){
     legend("bottomright", legend=LEGTEXT, col = colLEG, lwd = colLWD, 
             lty = colLTY, pch = colPCH, bty = "n")
@@ -165,7 +154,6 @@ DAP_vs_IPAR(DATA, "Benue", 2017)
 mtext("Days after planting", side = 1, line = 1, outer = TRUE)
 mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.25)
 mtext("IPAR, f", side = 2, line = 1, outer = TRUE, at = 0.75)
-
 ```
 
 
@@ -188,7 +176,7 @@ anova(ModBE)
 
 And now the plot 
 
-```{r fig3}
+```{r fig3, fig.width=7, fig.height=7}
 
 Fig_3 <- function(bp, model){
   
@@ -221,7 +209,7 @@ Fig_3(Bio_cumIPAR, ModBE)
 
 ### Figure 4
 
-```{r fig4}
+```{r fig4, fig.width=10, fig.height=5.5}
 #Data output from LINTUL-cASSAVA simulations
 #Analysing Simulated and observed yield 
 #Read in the data needed
@@ -345,7 +333,7 @@ Figure4()
 
 Plotting simulated versus observed storage root yield NfPfKf for all years in Benue, Cross River and Edo  (Fig. 5 in thesis chapter 3)
 
-```{r fig5}
+```{r fig5, fig.width=7, fig.height=7}
 #Get the data
 measured <- read.csv(lcp("ex/Biomass_NPKuptake.csv"))
 
@@ -354,15 +342,16 @@ measured[,"DMRoots.t.ha"] <- measured[,"DMRoots.g.DM.m2"] * 0.01 #1E4*1E-6
 
 mod <- lapply(mod, \(m) {
     m$WSOTHA <- m$WSO / 100
-    m$Year <- as.integer(format(m$date, "%Y"))
+    m$Year <- as.integer(format(m$date[1], "%Y"))
     m
 })
 
-modelled <- do.call(rbind, mod)[, c("Location", "Year", "time", "WSOTHA")]
+modelled <- do.call(rbind, mod[grep("^wlim", names(mod))])[, c("Location", "Year", "time", "WSOTHA")]
 
-dcomb <- merge(measured, modelled, by=c("time", "Year", "Location"))
 
-fit <- lm(WSOTHA ~ -1 + DMRoots.t.ha, data=dcomb)
+dc <- merge(measured, modelled, by=c("time", "Year", "Location"))
+
+fit <- lm(WSOTHA ~ -1 + DMRoots.t.ha, data=dc)
 sfit = summary(fit)
 RMSE=sqrt(mean(sfit$residuals^2))
 anova(fit)
@@ -377,13 +366,13 @@ Figure_5 <- function(d){
        xlab = 'Observed storage roots (t DM/ha)',
        ylab = 'Simulated storage roots (t DM/ha)', pch=15)
   i <- which(d$Year==2016 & d$Location=="Benue")
-  points(d[i,"DMRoots.t.ha"], d[i,"WSOTHA"], pch=0, cex=1.5)
+  points(d[i,"DMRoots.t.ha"], d[i, "WSOTHA"], pch=0, cex=1.5)
   i <- which(d$Year==2017 & d$Location=="Edo")
-  points(d[i,"DMRoots.t.ha"], d[i,"WSOTHA"], pch=16,cex=1.5)
+  points(d[i,"DMRoots.t.ha"], d[i, "WSOTHA"], pch=16,cex=1.5)
   i <- which(d$Year==2016 & d$Location=="CRS")
-  points(d[i,"DMRoots.t.ha"], d[i,"WSOTHA"], pch=2, cex=1.5)
+  points(d[i,"DMRoots.t.ha"], d[i, "WSOTHA"], pch=2, cex=1.5)
   i <- which(d$Year==2017 & d$Location=="CRS")
-  points(d[i,"DMRoots.t.ha"], d[i,"WSOTHA"], pch=17, cex=1.5)
+  points(d[i,"DMRoots.t.ha"], d[i, "WSOTHA"], pch=17, cex=1.5)
   lines(c(-100,100), c(-100,100), lwd=2)
   lines(c(-100,100), c(-100,100)*sfit$coefficients[1], col="red",lty=3,lwd=3)
   
@@ -395,7 +384,7 @@ Figure_5 <- function(d){
                        paste0('RMSE = ',round(RMSE,2))), cex=1.2, bty='n')
 }
 
-Figure_5(dcomb)
+Figure_5(dc)
 
 ```
 
