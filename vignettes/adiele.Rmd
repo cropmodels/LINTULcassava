@@ -8,7 +8,7 @@
 
 This document shows how to run the LINTUL-Cassava model and how to produce the figures shown in 
 
-Adiele, J.G., A.G.T. Schut, K.S. Ezui, P. Pypers and K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
+Adiele, J.G., A.G.T. Schut, R.P.M. van den Beuken, K.S. Ezui, P. Pypers, A.O. Ano, C.N. Egesi & K.E. Giller (2021). A recalibrated and tested LINTUL-Cassava simulation model provides insight into the high yield potential of cassava under rainfed conditions. European Journal of Agronomy 124: 126242.
 
 ### Run model 
 
