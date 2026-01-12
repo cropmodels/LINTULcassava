@@ -5,7 +5,7 @@ LINTCAS <- function(weather, crop, soil, management, control, level=3) {
 	} else if (level == 2) {
 		LINTCAS2(weather, crop, soil, management, control)
 	} else {
-		if (control$NPK_model) {
+		if (isTRUE(control$NPK_model)) {
 			LINTCAS1_NPK(weather, crop, soil, management, control)			
 		} else {
 			LINTCAS1(weather, crop, soil, management, control)	

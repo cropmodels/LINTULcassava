@@ -25,20 +25,20 @@ LINTUL2_CASSAVA_FIELD_MANAGEMENT_NPK <- function(SiteInfo, MODEL_PARAM, fertiliz
     DRATE  = SiteInfo[1,"Drainage_rate.mm.d.1"]      # mm d-1      :     max drainage rate
   )
  
- soil_param <- list()
+ chem_soil <- list()
   #Add soil supply, extra uptake from soil for omission treatments 
   #needs to be in g/m2!!
-  soil_param[["NMINI"]] = SiteInfo[1,"N_soil.kg.ha"] * 0.1
+  chem_soil[["NMINI"]] = SiteInfo[1,"N_soil.kg.ha"] * 0.1
   if (any(fertilizerNPK[,"K"] > 0) || any(fertilizerNPK[,"P"] > 0)) {
-	soil_param[["NMINI"]] = soil_param[["NMINI"]] + SiteInfo[1,"N_PK.kg.ha"] * 0.1
+	chem_soil[["NMINI"]] = chem_soil[["NMINI"]] + SiteInfo[1,"N_PK.kg.ha"] * 0.1
   }
-  soil_param[["PMINI"]] = SiteInfo[1,"P_soil.kg.ha"] * 0.1
+  chem_soil[["PMINI"]] = SiteInfo[1,"P_soil.kg.ha"] * 0.1
   if (any(fertilizerNPK[,"N"] > 0) || any(fertilizerNPK[,"K"] > 0)) {
-    soil_param[["PMINI"]] = soil_param[["PMINI"]] + SiteInfo[1,"P_NK.kg.ha"] * 0.1
+    chem_soil[["PMINI"]] = chem_soil[["PMINI"]] + SiteInfo[1,"P_NK.kg.ha"] * 0.1
   }
-  soil_param[["KMINI"]] = SiteInfo[1,"K_soil.kg.ha"] * 0.1
+  chem_soil[["KMINI"]] = SiteInfo[1,"K_soil.kg.ha"] * 0.1
   if (any(fertilizerNPK[,"N"] > 0) || any(fertilizerNPK[,"P"] > 0)) {
-    soil_param[["KMINI"]] = soil_param[["KMINI"]] + SiteInfo[1,"K_NP.kg.ha"] * 0.1
+    chem_soil[["KMINI"]] = chem_soil[["KMINI"]] + SiteInfo[1,"K_NP.kg.ha"] * 0.1
   }
   
   
@@ -52,7 +52,7 @@ LINTUL2_CASSAVA_FIELD_MANAGEMENT_NPK <- function(SiteInfo, MODEL_PARAM, fertiliz
     DOYHAR = SiteInfo[1,"Day_of_harvest.Days_since_1_january_of_planting_year"], # Day nr of harvest, counted from 1 Jan in year of planting
 	FERTAB = fert 
   )
-  list(soil_phys=phys_soil, soil_chem=soil_param, mgmt=mgmt)
+  list(soil_phys=phys_soil, soil_chem=chem_soil, mgmt=mgmt)
    
   #NOTE: the order of concatenation matters!!!! FIELD PARAM needs to go first.
   #return( c(FIELD_PARAM, MODEL_PARAM))
