@@ -23,3 +23,17 @@ tinytest::expect_equal(m, run(3))
 #		all(sapply(1:length(d), function(j) all.equal(m[[j]][,nms], d[[j]][,nms])))
 #	)
 #}
+
+
+## NPK, original model
+z <- readRDS(system.file(package="LINTULcassava", "ex/edo17npk.rds"))
+p <- Adiele("Edo", 2017, NPK=TRUE)
+crop <- LC_crop("Adiele", TRUE)
+x <- list()
+x$W <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=F, IRRIGF=F), level=1)
+x$WN <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=T, IRRIGF=F), level=1)
+x$N <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=F, IRRIGF=T), level=1)
+x$none <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=T, IRRIGF=T), level=1)
+
+all.equal(x, z)
+

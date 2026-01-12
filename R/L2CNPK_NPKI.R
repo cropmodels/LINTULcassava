@@ -15,27 +15,19 @@
 
 
 Mirrored_Monod <- function(x, K, Kmax = 4){
-  if(K <= Kmax){
-    C=K+1
-    y=ifelse(x == 0, 0, C * x/(x+K))
-  }else{
-    K=max(0, 2 * Kmax - K)
-    C=K+1
-    x=1-x
-    y=ifelse(x == 0, 0, C * x/(x+K))
-    y=1-y
-  }
+	if (K <= Kmax){
+		ifelse(x == 0, 0, (K+1) * x/(x+K))
+	} else {
+		K = max(0, 2 * Kmax - K)
+		x = 1-x
+		1 - ifelse(x == 0, 0, (K+1) * x/(x+K))
+	}
 }
 
-
-npkical <- function(WLVG, WST, WSO,
-                    NMINLV, PMINLV, KMINLV,
-                    NMINST, PMINST, KMINST,
-                    NMINSO, PMINSO, KMINSO, 
-                 NMAXLV, PMAXLV, KMAXLV,
-                 NMAXST, PMAXST, KMAXST,
-                 NMAXSO, PMAXSO, KMAXSO,
-                 FR_MAX, K_NPK_NI, K_MAX,
+npkical <- function(WLVG, WST, WSO, NMINLV, PMINLV, KMINLV,
+                    NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, 
+                 NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST,
+                 NMAXSO, PMAXSO, KMAXSO, FR_MAX, K_NPK_NI, K_MAX,
                  ANLVG, ANST, ANSO, APLVG, APST, APSO, AKLVG, AKST, AKSO){
   
   #---------------- Nutrient concentrations
@@ -68,18 +60,15 @@ npkical <- function(WLVG, WST, WSO,
   PNI <- ifelse( (POPT - PMIN) == 0, 0, (PACT - PMIN) / (POPT - PMIN) )  # (-)
   KNI <- ifelse( (KOPT - KMIN) == 0, 0, (KACT - KMIN) / (KOPT - KMIN) )  # (-)
   
-  NNI <- pmin(1, pmax(0,NNI))
-  PNI <- pmin(1, pmax(0,PNI))
-  KNI <- pmin(1, pmax(0,KNI))
+  NNI <- min(1, max(0,NNI))
+  PNI <- min(1, max(0,PNI))
+  KNI <- min(1, max(0,KNI))
   
 
   #Combined effect. 
   #Multiplication allows to have extra growth reduction if multiple nutrients are deficient
-  #The "Monod" acts as scalar to reduce effect of minor deficiencies that do not affect growth rates 
-  #but are compensated by dilution. 
-  #A mirrored Monod function to determine effect of N, P and K stress on NPKI 
+  #The "Monod" acts as scalar to reduce effect of minor deficiencies that do not affect growth rates but are compensated by dilution. A mirrored Monod function to determine effect of N, P and K stress on NPKI 
   NPKI = Mirrored_Monod(x = NNI*PNI*KNI, K = K_NPK_NI, Kmax = K_MAX)
   
   return(data.frame(NNI = NNI, PNI = PNI, KNI = KNI, NPKI = NPKI))
-  #-----------------
 }
