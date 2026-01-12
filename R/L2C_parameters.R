@@ -1,3 +1,4 @@
+# Authors: AGT Schut, RJ Hijmans
 
 
 LC_crop <- function(x, npk=FALSE) {
@@ -19,7 +20,7 @@ LC_crop <- function(x, npk=FALSE) {
 	}
 }
 
-Adiele <- function(site, year) { 
+Adiele <- function(site, year, NPK=FALSE) { 
 
 	params = c(
 		"ROOTDM"= "Maximum_rooting_depth.m", # m : maximum rooting depth
@@ -33,8 +34,7 @@ Adiele <- function(site, year) {
 		"DRATE" = "Drainage_rate.mm.d.1" # mm d-1 : max drainage rate
 	)
 
-	lcp <- system.file(package="LINTULcassava")
-	ss <- readRDS(file.path(lcp, "ex/fields.rds"))
+	ss <- readRDS(system.file(package="LINTULcassava", "ex/fields.rds"))
 	if (site == "Benue") {
 		site <- "Benue2"
 	} else if (site %in% c("CRS", "Cross River")) {
@@ -71,13 +71,25 @@ Adiele <- function(site, year) {
 		stop("something went wrong")
 	}
 		
-	list(weather=wth, soil=x, management=mng, control=cntr)
+	p <- list(weather=wth, soil=x, management=mng, control=cntr)
+	
+	if (NPK) {
+		sites <- readRDS(system.file(package="LINTULcassava", "ex/fieldsNPK.rds"))
+		sinfo <- sites[sites$Location == site & sites$Year_of_planting == year, ]
+		NPK= cbind(N = c(  0, 100, 100, 100),#kg/ha N
+						P = c(100,   0,   0,   0),#kg/ha P
+						K = c(  0, 100, 100, 100)) #kg/ha K
+		mg <- FIELD_MANAGEMENT_NPK(sinfo, crop, NPK)
+		p$soil <- c(p$soil, mg$soil_chem)
+		p$management$FERTAB <- mg$mgmt$FERTAB
+		p$control$NPK_model=TRUE
+	}
+	p
 }
 
 
 Adiele_weather <- function(site, year) { 
-	lcp <- system.file(package="LINTULcassava")
-	wth <- readRDS(file.path(lcp, "ex/weather.rds"))
+	wth <- readRDS(system.file(package="LINTULcassava", "ex/weather.rds"))
 	Y <- as.integer(format(wth$date, "%Y"))
 	w <- wth[(wth$name==site) & (Y >= year), ]
 	if (nrow(w) == 0) {
@@ -85,4 +97,51 @@ Adiele_weather <- function(site, year) {
 	}
 	w
 }
+
+
+
+FIELD_MANAGEMENT_NPK <- function(SiteInfo, MODEL_PARAM, fertilizerNPK) { 
+
+  phys_soil = c(
+    ROOTDM = SiteInfo[1,"Maximum_rooting_depth.m"] ,    # m            :     maximum rooting depth
+    WCAD   = SiteInfo[1,"Water_content_air_dry.m3.H2O..m.3.soil."],   # m3 m-3      :     soil water content at air dryness 
+    WCWP   = SiteInfo[1,"Water_content_wilting_point.m3.H2O..m.3.soil."],   # m3 m-3      :     soil water content at wilting point
+    WCFC   = SiteInfo[1,"Water_content_field_capacity.m3.H2O..m.3.soil."],    # m3 m-3      :     soil water content at field capacity 
+    WCWET  = SiteInfo[1,"Water_content_wet.m3.H2O..m.3.soil."],   # m3 m-3      :     critical soil water content for transpiration reduction due to waterlogging
+    WCST   = SiteInfo[1,"Water_content_saturated.m3.H2O..m.3.soil."],    # m3 m-3      :     soil water content at full saturation 
+    DRATE  = SiteInfo[1,"Drainage_rate.mm.d.1"]      # mm d-1      :     max drainage rate
+  )
+ 
+ chem_soil <- list()
+  #Add soil supply, extra uptake from soil for omission treatments 
+  #needs to be in g/m2!!
+  chem_soil[["NMINI"]] = SiteInfo[1,"N_soil.kg.ha"] * 0.1
+  if (any(fertilizerNPK[,"K"] > 0) || any(fertilizerNPK[,"P"] > 0)) {
+	chem_soil[["NMINI"]] = chem_soil[["NMINI"]] + SiteInfo[1,"N_PK.kg.ha"] * 0.1
+  }
+  chem_soil[["PMINI"]] = SiteInfo[1,"P_soil.kg.ha"] * 0.1
+  if (any(fertilizerNPK[,"N"] > 0) || any(fertilizerNPK[,"K"] > 0)) {
+    chem_soil[["PMINI"]] = chem_soil[["PMINI"]] + SiteInfo[1,"P_NK.kg.ha"] * 0.1
+  }
+  chem_soil[["KMINI"]] = SiteInfo[1,"K_soil.kg.ha"] * 0.1
+  if (any(fertilizerNPK[,"N"] > 0) || any(fertilizerNPK[,"P"] > 0)) {
+    chem_soil[["KMINI"]] = chem_soil[["KMINI"]] + SiteInfo[1,"K_NP.kg.ha"] * 0.1
+  }
+  
+  
+
+	fdays <- c("Day_of_basal_fertilizer_application.DOY", "Day_of_first_topdressing.DOY", "Day_of_second_topdressing.DOY", "Day_of_third_topdressing.DOY")
+	fert <- cbind(DAYS=unname(unlist(SiteInfo[1,fdays])), fertilizerNPK[, c("N", "P", "K")])
+	
+  mgmt <- list(
+    DOYPL  = SiteInfo[1,"Day_of_planting.DOY"],    # Day nr of planting and basal NPK application
+    DOYHAR = SiteInfo[1,"Day_of_harvest.Days_since_1_january_of_planting_year"], # Day nr of harvest, counted from 1 Jan in year of planting
+	FERTAB = fert 
+  )
+  list(soil_phys=phys_soil, soil_chem=chem_soil, mgmt=mgmt)
+   
+  #NOTE: the order of concatenation matters!!!! FIELD PARAM needs to go first.
+  #return( c(FIELD_PARAM, MODEL_PARAM))
+}
+
 

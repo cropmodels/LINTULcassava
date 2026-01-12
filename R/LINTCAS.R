@@ -66,27 +66,28 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 		management[[v]] <- surround_days(management[[v]], crop[[paste0(substr(v, 4, 4), "_RECOV")]])
 	}
 
-
-  #Uptake of control treatment should be taken up in period to harvest. Assumed that all becomes gradually available with fixed rate per day. Available nutrients can be taken up in 90% of the season
-  
-  ## RH. What about very short or long seasons. Probably better use a decay function in the model
- 
-  season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
-  soil[["RTNMINS"]] =  (1/0.9) * soil[["NMINI"]] / season_length # gN m-2 d-1
-  soil[["RTPMINS"]] =  (1/0.9) * soil[["PMINI"]] / season_length # gP m-2 d-1
-  soil[["RTKMINS"]] =  (1/0.9) * soil[["KMINI"]] / season_length # gK m-2 d-1
-
-
   ## initial soil water content set at field capacity
-  soil$WCI = soil[["WCFC"]]    # m3 m-3 
+	soil$WCI = soil[["WCFC"]]    # m3 m-3 
 
 	names(wdata) <- toupper(names(wdata))
 	wdata$DOYS <- 1:nrow(wdata)
-	pars <- c(management, soil, crop, control)
-	
-	state_res <- deSolve::euler(LC_NPK_iniSTATES(pars), 
-                    seq(control$starttime, control$endtime, by = control$DELT), 
-                    LINTUL2_CASSAVA_NPK, pars, WDATA = wdata)
+
+	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
+	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
+	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
+
+	#Uptake of control treatment should be taken up in period to harvest. Assumed that all becomes gradually available with fixed rate per day. Available nutrients can be taken up in 90% of the season 
+	## RH. What about very short or long seasons? Perhaps better use a decay function in the model?
+	soil[["RTNMINS"]] =  (1/0.9) * soil[["NMINI"]] / season_length # gN m-2 d-1
+	soil[["RTPMINS"]] =  (1/0.9) * soil[["PMINI"]] / season_length # gP m-2 d-1
+	soil[["RTKMINS"]] =  (1/0.9) * soil[["KMINI"]] / season_length # gK m-2 d-1
+
+	pars <- c(management, soil, crop, control, DELT=control$timestep)
+	startDOY <- as.integer(format(control$startDATE, "%j"))
+	steps <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
+	ini <- LC_NPK_iniSTATES(pars)
+	state_res <- deSolve::euler(ini, steps, LINTUL2_CASSAVA_NPK, pars, WDATA = wdata)
+
 	state_res <- data.frame(state_res)    
 	info <- data.frame(date=wdata$DATE[state_res$time], step=1:nrow(state_res))
 	state_res$time <- NULL
