@@ -33,7 +33,6 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     
     RFERTK <- approx(management$FERKTAB[,1], management$FERKTAB[,2], Time)$y    # kg N ha-1 d-1
     RFERTK <- (RFERTK * 1000) / 10000                     # g N m-2 d-1
-    #---------------- 
  
 
     #---------------- Translocatable nutrient amounts
@@ -210,11 +209,11 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKCUTSO <- -R$KCUTTING * FSO  # g K m-2 d-1
     
     #------------ Nutrient redistribution because of leaf death
-    if( WLVG > 0){
+    if( S$WLVG > 0){
       #Nutrients lost due to dying leaves
-      RANLVD <- R$WLVD * NFLVD # g N m-2 d-1
-      RAPLVD <- R$WLVD * PFLVD # g P m-2 d-1
-      RAKLVD <- R$WLVD * KFLVD # g K m-2 d-1
+      RANLVD <- R$WLVD * crop$NFLVD # g N m-2 d-1
+      RAPLVD <- R$WLVD * crop$PFLVD # g P m-2 d-1
+      RAKLVD <- R$WLVD * crop$KFLVD # g K m-2 d-1
       #Total nutrients in dying leaves
       RNDLVG <- R$WLVD * (S$ANLVG / S$WLVG) # g N m-2 d-1
       RPDLVG <- R$WLVD * (S$APLVG / S$WLVG) # g P m-2 d-1
@@ -262,7 +261,6 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKST <- RKUST + RKTST + RAKCUTST                         # g K m-2 d-1
     RAKRT <- RKURT + RKTRT + RAKCUTRT                         # g K m-2 d-1
     RAKSO <- RKUSO + RKTSO + RAKCUTSO - RAKSO2LVSO + RKDLV_REDIST   # g K m-2 d-1
-    #----------
     
     #------------ Soil supply
     # Soil nutrient supply through mineralization during crop growth(not affected by water supply)
@@ -276,17 +274,17 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     #Fertilizer nutrient supply 
     #Pool in the soil which is not yet avalable for plant uptake
     #        supply rate      rate that becomes available for uptake
-    RNMINF <- RFERTN - soil$RTNMINF * S$NMINF * WLIMIT   # g N m-2 d-1
-    RPMINF <- RFERTP - soil$RTPMINF * S$PMINF * WLIMIT   # g P m-2 d-1 
-    RKMINF <- RFERTK - soil$RTKMINF * S$KMINF * WLIMIT   # g K m-2 d-1
+    RNMINF <- RFERTN - crop$RTNMINF * S$NMINF * WLIMIT   # g N m-2 d-1
+    RPMINF <- RFERTP - crop$RTPMINF * S$PMINF * WLIMIT   # g P m-2 d-1 
+    RKMINF <- RFERTK - crop$RTKMINF * S$KMINF * WLIMIT   # g K m-2 d-1
 
     # Change in total inorganic N/P/K in soil as function of fertilizer input, 
     # soil N/P/K mineralization and crop uptake.
-    RNMINT <- soil$RTNMINF * S$NMINF * WLIMIT + (-R$NMINS)  - RNUPTR   # g N m-2 d-1
-    RPMINT <- soil$RTPMINF * S$PMINF * WLIMIT + (-R$PMINS)  - RPUPTR   # g P m-2 d-1
-    RKMINT <- soil$RTKMINF * S$KMINF * WLIMIT + (-R$KMINS)  - RKUPTR   # g K m-2 d-1
+    RNMINT <- crop$RTNMINF * S$NMINF * WLIMIT + (-RNMINS) - RNUPTR   # g N m-2 d-1
+    RPMINT <- crop$RTPMINF * S$PMINF * WLIMIT + (-RPMINS) - RPUPTR   # g P m-2 d-1
+    RKMINT <- crop$RTKMINF * S$KMINF * WLIMIT + (-RKMINS) - RKUPTR   # g K m-2 d-1
    
-    data.frame(RANLVG = RANLVG, RANLVD = RANLVD, RANST = RANST, RANRT = RANRT, RANSO = RANSO, 
+	data.frame(RANLVG = RANLVG, RANLVD = RANLVD, RANST = RANST, RANRT = RANRT, RANSO = RANSO, 
                       RAPLVG = RAPLVG, RAPLVD = RAPLVD, RAPST = RAPST, RAPRT = RAPRT, RAPSO = RAPSO, 
                       RAKLVG = RAKLVG, RAKLVD = RAKLVD, RAKST = RAKST, RAKRT = RAKRT, RAKSO = RAKSO, 
                       RNMINT = RNMINT, RPMINT = RPMINT, RKMINT = RKMINT, 

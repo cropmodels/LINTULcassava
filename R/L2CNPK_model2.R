@@ -38,12 +38,12 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			"DORMTIME", "WCUTTING", "TRAIN", "PAR", "LAI", "WLVD", 
 			"WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", 
 			"PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", 
-			"REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "RNCUTTING", 
-			"RPCUTTING", "RKCUTTING", "RANLVG", "RANLVD", "RANST", 
-			"RANRT", "RANSO", "RAPLVG", "RAPLVD", "RAPST", "RAPRT", 
-			"RAPSO", "RAKLVG", "RAKLVD", "RAKST", "RAKRT", "RAKSO", 
-			"RNMINT", "RPMINT", "RKMINT", "RNMINS", "RPMINS", 
-			"RKMINS", "RNMINF", "RPMINF", "RKMINF")) {
+			"REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "NCUTTING", 
+			"PCUTTING", "KCUTTING", "ANLVG", "ANLVD", "ANST", 
+			"ANRT", "ANSO", "APLVG", "APLVD", "APST", "APRT", 
+			"APSO", "AKLVG", "AKLVD", "AKST", "AKRT", "AKSO", 
+			"NMINT", "PMINT", "KMINT", "NMINS", "PMINS", 
+			"KMINS", "NMINF", "PMINF", "KMINF")) {
 			S[[v]] <- S[[v]] + R[[v]]
 		}
 		S
@@ -72,7 +72,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 
 		# Temperature sum after planting
-		R$TSUM <- ifelse(management$PLDATE <= today, DTEFF, 0) # Deg. C 
+		R$TSUM <- ifelse(management$PLDATE <= wth$DATE[today], DTEFF, 0) # Deg. C 
 			
 		# Determine water content of rooted soil
 		WC <- 0.001 * S$WA/S$ROOTD		 # (-) 
@@ -131,40 +131,40 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		# Rate of change of soil water amount
 		R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
 
-		if (!EMERG) return(R)
+		#if (!EMERG) return(R)
 
 
 		#---NUTRIENT LIMITATION-------------------------------------------#
 		# The nutrient limitation is based on the nutrient concentrations in the organs of the crop. A nutrition index is calculated to quantify nutrient limitation. 
 		
 		# Minimum and maximum nutrient concentrations in the leaves
-		NMINLV <- approx(NMINMAXLV[,1], NMINMAXLV[,2], TSUMCROP)$y   # g N g-1 DM
-		PMINLV <- approx(PMINMAXLV[,1], PMINMAXLV[,2], TSUMCROP)$y   # g P g-1 DM
-		KMINLV <- approx(KMINMAXLV[,1], KMINMAXLV[,2], TSUMCROP)$y   # g K g-1 DM
-		NMAXLV <- approx(NMINMAXLV[,1], NMINMAXLV[,3], TSUMCROP)$y   # g N g-1 DM
-		PMAXLV <- approx(PMINMAXLV[,1], PMINMAXLV[,3], TSUMCROP)$y   # g P g-1 DM
-		KMAXLV <- approx(KMINMAXLV[,1], KMINMAXLV[,3], TSUMCROP)$y   # g K g-1 DM
+		NMINLV <- approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINLV <- approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINLV <- approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXLV <- approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXLV <- approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXLV <- approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum concentrations in the stems
-		NMINST <- approx(NMINMAXST[,1], NMINMAXST[,2], TSUMCROP)$y   # g N g-1 DM
-		PMINST <- approx(PMINMAXST[,1], PMINMAXST[,2], TSUMCROP)$y   # g P g-1 DM
-		KMINST <- approx(KMINMAXST[,1], KMINMAXST[,2], TSUMCROP)$y   # g K g-1 DM
-		NMAXST <- approx(NMINMAXST[,1], NMINMAXST[,3], TSUMCROP)$y   # g N g-1 DM
-		PMAXST <- approx(PMINMAXST[,1], PMINMAXST[,3], TSUMCROP)$y   # g P g-1 DM
-		KMAXST <- approx(KMINMAXST[,1], KMINMAXST[,3], TSUMCROP)$y   # g K g-1 DM
+		NMINST <- approx(crop$NMINMAXST[,1], crop$NMINMAXST[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINST <- approx(crop$PMINMAXST[,1], crop$PMINMAXST[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINST <- approx(crop$KMINMAXST[,1], crop$KMINMAXST[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXST <- approx(crop$NMINMAXST[,1], crop$NMINMAXST[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXST <- approx(crop$PMINMAXST[,1], crop$PMINMAXST[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXST <- approx(crop$KMINMAXST[,1], crop$KMINMAXST[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum nutrient concentrations in the storage organs
-		NMINSO <- approx(NMINMAXSO[,1], NMINMAXSO[,2], TSUMCROP)$y   # g N g-1 DM
-		PMINSO <- approx(PMINMAXSO[,1], PMINMAXSO[,2], TSUMCROP)$y   # g P g-1 DM
-		KMINSO <- approx(KMINMAXSO[,1], KMINMAXSO[,2], TSUMCROP)$y   # g K g-1 DM
-		NMAXSO <- approx(NMINMAXSO[,1], NMINMAXSO[,3], TSUMCROP)$y   # g N g-1 DM
-		PMAXSO <- approx(PMINMAXSO[,1], PMINMAXSO[,3], TSUMCROP)$y   # g P g-1 DM
-		KMAXSO <- approx(KMINMAXSO[,1], KMINMAXSO[,3], TSUMCROP)$y   # g K g-1 DM
+		NMINSO <- approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINSO <- approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINSO <- approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXSO <- approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXSO <- approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXSO <- approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum nutrient concentrations in the roots
-		NMINRT <- approx(NMINMAXRT[,1], NMINMAXRT[,2], TSUMCROP)$y   # g N g-1 DM
-		PMINRT <- approx(PMINMAXRT[,1], PMINMAXRT[,2], TSUMCROP)$y   # g P g-1 DM
-		KMINRT <- approx(KMINMAXRT[,1], KMINMAXRT[,2], TSUMCROP)$y   # g K g-1 DM
-		NMAXRT <- approx(NMINMAXRT[,1], NMINMAXRT[,3], TSUMCROP)$y   # g N g-1 DM
-		PMAXRT <- approx(PMINMAXRT[,1], PMINMAXRT[,3], TSUMCROP)$y   # g P g-1 DM
-		KMAXRT <- approx(KMINMAXRT[,1], KMINMAXRT[,3], TSUMCROP)$y   # g K g-1 DM
+		NMINRT <- approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINRT <- approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINRT <- approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXRT <- approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXRT <- approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXRT <- approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,3], S$TSUMCROP)$y   # g K g-1 DM
 		
 		NPKICAL <- LINTULcassava:::npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
 				NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV,
@@ -176,7 +176,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			#Simple based on daily values
 			NPKI <- max(0, min(1, NPKICAL$NPKI)) # (-)
 			#Shortly after emergence nutrient stress does not occur
-			NPKI <- ifelse(TSUMCROP < TSUM_NPKI, 1, NPKI)
+			NPKI <- ifelse(S$TSUMCROP < TSUM_NPKI, 1, NPKI)
 		} else {
 			NPKI <- 1
 		}
@@ -326,9 +326,9 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			R$WLVG  <- (abs(GTOTAL)+abs(R$WCUTTING)) * FLV - DLV + R$REDISTLVG * PUSHREDIST # g leaves DM m-2 d-1 
 			R$WSO   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FSO + R$WSOFASTRANSLSO - R$REDISTSO	 # g storage root DM m-2 d-1			
 			#The amount of N, P, K transfered depends on max. concentrations in LV, ST, RT and SO 
-			R$NCUTTING <- (R$WCUTTING/S$WCUTTING)* S$NCUTTING #g N m-2 d-1, proportional to DM
-			R$PCUTTING <- (R$WCUTTING/S$WCUTTING)* S$PCUTTING #g P m-2 d-1, proportional to DM
-			R$KCUTTING <- (R$WCUTTING/WS$CUTTING)* S$KCUTTING #g K m-2 d-1, proportional to DM
+			R$NCUTTING <- (R$WCUTTING/S$WCUTTING) * S$NCUTTING #g N m-2 d-1, proportional to DM
+			R$PCUTTING <- (R$WCUTTING/S$WCUTTING) * S$PCUTTING #g P m-2 d-1, proportional to DM
+			R$KCUTTING <- (R$WCUTTING/S$WCUTTING) * S$KCUTTING #g K m-2 d-1, proportional to DM
 			
 		} else {
 			R$WCUTTING <- 0   	# g stem cutting DM m-2 d-1
@@ -352,6 +352,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
 		# using the nutrientdyn function. 
 		NUTRIENTDYN <- LINTULcassava:::nutrientdyn2(today, S, R, crop, soil, 
+#		NUTRIENTDYN <- nutrientdyn2(today, S, R, crop, soil, 
 			management, NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
 			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, NMAXSO, 
@@ -359,7 +360,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST, DELT)
 
 		# Rate of change of the actual nitrogen amounts in the different crop organs. 
-		test <- EMERG == 1 && WST == 0
+		test <- EMERG == 1 && S$WST == 0
 		R$ANLVG <- ifelse(test, 0, NUTRIENTDYN$RANLVG)  # g N m-2 d-1
 		R$ANLVD <- ifelse(test, 0, NUTRIENTDYN$RANLVD)  # g N m-2 d-1
 		R$ANST <- ifelse(test, 0, NUTRIENTDYN$RANST)  # g N m-2 d-1
@@ -401,7 +402,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		GLV <- FLV * (GTOTAL + abs(R$WCUTTING)) + R$REDISTLVG * PUSHREDIST  # g green leaves DM m-2 d-1
 		
 		# Growth of the leaf are index
-		GLAI <- gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
+		GLAI <- LINTULcassava:::gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 					crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
 					crop$LAIEXPOEND, DORMANCY)	 # m2 m-2 d-1
 			
@@ -410,6 +411,8 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 		R
 	}
+
+## MAIN
 
 	management$FERNTAB <- management$FERTAB[, 1:2]
 	management$FERPTAB <- management$FERTAB[, c(1, 3)]
@@ -446,7 +449,11 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 	out <- vector(length = length(season), mode = "list")
 	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
-	for (i in 1:length(season)) {
+#		for (i in 1:length(season)) {
+	for (i in 1:85) {
+		today = season[i]
+		W = wth[i,]
+		
 		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
 		states <- unlist(S)
 		R <- R[names(S)]
