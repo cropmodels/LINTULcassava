@@ -161,9 +161,14 @@ nutrientdyn <- function(Time, Pars, States,
     #For example, a soil full of N gives large N uptake, but relatively small P and K uptake. 
     #Actual uptake of N is limited by maximum N contensts, reducing uptake of P and K contents in the plant 
     #to suboptimal levels. In extremis, oversupply of one nutrient can reduce uptake of another.
-    RNUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE *                                  NMINT  / NUTEQ_SOIL) * WLIMIT 
-    RPUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * (ifelse(PMAX == 0,1,NMAX/PMAX) * PMINT) / NUTEQ_SOIL) * WLIMIT 
-    RKUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * (ifelse(KMAX == 0,1,NMAX/KMAX) * KMINT) / NUTEQ_SOIL) * WLIMIT 
+    RNUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * NMINT  / NUTEQ_SOIL) * WLIMIT 
+
+#### changed per advise from Tom Schut 2026-01-13
+	##RPUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * (ifelse(PMAX == 0,1,NMAX/PMAX) * PMINT) / NUTEQ_SOIL) * WLIMIT 
+    ##RKUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * (ifelse(KMAX == 0,1,NMAX/KMAX) * KMINT) / NUTEQ_SOIL) * WLIMIT 
+    RPUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * PMINT / NUTEQ_SOIL) * WLIMIT 
+    RKUPTR = ifelse(NUTEQ_SOIL == 0, 0, RMAX_UPRATE * KMINT / NUTEQ_SOIL) * WLIMIT 	
+####
 
     #Actual uptake is limited by demand based on maximum concentrations for standing biomass
     #Uptake rate should not exceed maximum soil supply.

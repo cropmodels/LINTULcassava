@@ -3,7 +3,11 @@ LINTCAS <- function(weather, crop, soil, management, control, level=3) {
 	if (level == 3) {
 		LINTCAS3(weather, crop, soil, management, control)
 	} else if (level == 2) {
-		LINTCAS2(weather, crop, soil, management, control)
+		if (isTRUE(control$NPK_model)) {
+			LINTCAS2_NPK(weather, crop, soil, management, control)
+		} else {
+			LINTCAS2(weather, crop, soil, management, control)		
+		}
 	} else {
 		if (isTRUE(control$NPK_model)) {
 			LINTCAS1_NPK(weather, crop, soil, management, control)			
@@ -86,7 +90,7 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 	startDOY <- as.integer(format(control$startDATE, "%j"))
 	steps <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
 	ini <- LC_NPK_iniSTATES(pars)
-	state_res <- deSolve::euler(ini, steps, LINTUL2_CASSAVA_NPK, pars, WDATA = wdata)
+	state_res <- deSolve::euler(ini, steps, LC_model_NPK, pars, WDATA = wdata)
 
 	state_res <- data.frame(state_res)    
 	info <- data.frame(date=wdata$DATE[state_res$time], step=1:nrow(state_res))
