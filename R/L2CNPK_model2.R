@@ -1,6 +1,6 @@
 
 
-LINTCAS2NPK <- function(weather, crop, soil, management, control) {
+LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 # Alternative R implementation of the model used as a bridge to develope the C++ version
 # Robert Hijmans, January 2026
 
@@ -22,78 +22,61 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 			PUSHREDISTSUM=0,# Deg. C d-1
 			WSOFASTRANSLSO=0, # g DM m-2 d-1
 
-            RNCUTTING=0, RPCUTTING=0, RKCUTTING=0, 
-            RANLVG=0, RANLVD=0, RANST=0, RANRT=0, RANSO=0, # g N m-2 d-1
-            RAPLVG=0, RAPLVD=0, RAPST=0, RAPRT=0, RAPSO=0, # g P m-2 d-1
-            RAKLVG=0, RAKLVD=0, RAKST=0, RAKRT=0, RAKSO=0, # g K m-2 d-1
-            RNMINT=0, RPMINT=0, RKMINT=0, # g N,P,K m-2 d-1
-            RNMINS=0, RPMINS=0, RKMINS=0, # g N,P,K m-2 d-1
-            RNMINF=0, RPMINF=0, RKMINF=0) # g N,P,K m-2 d-1			
+			NCUTTING=0, PCUTTING=0, KCUTTING=0, 
+			ANLVG=0, ANLVD=0, ANST=0, ANRT=0, ANSO=0, # g N m-2 d-1
+			APLVG=0, APLVD=0, APST=0, APRT=0, APSO=0, # g P m-2 d-1
+			AKLVG=0, AKLVD=0, AKST=0, AKRT=0, AKSO=0, # g K m-2 d-1
+			NMINT=0, PMINT=0, KMINT=0, # g N,P,K m-2 d-1
+			NMINS=0, PMINS=0, KMINS=0, # g N,P,K m-2 d-1
+			NMINF=0, PMINF=0, KMINF=0) # g N,P,K m-2 d-1			
 		)
 	}
 
-
 	get_states <- function(S, R) {
-		S$ROOTD <- S$ROOTD + R$ROOTD
-		S$WA <- S$WA + R$WA
-		S$TSUM <- S$TSUM + R$TSUM
-		S$TSUMCROP <- S$TSUMCROP + R$TSUMCROP
-		S$TSUMCROPLEAFAGE <- S$TSUMCROPLEAFAGE + R$TSUMCROPLEAFAGE
-		S$DORMTSUM <- S$DORMTSUM + R$DORMTSUM
-		S$PUSHDORMRECTSUM <- S$PUSHDORMRECTSUM + R$PUSHDORMRECTSUM
-		S$PUSHREDISTENDTSUM <- S$PUSHREDISTENDTSUM + R$PUSHREDISTENDTSUM
-		S$DORMTIME <- S$DORMTIME + R$DORMTIME
-		S$WCUTTING <- S$WCUTTING + R$WCUTTING
-		S$TRAIN <- S$TRAIN + R$TRAIN
-		S$PAR <- S$PAR + R$PAR
-		S$LAI <- S$LAI + R$LAI
-		S$WLVD <- S$WLVD + R$WLVD
-		S$WLV <- S$WLV + R$WLV
-		S$WST <- S$WST + R$WST
-		S$WSO <- S$WSO + R$WSO
-		S$WRT <- S$WRT + R$WRT
-		S$WLVG <- S$WLVG + R$WLVG
-		S$TRAN <- S$TRAN + R$TRAN
-		S$EVAP <- S$EVAP + R$EVAP
-		S$PTRAN <- S$PTRAN + R$PTRAN
-		S$PEVAP <- S$PEVAP + R$PEVAP
-		S$RUNOFF <- S$RUNOFF + R$RUNOFF
-		S$NINTC <- S$NINTC + R$NINTC
-		S$DRAIN <- S$DRAIN + R$DRAIN
-		S$REDISTLVG <- S$REDISTLVG + R$REDISTLVG
-		S$REDISTSO <- S$REDISTSO + R$REDISTSO
-		S$PUSHREDISTSUM <- S$PUSHREDISTSUM + R$PUSHREDISTSUM
-		S$WSOFASTRANSLSO <- S$WSOFASTRANSLSO + R$WSOFASTRANSLSO
+		for (v in c("ROOTD", "WA", "TSUM", "TSUMCROP", "TSUMCROPLEAFAGE", 
+			"DORMTSUM", "PUSHDORMRECTSUM", "PUSHREDISTENDTSUM", 
+			"DORMTIME", "WCUTTING", "TRAIN", "PAR", "LAI", "WLVD", 
+			"WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", 
+			"PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", 
+			"REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "RNCUTTING", 
+			"RPCUTTING", "RKCUTTING", "RANLVG", "RANLVD", "RANST", 
+			"RANRT", "RANSO", "RAPLVG", "RAPLVD", "RAPST", "RAPRT", 
+			"RAPSO", "RAKLVG", "RAKLVD", "RAKST", "RAKRT", "RAKSO", 
+			"RNMINT", "RPMINT", "RKMINT", "RNMINS", "RPMINS", 
+			"RKMINS", "RNMINF", "RPMINF", "RKMINF")) {
+			S[[v]] <- S[[v]] + R[[v]]
+		}
 		S
-	}	   
-		   
+	}
+
+
 	get_rates <- function(today, W, S, R, crop, soil, management, control, DELT=1) {
 
 		if (S$TSUM >= crop$FINTSUM) {
 			# If the plant is not growing anymore all plant related rates are set to 0.
 			return(R)
-		}       
+		}		 
 			
 		#Daily weather data. 
 		SatVP_TMMN = 0.611 * exp(17.4 * W$TMIN / (W$TMIN + 239)) 
 		SatVP_TMMX = 0.611 * exp(17.4 * W$TMAX / (W$TMAX + 239)) 
-	  # vapour pressure deficits
+		# vapour pressure deficits
 		W$VPD_MN = max(0, SatVP_TMMN - W$VAPR)
 		W$VPD_MX = max(0, SatVP_TMMX - W$VAPR)
 		W$SRAD = W$SRAD / 1000
-		W$TAVG = 0.5 * (W$TMIN + W$TMAX)   # Deg. C     :     daily average temperature
+		W$TAVG = 0.5 * (W$TMIN + W$TMAX)   # Deg. C	 :	 daily average temperature
 		
-		R$TRAIN <- W$PREC                   # mm d-1           : rain rate, mm d-1
-		DTEFF  <- max(0, W$TAVG - crop$TBASE) # Deg. C           : effective daily temperature
-		R$PAR  <- crop$FPAR * W$SRAD             # PAR MJ m-2 d-1   : PAR radiation
+		R$TRAIN <- W$PREC					 # mm d-1			 : rain rate, mm d-1
+		DTEFF  <- max(0, W$TAVG - crop$TBASE) # Deg. C			 : effective daily temperature
+		R$PAR  <- crop$FPAR * W$SRAD			 # PAR MJ m-2 d-1   : PAR radiation
 
 
 		# Temperature sum after planting
 		R$TSUM <- ifelse(management$PLDATE <= today, DTEFF, 0) # Deg. C 
-		  
+			
 		# Determine water content of rooted soil
-		WC <- 0.001 * S$WA/S$ROOTD       # (-) 
-		  
+		WC <- 0.001 * S$WA/S$ROOTD		 # (-) 
+			
 	#---EMERGENCE-----------------------------------------------#
 		# emergence occurs (1) when the temperature sum exceeds the temperature sum needed for emergence. And (2)
 		# when enough water is available in the soil. 
@@ -110,40 +93,40 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		# the emergence of the crop and the constraints mentioned above.
 		
 		if ((S$ROOTD < soil$ROOTDM) && (WC >= soil$WCWP)) {
-			R$ROOTD <- crop$RRDMAX * EMERG		   # mm d-1
+			R$ROOTD <- crop$RRDMAX * EMERG			 # mm d-1
 		} else { 
 			R$ROOTD = 0
 		}
 		
 	#---WATER BALANCE---------------------------------------------#
 		# Explored water of new soil water layers by the roots, explored soil is assumed to have a FC soil moisture content).
-		EXPLOR <- 1000 * R$ROOTD * soil$WCFC		    # mm d-1
+		EXPLOR <- 1000 * R$ROOTD * soil$WCFC			# mm d-1
 		
 		# Interception of the canopy, depends on the amount of rainfall and the LAI. 
-		R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))     # mm d-1
+		R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))	 # mm d-1
 		
 		# Potential evaporation and transpiration are calculated using the Penman equation.
-		PENM <- penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
-		R$PTRAN <- PENM$PTRAN				  # mm d-1
-		R$PEVAP <- PENM$PEVAP				  # mm d-1
+		PENM <- LINTULcassava:::penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
+		R$PTRAN <- PENM$PTRAN					# mm d-1
+		R$PEVAP <- PENM$PEVAP					# mm d-1
 		# Soil moisture content at severe drought and the critical soil moisture content are calculated to see if drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
 		WCSD <- soil$WCWP * crop$TWCSD
 		WCCR <- soil$WCWP + max(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
 
 		# The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.
-		EVA <- evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
+		EVA <- LINTULcassava:::evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
 						soil$WCFC, soil$WCWET, soil$WCST, crop$TRANCO, DELT)
-		R$TRAN <- EVA$TRAN				     # mm d-1
-		R$EVAP <- EVA$EVAP				     # mm d-1
+		R$TRAN <- EVA$TRAN					 # mm d-1
+		R$EVAP <- EVA$EVAP					 # mm d-1
 		
 		# The transpiration reduction factor is defined as the ratio between actual and potential transpiration
 		TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
 		
 		# Drainage and Runoff is calculated using the drunir function.
-		DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, control$IRRIGF, soil$DRATE,
-							   DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
-		R$DRAIN  <- DRUNIR$DRAIN			    # mm d-1
-		R$RUNOFF <- DRUNIR$RUNOFF			   # mm d-1
+		DRUNIR  <- LINTULcassava:::drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, control$IRRIGF, soil$DRATE,
+								 DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
+		R$DRAIN  <- DRUNIR$DRAIN				# mm d-1
+		R$RUNOFF <- DRUNIR$RUNOFF				 # mm d-1
 		
 		# Rate of change of soil water amount
 		R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
@@ -151,10 +134,10 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		if (!EMERG) return(R)
 
 
-      #---NUTRIENT LIMITATION-------------------------------------------#
-      # The nutrient limitation is based on the nutrient concentrations in the organs of the crop. A nutrition index is calculated to quantify nutrient limitation. 
-      
-      # Minimum and maximum nutrient concentrations in the leaves
+		#---NUTRIENT LIMITATION-------------------------------------------#
+		# The nutrient limitation is based on the nutrient concentrations in the organs of the crop. A nutrition index is calculated to quantify nutrient limitation. 
+		
+		# Minimum and maximum nutrient concentrations in the leaves
 		NMINLV <- approx(NMINMAXLV[,1], NMINMAXLV[,2], TSUMCROP)$y   # g N g-1 DM
 		PMINLV <- approx(PMINMAXLV[,1], PMINMAXLV[,2], TSUMCROP)$y   # g P g-1 DM
 		KMINLV <- approx(KMINMAXLV[,1], KMINMAXLV[,2], TSUMCROP)$y   # g K g-1 DM
@@ -183,12 +166,12 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		PMAXRT <- approx(PMINMAXRT[,1], PMINMAXRT[,3], TSUMCROP)$y   # g P g-1 DM
 		KMAXRT <- approx(KMINMAXRT[,1], KMINMAXRT[,3], TSUMCROP)$y   # g K g-1 DM
 		
-		NPKICAL <- npkical(WLVG, WST, WSO, NMINLV, PMINLV, KMINLV, NMINST, PMINST, KMINST,
-					NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST,
-					NMAXSO, PMAXSO, KMAXSO, FR_MAX, K_NPK_NI, K_MAX, ANLVG, ANST, ANSO, 
-					APLVG, APST, APSO, AKLVG, AKST, AKSO)
+		NPKICAL <- LINTULcassava:::npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
+				NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV,
+				NMAXST, PMAXST, KMAXST, NMAXSO, PMAXSO, KMAXSO)
+		
 
-      # Nutrient limitation reduction factor when nutrient limition is switched on
+		# Nutrient limitation reduction factor when nutrient limition is switched on
 		if (control$NUTRIENT_LIMITED){
 			#Simple based on daily values
 			NPKI <- max(0, min(1, NPKICAL$NPKI)) # (-)
@@ -214,22 +197,22 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		# (1) PUSHREDISTEND: The activation of the PUSHREDISTEND function ends the redistribution phase. Redistribution stops when the redistributed fraction reached the maximum redistributed fraction or when the minimum amount of new leaves is produced after dormancy or when the Tsum during the recovery exceeds the maximum redistribution temperature sum. 
 		# (2) PUSHREDIST: The activation of the PUSHREDIST function ends the dormancy phase including the delay temperature sum needed for the redistribution of DM. 
 		# (3) PUSHDORMREC: Indicates if the the crop is still in dormancy. Dormancy can only when the temperature sum of the crop exceeds the temperature sum of the branching. 
-		  
+			
 		PUSHREDISTEND <- ((((WSOREDISTFRAC >= crop$WSOREDISTFRACMAX)) || 
 						((S$REDISTLVG >= crop$WLVGNEWN)) || 
 						((S$PUSHREDISTSUM >= crop$TSUMREDISTMAX))) && 
 						(S$PUSHREDISTSUM > 0))
 
 		PUSHREDIST  <- ifelse((S$PUSHDORMRECTSUM - crop$DELREDIST) >= 0, !PUSHREDISTEND, FALSE)  # (-)
-		  
+			
 		PUSHDORMREC <- pushdor && (S$DORMTSUM > 0) && (!PUSHREDIST) && (S$TSUMCROP >= crop$TSUMSBR) # (-)
 		
-		DORMANCY <- (dormancy || PUSHDORMREC) && (!PUSHREDIST) && (S$TSUMCROP >= crop$TSUMSBR)     # (-)
+		DORMANCY <- (dormancy || PUSHDORMREC) && (!PUSHREDIST) && (S$TSUMCROP >= crop$TSUMSBR)	 # (-)
 		
 		# The temperature sums related to the dormancy and recovery periods.
 		R$DORMTSUM = DTEFF * DORMANCY - (S$DORMTSUM/DELT) * PUSHREDIST # Deg. C
 		R$PUSHDORMRECTSUM = DTEFF * PUSHDORMREC - (S$PUSHDORMRECTSUM/DELT) * (!(PUSHDORMREC || PUSHREDIST))  # Deg. C
-		  
+			
 		R$PUSHREDISTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTSUM/DELT) * PUSHREDISTEND  # Deg. C
 		R$PUSHREDISTENDTSUM = DTEFF * PUSHREDIST - (S$PUSHREDISTENDTSUM/DELT) * (!PUSHREDISTEND) # Deg. C   
 		
@@ -241,11 +224,11 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		R$REDISTLVG = crop$SO2LV * R$REDISTSO * (!DORMANCY)  # g DM m-2 d-1
 		
 		#RH not used
-		#RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO    # g DM m-2 d-1
+		#RREDISTMAINTLOSS = (1 - crop$SO2LV) * R$REDISTSO	# g DM m-2 d-1
 		
 	#---LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
 		# Light interception and total crop growth rate.
-		PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))				     # MJ m-2 d-1
+		PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))					 # MJ m-2 d-1
 		LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
 		
 		GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
@@ -254,7 +237,7 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		
 		#--- AGE
 		# The calculation of the physiological leaf age.  
-		R$TSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
+		R$TSUMCROPLEAFAGE <- DTEFF * EMERG - (S$TSUMCROPLEAFAGE/DELT) * PUSHREDIST	 # Deg. C
 
 		
 		# Relative death rate due to aging depending on leaf age and the daily average temperature. 
@@ -264,7 +247,7 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		
 		#--- SHEDDING
 		# Relative death rate due to self shading, depending on a critical leaf area index at which leaf shedding is induced. Leaf shedding is limited to a maximum leaf shedding per day. 
-		RDRSH <- crop$RDRSHM * (S$LAI-crop$LAICR) / crop$LAICR	    # d-1
+		RDRSH <- crop$RDRSHM * (S$LAI-crop$LAICR) / crop$LAICR		# d-1
 		RDRSH <- min(max(0, RDRSH), crop$RDRSHM)  
 
 		
@@ -272,45 +255,45 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		# ENSHED triggers enhanced leaf senescence due to severe drought or excessive soil water. It assumes that drought or excessive water does not affect young leaves. It only affects leaves that have a reached a given fraction of the leaf age. 
 
 		ENHSHED <- ((WC < WCSD) || ((WC >= soil$WCWET))) && 
-					(S$TSUMCROPLEAFAGE >= (crop$FRACTLLFENHSH * crop$TSUMLLIFE))    # (-)
+					(S$TSUMCROPLEAFAGE >= (crop$FRACTLLFENHSH * crop$TSUMLLIFE))	# (-)
 		
 		# Relative death rate due to severe drought
-		RDRSD <- crop$RDRB * ENHSHED    # d-1
+		RDRSD <- crop$RDRB * ENHSHED	# d-1
 		
 		# Effective relative death rate and the resulting decrease in LAI.
 		RDR <- ifelse((S$TSUMCROPLEAFAGE >= crop$TSUMLLIFE), max(RDRDV, RDRSH, RDRSD), 0) 	# d-1
 		
 		
-		#	DLAI  <- LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    # m2 m-2 d-1
-		DLAI  <- S$LAI * RDR * (!DORMANCY)    # m2 m-2 d-1
+		#	DLAI  <- LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)	# m2 m-2 d-1
+		DLAI  <- S$LAI * RDR * (!DORMANCY)	# m2 m-2 d-1
 		
 		# Fraction of the maximum specific leaf area index depending on the temperature sum of the crop. And its specific leaf area index. 
 		FRACSLACROPAGE <- stats::approx(crop$FRACSLATB[,1], crop$FRACSLATB[,2], S$TSUMCROP)$y  # (-)
-		SLA <- crop$SLA_MAX * FRACSLACROPAGE    # m2 g-1 DM
+		SLA <- crop$SLA_MAX * FRACSLACROPAGE	# m2 g-1 DM
 		
 		# The rate of storage root DM production with DM supplied by the leaves before abscission. 
-		R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (!DORMANCY)	  # g storage root DM m-2 d-1
+		R$WSOFASTRANSLSO <- S$WLVG * RDR * crop$FASTRANSLSO * (!DORMANCY)		# g storage root DM m-2 d-1
 
 
 		
 		# Decrease in leaf weight due to leaf senesence. 
 		#	DLV <- (WLVG * RDR - RWSOFASTRANSLSO) * (1 - DORMANCY)		 # g leaves DM m-2 d-1
-		DLV <- S$WLVG * RDR * (!DORMANCY)         # g leaves DM m-2 d-1
-		R$WLVD <- (DLV - R$WSOFASTRANSLSO)        # g leaves DM m-2 d-1
+		DLV <- S$WLVG * RDR * (!DORMANCY)		 # g leaves DM m-2 d-1
+		R$WLVD <- (DLV - R$WSOFASTRANSLSO)		# g leaves DM m-2 d-1
 		
 		
 	#---PARTITIONING---------------------------------------------------#
 		# Allocation of assimilates to the different organs. The fractions are modified for water availability.
-		FRTMOD <- max(1, 1/(TRANRF+0.5))		  # (-)
+		FRTMOD <- max(1, 1/(TRANRF+0.5))			# (-)
 		# Fibrous roots
-		FRT    <- stats::approx(crop$FRTTB[,1], crop$FRTTB[,2], S$TSUMCROP)$y * FRTMOD # (-)
-		FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)				   # (-)
+		FRT	<- stats::approx(crop$FRTTB[,1], crop$FRTTB[,2], S$TSUMCROP)$y * FRTMOD # (-)
+		FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)					 # (-)
 		# Leaves
-		FLV    <- stats::approx(crop$FLVTB[,1], crop$FLVTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
+		FLV	<- stats::approx(crop$FLVTB[,1], crop$FLVTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
 		# Stems
-		FST    <- stats::approx(crop$FSTTB[,1], crop$FSTTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
+		FST	<- stats::approx(crop$FSTTB[,1], crop$FSTTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
 		# Storage roots
-		FSO    <- stats::approx(crop$FSOTB[,1], crop$FSOTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
+		FSO	<- stats::approx(crop$FSOTB[,1], crop$FSOTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
 		
 		#When plants emerge from dormancy, leaf growth may go far too quickly. 
 		#Adjust partitioning if LAI too large
@@ -341,7 +324,7 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 			R$WRT   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FRT	# g fibrous root DM m-2 d-1
 			R$WST   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FST	# g stem DM m-2 d-1
 			R$WLVG  <- (abs(GTOTAL)+abs(R$WCUTTING)) * FLV - DLV + R$REDISTLVG * PUSHREDIST # g leaves DM m-2 d-1 
-			R$WSO   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FSO + R$WSOFASTRANSLSO - R$REDISTSO	 # g storage root DM m-2 d-1		  
+			R$WSO   <- (abs(GTOTAL)+abs(R$WCUTTING)) * FSO + R$WSOFASTRANSLSO - R$REDISTSO	 # g storage root DM m-2 d-1			
 			#The amount of N, P, K transfered depends on max. concentrations in LV, ST, RT and SO 
 			R$NCUTTING <- (R$WCUTTING/S$WCUTTING)* S$NCUTTING #g N m-2 d-1, proportional to DM
 			R$PCUTTING <- (R$WCUTTING/S$WCUTTING)* S$PCUTTING #g P m-2 d-1, proportional to DM
@@ -353,68 +336,64 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 			R$WST <- 0			# g stem DM m-2 d-1
 			R$WLVG <- 0	 		# g leaves DM m-2 d-1 
 			R$WSO  <- 0	 		# g storage root DM m-2 d-1
-			R$NCUTTING <- 0     # g cutting N m-2 d-1
-			R$PCUTTING <- 0     # g cutting P m-2 d-1
-			R$KCUTTING <- 0     # g cutting K m-2 d-1
+			R$NCUTTING <- 0	 # g cutting N m-2 d-1
+			R$PCUTTING <- 0	 # g cutting P m-2 d-1
+			R$KCUTTING <- 0	 # g cutting K m-2 d-1
 		}
 
 		# Growth of the leaf weight
-		R$WLV = R$WLVG + R$WLVD				  # g leaves DM m-2 d-1
+		R$WLV = R$WLVG + R$WLVD					# g leaves DM m-2 d-1
 		# Total biomass increase 
 		#RH: this is total biomass (state) not the increase (rate) (apparently not used)
-		  #WGTOTAL = WLV+WST+WCUTTING+WSO+WRT  # g DM m-2 d-1
-		
-		
-      
-      #-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
-      # Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
-      # using the nutrientdyn function. 
-      NUTRIENTDYN <- nutrientdyn(Time, Pars, State,
-			NMINLV, PMINLV, KMINLV, NMINST, PMINST, KMINST,
-			NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT,
-			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST,
-			NMAXSO, PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT,
-			EMERG, TRANRF, NPKICAL$NNI, NPKICAL$PNI, NPKICAL$KNI,
-			FLV, FST, FRT, FSO, RWCUTTING, RNCUTTING, RPCUTTING, RKCUTTING,
-			RREDISTLVG, PUSHREDIST, RWLVD, RREDISTSO)
+			#WGTOTAL = WLV+WST+WCUTTING+WSO+WRT  # g DM m-2 d-1
 
- 
-      # Rate of change of the actual nitrogen amounts in the different crop organs. 
-	  test <- EMERG == 1 && WST == 0
-      R$ANLVG <- ifelse(test, 0, NUTRIENTDYN$RANLVG)  # g N m-2 d-1
-      R$ANLVD <- ifelse(test, 0, NUTRIENTDYN$RANLVD)  # g N m-2 d-1
-      R$ANST <- ifelse(test, 0, NUTRIENTDYN$RANST)  # g N m-2 d-1
-      R$ANRT <- ifelse(test, 0, NUTRIENTDYN$RANRT)  # g N m-2 d-1
-      R$ANSO <- ifelse(test, 0, NUTRIENTDYN$RANSO)  # g N m-2 d-1
-      
-      # Rate of change of the actual phosporus amounts in the different crop organs.
-      R$APLVG <- ifelse(test, 0, NUTRIENTDYN$RAPLVG)  # g P m-2 d-1
-      R$APLVD <- ifelse(test, 0, NUTRIENTDYN$RAPLVD)  # g P m-2 d-1
-      R$APST <- ifelse(test, 0, NUTRIENTDYN$RAPST)  # g P m-2 d-1
-      R$APRT <- ifelse(test, 0, NUTRIENTDYN$RAPRT)  # g P m-2 d-1
-      R$APSO <- ifelse(test, 0, NUTRIENTDYN$RAPSO)  # g P m-2 d-1
-      
-      # Rate of change of the actual potassium amounts in the different crop organs.
-      R$AKLVG <- ifelse(test, 0, NUTRIENTDYN$RAKLVG)  # g K m-2 d-1
-      R$AKLVD <- ifelse(test, 0, NUTRIENTDYN$RAKLVD)  # g K m-2 d-1
-      R$AKST <- ifelse(test, 0, NUTRIENTDYN$RAKST)  # g K m-2 d-1
-      R$AKRT <- ifelse(test, 0, NUTRIENTDYN$RAKRT)  # g K m-2 d-1 
-      R$AKSO <- ifelse(test, 0, NUTRIENTDYN$RAKSO)  # g K m-2 d-1
-      
-      # Rate of change of the total mineral N, P and K available for crop uptake. 
-      R$NMINT <- NUTRIENTDYN$RNMINT  # g N m-2 d-1
-      R$PMINT <- NUTRIENTDYN$RPMINT  # g P m-2 d-1
-      R$KMINT <- NUTRIENTDYN$RKMINT  # g K m-2 d-1
-      
-      # Rate of the nutrient amount which becomes available due to soil mineralization.  
-      R$NMINS <- NUTRIENTDYN$RNMINS  # g N m-2 d-1
-      R$PMINS <- NUTRIENTDYN$RPMINS  # g P m-2 d-1
-      R$KMINS <- NUTRIENTDYN$RKMINS  # g K m-2 d-1
-      # Rate of the nutrient amount which becomes available due to fertilization.  
-      R$NMINF <- NUTRIENTDYN$RNMINF  # g N m-2 d-1
-      R$PMINF <- NUTRIENTDYN$RPMINF  # g P m-2 d-1
-      R$KMINF <- NUTRIENTDYN$RKMINF  # g K m-2 d-1
-      
+		
+		#-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
+		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
+		# using the nutrientdyn function. 
+		NUTRIENTDYN <- LINTULcassava:::nutrientdyn2(today, S, R, crop, soil, 
+			management, NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
+			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
+			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, NMAXSO, 
+			PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, EMERG, TRANRF, 
+			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST, DELT)
+
+		# Rate of change of the actual nitrogen amounts in the different crop organs. 
+		test <- EMERG == 1 && WST == 0
+		R$ANLVG <- ifelse(test, 0, NUTRIENTDYN$RANLVG)  # g N m-2 d-1
+		R$ANLVD <- ifelse(test, 0, NUTRIENTDYN$RANLVD)  # g N m-2 d-1
+		R$ANST <- ifelse(test, 0, NUTRIENTDYN$RANST)  # g N m-2 d-1
+		R$ANRT <- ifelse(test, 0, NUTRIENTDYN$RANRT)  # g N m-2 d-1
+		R$ANSO <- ifelse(test, 0, NUTRIENTDYN$RANSO)  # g N m-2 d-1
+		
+		# Rate of change of the actual phosporus amounts in the different crop organs.
+		R$APLVG <- ifelse(test, 0, NUTRIENTDYN$RAPLVG)  # g P m-2 d-1
+		R$APLVD <- ifelse(test, 0, NUTRIENTDYN$RAPLVD)  # g P m-2 d-1
+		R$APST <- ifelse(test, 0, NUTRIENTDYN$RAPST)  # g P m-2 d-1
+		R$APRT <- ifelse(test, 0, NUTRIENTDYN$RAPRT)  # g P m-2 d-1
+		R$APSO <- ifelse(test, 0, NUTRIENTDYN$RAPSO)  # g P m-2 d-1
+		
+		# Rate of change of the actual potassium amounts in the different crop organs.
+		R$AKLVG <- ifelse(test, 0, NUTRIENTDYN$RAKLVG)  # g K m-2 d-1
+		R$AKLVD <- ifelse(test, 0, NUTRIENTDYN$RAKLVD)  # g K m-2 d-1
+		R$AKST <- ifelse(test, 0, NUTRIENTDYN$RAKST)  # g K m-2 d-1
+		R$AKRT <- ifelse(test, 0, NUTRIENTDYN$RAKRT)  # g K m-2 d-1 
+		R$AKSO <- ifelse(test, 0, NUTRIENTDYN$RAKSO)  # g K m-2 d-1
+		
+		# Rate of change of the total mineral N, P and K available for crop uptake. 
+		R$NMINT <- NUTRIENTDYN$RNMINT  # g N m-2 d-1
+		R$PMINT <- NUTRIENTDYN$RPMINT  # g P m-2 d-1
+		R$KMINT <- NUTRIENTDYN$RKMINT  # g K m-2 d-1
+		
+		# Rate of the nutrient amount which becomes available due to soil mineralization.  
+		R$NMINS <- NUTRIENTDYN$RNMINS  # g N m-2 d-1
+		R$PMINS <- NUTRIENTDYN$RPMINS  # g P m-2 d-1
+		R$KMINS <- NUTRIENTDYN$RKMINS  # g K m-2 d-1
+		# Rate of the nutrient amount which becomes available due to fertilization.  
+		R$NMINF <- NUTRIENTDYN$RNMINF  # g N m-2 d-1
+		R$PMINF <- NUTRIENTDYN$RPMINF  # g P m-2 d-1
+		R$KMINF <- NUTRIENTDYN$RKMINF  # g K m-2 d-1
+		
 		
 	#---LEAF GROWTH---------------------------------------------------#
 		
@@ -424,39 +403,60 @@ LINTCAS2NPK <- function(weather, crop, soil, management, control) {
 		# Growth of the leaf are index
 		GLAI <- gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 					crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
-					crop$LAIEXPOEND, DORMANCY)     # m2 m-2 d-1
+					crop$LAIEXPOEND, DORMANCY)	 # m2 m-2 d-1
 			
 		# Change in LAI due to new growth of leaves
-		R$LAI <- GLAI - DLAI    # m2 m-2 d-1
+		R$LAI <- GLAI - DLAI	# m2 m-2 d-1
 
 		R
 	}
 
-
+	management$FERNTAB <- management$FERTAB[, 1:2]
+	management$FERPTAB <- management$FERTAB[, c(1, 3)]
+	management$FERKTAB <- management$FERTAB[, c(1, 4)]
+	
+	surround_days <- function(d, recovery) {
+		if (is.null(d)) return(d)
+		d[, 2] <- d[, 2] * recovery
+		d <- d[rep(1:nrow(d), each = 3), ]
+		d[, 1] <- d[, 1] + c(-1:1)
+		d[-seq(2, nrow(d), by = 3), 2] = 0
+		rbind(cbind(0, 0), d, cbind(2000, 0))
+	}
+	
+	for (v in c("FERNTAB", "FERPTAB", "FERKTAB")) {
+		management[[v]] <- surround_days(management[[v]], crop[[paste0(substr(v, 4, 4), "_RECOV")]])
+	}
+	
 	DELT <- control$timestep
-	pars <- c(crop, soil, DELT=DELT)
-	iR <- iniRates() 	
+	pars <- c(crop, soil, DELT = DELT)
+	iR <- iniRates()
 	wth <- weather[weather$date >= control$startDATE, ]
 	names(wth) <- toupper(names(wth))
-	season <- seq(control$startDATE, management$HVDATE, by = DELT)
-	out <- vector(length=length(season), mode="list")
-	S <- as.list(LC_iniSTATES(pars))
+	wth$DOYS <- 1:nrow(wth)
+	soil$WCI = soil[["WCFC"]]
+	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
+	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
+	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
+	soil[["RTNMINS"]] = (1/0.9) * soil[["NMINI"]]/season_length
+	soil[["RTPMINS"]] = (1/0.9) * soil[["PMINI"]]/season_length
+	soil[["RTKMINS"]] = (1/0.9) * soil[["KMINI"]]/season_length
+	startDOY <- as.integer(format(control$startDATE, "%j"))
+	season <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
+
+	out <- vector(length = length(season), mode = "list")
+	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
 	for (i in 1:length(season)) {
 		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
 		states <- unlist(S)
-#		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
-#				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))
-		# order 
 		R <- R[names(S)]
 		rates <- unlist(R)
 		names(rates) <- paste0("R", names(rates))
-		#out[[i]] <- c(states, AUX, rates)
-		#S <- S + rates
 		out[[i]] <- c(states, rates)
 		S <- get_states(S, R)
-		if (S$TSUM >= crop$FINTSUM) break
-    }
+		if (S$TSUM >= crop$FINTSUM)  break
+	}
 	out <- do.call(rbind, out)
-	out <- data.frame(date=wth$DATE[1:nrow(out)], step=1:nrow(out), out)
+	out <- data.frame(date = wth$DATE[1:nrow(out)], step = 1:nrow(out), out)
 	out
 }
