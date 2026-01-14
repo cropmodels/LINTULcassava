@@ -26,7 +26,7 @@ tinytest::expect_equal(m, run(3))
 
 
 ## NPK, original model
-z <- readRDS(system.file(package="LINTULcassava", "ex/edo17npk.rds"))
+z <- readRDS(system.file(package="LINTULcassava", "ex/edo17npk2.rds"))
 p <- Adiele("Edo", 2017, NPK=TRUE)
 crop <- LC_crop("Adiele", TRUE)
 x <- list()
