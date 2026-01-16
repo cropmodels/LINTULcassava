@@ -15,11 +15,11 @@ And expanded for nutrient-limiation by
 
 Adiele, J.G., Schut, A.G.T., Ezui, K.S., & Giller, K.E. (2022). LINTUL-Cassava-NPK: A simulation model for nutrient-limited cassava growth. Field Crops Research 281: 108488. [10.1016/j.fcr.2022.108488](https://doi.org/10.1016/j.fcr.2022.108488).
 
-For  additional details about the experiment and the measured dynamics of concentrations in the plant and nutrient uptake within a season see
+For  additional details about the experiment and the measured dynamics of concentrations in the plant and nutrient uptake within a season see:
+
 Adiele, J.G., Schut, A.G.T., Ezui, K.S., Pypers, P., & Giller, K.E. (2021). Dynamics of N-P-K demand and uptake in cassava. Agronomy for Sustainable Development 41: 1-14
+
 Adiele, J.G., Schut, A.G.T., van den Beuken, R.P.M., Ezui, K.S., Pypers, P., Ano, A.O., Egesi, C.N., & Giller, K.E. (2020). Towards closing cassava yield gap in West Africa: Agronomic efficiency and storage root yield responses to NPK fertilizers. Field Crops Research 253: 107820
-
-
 
 The orginal *R* implementation by Rob van den Beuken was a translation from the FST implementation of the model developed by Guillaume Ezui under supervision of Peter Leffelaar. Joy Adiele calibrated the model for Nigerian conditions using cultivar 'TME 419'. Tom Schut checked, simplified and adapted the code which is available as R scripts [here]({https://models.pps.wur.nl/index.php/lintulcassavanpk) (2024-10-21).
 
