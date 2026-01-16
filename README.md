@@ -21,5 +21,6 @@ You can install the package with:
 install.packages('LINTULcassava', repos = c('https://cropmodels.r-universe.dev'))
 ```
 
+<a href="https://www.iita.org/" target="_blank">
 <img width="183" height="78" alt="IITA-TAA-smallnew" src="https://github.com/user-attachments/assets/03892fd1-2ea4-4fc8-a540-44e79b680d00" />
-
+</a>
