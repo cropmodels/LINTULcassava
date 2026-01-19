@@ -175,20 +175,20 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     # concentrations are balanced, so distribution based on weight proportions
 	WTOT <- S$WLVG + S$WST + S$WSO + S$WRT
 
-	RNULV <- ifelse(WTOT == 0, 0, (S$WLVG/S$WTOT) * RNUPTR) # g N m-2 d-1
-	RNUST <- ifelse(WTOT == 0, 0, (S$WST/S$WTOT) * RNUPTR)
-	RNUSO <- ifelse(WTOT == 0, 0, (S$WSO/S$WTOT) * RNUPTR)
-	RNURT <- ifelse(WTOT == 0, 0, (S$WRT/S$WTOT) * RNUPTR)
+	RNULV <- ifelse(WTOT == 0, 0, (S$WLVG/WTOT) * RNUPTR) # g N m-2 d-1
+	RNUST <- ifelse(WTOT == 0, 0, (S$WST/WTOT) * RNUPTR)
+	RNUSO <- ifelse(WTOT == 0, 0, (S$WSO/WTOT) * RNUPTR)
+	RNURT <- ifelse(WTOT == 0, 0, (S$WRT/WTOT) * RNUPTR)
 
-	RPULV <- ifelse(WTOT == 0, 0, (S$WLVG/S$WTOT) * RPUPTR) # g P m-2 d-1
-	RPUST <- ifelse(WTOT == 0, 0, (S$WST/S$WTOT) * RPUPTR)
-	RPUSO <- ifelse(WTOT == 0, 0, (S$WSO/S$WTOT) * RPUPTR)
-	RPURT <- ifelse(WTOT == 0, 0, (S$WRT/S$WTOT) * RPUPTR)
+	RPULV <- ifelse(WTOT == 0, 0, (S$WLVG/WTOT) * RPUPTR) # g P m-2 d-1
+	RPUST <- ifelse(WTOT == 0, 0, (S$WST/WTOT) * RPUPTR)
+	RPUSO <- ifelse(WTOT == 0, 0, (S$WSO/WTOT) * RPUPTR)
+	RPURT <- ifelse(WTOT == 0, 0, (S$WRT/WTOT) * RPUPTR)
 
-	RKULV <- ifelse(WTOT == 0, 0, (S$WLVG/S$WTOT) * RKUPTR) # g K m-2 d-1
-	RKUST <- ifelse(WTOT == 0, 0, (S$WST/S$WTOT) * RKUPTR)
-	RKUSO <- ifelse(WTOT == 0, 0, (S$WSO/S$WTOT) * RKUPTR)
-	RKURT <- ifelse(WTOT == 0, 0, (S$WRT/S$WTOT) * RKUPTR)
+	RKULV <- ifelse(WTOT == 0, 0, (S$WLVG/WTOT) * RKUPTR) # g K m-2 d-1
+	RKUST <- ifelse(WTOT == 0, 0, (S$WST/WTOT) * RKUPTR)
+	RKUSO <- ifelse(WTOT == 0, 0, (S$WSO/WTOT) * RKUPTR)
+	RKURT <- ifelse(WTOT == 0, 0, (S$WRT/WTOT) * RKUPTR)
 
     
     #------------ Nutrient redistribution because of cutting. 
@@ -240,9 +240,9 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKSO2LVLV <- R$REDISTLVG * KMAXLV * PUSHREDIST  # g K m-2 d-1
     
     # DM loss of the storage roots
-    RANSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (ANSO / S$WSO))  # g N m-2 d-1 
-    RAPSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (APSO / S$WSO))  # g P m-2 d-1
-    RAKSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (AKSO / S$WSO))  # g K m-2 d-1
+    RANSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (S$ANSO / S$WSO))  # g N m-2 d-1 
+    RAPSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (S$APSO / S$WSO))  # g P m-2 d-1
+    RAKSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (S$AKSO / S$WSO))  # g K m-2 d-1
    
     #------------- Rate of change of N/P/K in crop organs
     #        uptake + net translocation + cutting

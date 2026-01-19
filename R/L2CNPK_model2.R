@@ -72,7 +72,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 
 		# Temperature sum after planting
-		R$TSUM <- ifelse(management$PLDATE <= wth$DATE[today], DTEFF, 0) # Deg. C 
+		R$TSUM <- ifelse(management$PLDATE <= W$DATE, DTEFF, 0) # Deg. C 
 			
 		# Determine water content of rooted soil
 		WC <- 0.001 * S$WA/S$ROOTD		 # (-) 
@@ -449,8 +449,8 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 	out <- vector(length = length(season), mode = "list")
 	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
-#		for (i in 1:length(season)) {
-	for (i in 1:85) {
+	for (i in 1:length(season)) {
+#	for (i in 1:456) {
 		today = season[i]
 		W = wth[i,]
 		
