@@ -231,7 +231,14 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		PARINT <- R$PAR * (1 - exp(-crop$K_EXT * S$LAI))					 # MJ m-2 d-1
 		LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
 		
-		GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
+      # When water stress is more severe or nutrient is stress is more severe
+      if (TRANRF <= NPKI){
+        GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
+        
+      } else{
+        GTOTAL <- LUE * PARINT * NPKI * (!DORMANCY)  # g DM m-2 d-1 
+      }
+
 		
 	#---LEAF SENESCENCE------------------------------------------------------#
 		
@@ -259,9 +266,16 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		
 		# Relative death rate due to severe drought
 		RDRSD <- crop$RDRB * ENHSHED	# d-1
+
+      #-------- NUTRIENT LIMITATION
+      # Leaf death due to nutrient limitation is added on top op the relative death rate due to age, shade 
+      # and drought. 
+      RDRNS <- crop$RDRNS * (1-NPKI)    # d-1
+      #--------
 		
 		# Effective relative death rate and the resulting decrease in LAI.
-		RDR <- ifelse((S$TSUMCROPLEAFAGE >= crop$TSUMLLIFE), max(RDRDV, RDRSH, RDRSD), 0) 	# d-1
+
+		RDR <- ifelse((S$TSUMCROPLEAFAGE >= crop$TSUMLLIFE), max(RDRDV, RDRSH, RDRSD) + RDRNS, 0) 	# d-1
 		
 		
 		#	DLAI  <- LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)	# m2 m-2 d-1
@@ -284,7 +298,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		
 	#---PARTITIONING---------------------------------------------------#
 		# Allocation of assimilates to the different organs. The fractions are modified for water availability.
-		FRTMOD <- max(1, 1/(TRANRF+0.5))			# (-)
+		FRTMOD <- max(1, 1/(TRANRF * NPKI + 0.5))			                             # (-)
 		# Fibrous roots
 		FRT	<- stats::approx(crop$FRTTB[,1], crop$FRTTB[,2], S$TSUMCROP)$y * FRTMOD # (-)
 		FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)					 # (-)
@@ -294,7 +308,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		FST	<- stats::approx(crop$FSTTB[,1], crop$FSTTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
 		# Storage roots
 		FSO	<- stats::approx(crop$FSOTB[,1], crop$FSOTB[,2], S$TSUMCROP)$y * FSHMOD # (-)
-		
+				
 		#When plants emerge from dormancy, leaf growth may go far too quickly. 
 		#Adjust partitioning if LAI too large
 		FLV_ADJ  <- FLV * max(0, min(1, (S$LAI-crop$LAICR) / crop$LAICR))
@@ -403,7 +417,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		# Growth of the leaf are index
 		GLAI <- LINTULcassava:::gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 					crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
-					crop$LAIEXPOEND, DORMANCY)	 # m2 m-2 d-1
+					crop$LAIEXPOEND, DORMANCY, NPKI)	 # m2 m-2 d-1
 			
 		# Change in LAI due to new growth of leaves
 		R$LAI <- GLAI - DLAI	# m2 m-2 d-1
@@ -449,7 +463,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 	out <- vector(length = length(season), mode = "list")
 	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
 	for (i in 1:length(season)) {
-#	for (i in 1:115) {
+#	for (i in 1:130) {
 		today = season[i]
 		W = wth[i,]
 		R = iR 

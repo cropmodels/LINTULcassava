@@ -47,6 +47,7 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
 	ATNRT <- max(0, S$ANRT - S$WRT * (NMINRT + crop$FR_MAX * (NMAXRT - NMINRT)))
     ATN   <- ATNLV + ATNST + ATNSO + ATNRT # g N m-2   
 
+
 	ATPLV <- max(0, S$APLVG - S$WLVG * (PMINLV + crop$FR_MAX * (PMAXLV - PMINLV)))
 	ATPST <- max(0, S$APST - S$WST * (PMINST + crop$FR_MAX * (PMAXST - PMINST)))
 	ATPSO <- max(0, S$APSO - S$WSO * (PMINSO + crop$FR_MAX * (PMAXSO - PMINSO)))
@@ -208,6 +209,7 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKCUTRT <- -R$KCUTTING * FRT  # g K m-2 d-1
     RAKCUTSO <- -R$KCUTTING * FSO  # g K m-2 d-1
     
+	
     #------------ Nutrient redistribution because of leaf death
     if( S$WLVG > 0){
       #Nutrients lost due to dying leaves
@@ -263,6 +265,7 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKRT <- RKURT + RKTRT + RAKCUTRT                         # g K m-2 d-1
     RAKSO <- RKUSO + RKTSO + RAKCUTSO - RAKSO2LVSO + RKDLV_REDIST   # g K m-2 d-1
     
+	
     #------------ Soil supply
     # Soil nutrient supply through mineralization during crop growth(not affected by water supply)
     #The reason for this is that soil supply isn't modelled but a given from control plots. 
