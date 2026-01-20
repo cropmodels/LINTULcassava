@@ -176,7 +176,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			#Simple based on daily values
 			NPKI <- max(0, min(1, NPKICAL$NPKI)) # (-)
 			#Shortly after emergence nutrient stress does not occur
-			NPKI <- ifelse(S$TSUMCROP < TSUM_NPKI, 1, NPKI)
+			NPKI <- ifelse(S$TSUMCROP < crop$TSUM_NPKI, 1, NPKI)
 		} else {
 			NPKI <- 1
 		}
@@ -351,8 +351,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		#-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
 		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
 		# using the nutrientdyn function. 
-		NUTRIENTDYN <- LINTULcassava:::nutrientdyn2(today, S, R, crop, soil, 
-#		NUTRIENTDYN <- nutrientdyn2(today, S, R, crop, soil, 
+		NutD <- LINTULcassava:::nutrientdyn2(today, S, R, crop, soil, 
 			management, NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
 			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, NMAXSO, 
@@ -361,39 +360,39 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 		# Rate of change of the actual nitrogen amounts in the different crop organs. 
 		test <- EMERG == 1 && S$WST == 0
-		R$ANLVG <- ifelse(test, 0, NUTRIENTDYN$RANLVG)  # g N m-2 d-1
-		R$ANLVD <- ifelse(test, 0, NUTRIENTDYN$RANLVD)  # g N m-2 d-1
-		R$ANST <- ifelse(test, 0, NUTRIENTDYN$RANST)  # g N m-2 d-1
-		R$ANRT <- ifelse(test, 0, NUTRIENTDYN$RANRT)  # g N m-2 d-1
-		R$ANSO <- ifelse(test, 0, NUTRIENTDYN$RANSO)  # g N m-2 d-1
+		R$ANLVG <- ifelse(test, 0, NutD$RANLVG)  # g N m-2 d-1
+		R$ANLVD <- ifelse(test, 0, NutD$RANLVD)  # g N m-2 d-1
+		R$ANST <- ifelse(test, 0, NutD$RANST)  # g N m-2 d-1
+		R$ANRT <- ifelse(test, 0, NutD$RANRT)  # g N m-2 d-1
+		R$ANSO <- ifelse(test, 0, NutD$RANSO)  # g N m-2 d-1
 		
 		# Rate of change of the actual phosporus amounts in the different crop organs.
-		R$APLVG <- ifelse(test, 0, NUTRIENTDYN$RAPLVG)  # g P m-2 d-1
-		R$APLVD <- ifelse(test, 0, NUTRIENTDYN$RAPLVD)  # g P m-2 d-1
-		R$APST <- ifelse(test, 0, NUTRIENTDYN$RAPST)  # g P m-2 d-1
-		R$APRT <- ifelse(test, 0, NUTRIENTDYN$RAPRT)  # g P m-2 d-1
-		R$APSO <- ifelse(test, 0, NUTRIENTDYN$RAPSO)  # g P m-2 d-1
+		R$APLVG <- ifelse(test, 0, NutD$RAPLVG)  # g P m-2 d-1
+		R$APLVD <- ifelse(test, 0, NutD$RAPLVD)  # g P m-2 d-1
+		R$APST <- ifelse(test, 0, NutD$RAPST)  # g P m-2 d-1
+		R$APRT <- ifelse(test, 0, NutD$RAPRT)  # g P m-2 d-1
+		R$APSO <- ifelse(test, 0, NutD$RAPSO)  # g P m-2 d-1
 		
 		# Rate of change of the actual potassium amounts in the different crop organs.
-		R$AKLVG <- ifelse(test, 0, NUTRIENTDYN$RAKLVG)  # g K m-2 d-1
-		R$AKLVD <- ifelse(test, 0, NUTRIENTDYN$RAKLVD)  # g K m-2 d-1
-		R$AKST <- ifelse(test, 0, NUTRIENTDYN$RAKST)  # g K m-2 d-1
-		R$AKRT <- ifelse(test, 0, NUTRIENTDYN$RAKRT)  # g K m-2 d-1 
-		R$AKSO <- ifelse(test, 0, NUTRIENTDYN$RAKSO)  # g K m-2 d-1
+		R$AKLVG <- ifelse(test, 0, NutD$RAKLVG)  # g K m-2 d-1
+		R$AKLVD <- ifelse(test, 0, NutD$RAKLVD)  # g K m-2 d-1
+		R$AKST <- ifelse(test, 0, NutD$RAKST)  # g K m-2 d-1
+		R$AKRT <- ifelse(test, 0, NutD$RAKRT)  # g K m-2 d-1 
+		R$AKSO <- ifelse(test, 0, NutD$RAKSO)  # g K m-2 d-1
 		
-		# Rate of change of the total mineral N, P and K available for crop uptake. 
-		R$NMINT <- NUTRIENTDYN$RNMINT  # g N m-2 d-1
-		R$PMINT <- NUTRIENTDYN$RPMINT  # g P m-2 d-1
-		R$KMINT <- NUTRIENTDYN$RKMINT  # g K m-2 d-1
+		# Rate of change of the total mineral N, P aNutD K available for crop uptake. 
+		R$NMINT <- NutD$RNMINT  # g N m-2 d-1
+		R$PMINT <- NutD$RPMINT  # g P m-2 d-1
+		R$KMINT <- NutD$RKMINT  # g K m-2 d-1
 		
 		# Rate of the nutrient amount which becomes available due to soil mineralization.  
-		R$NMINS <- NUTRIENTDYN$RNMINS  # g N m-2 d-1
-		R$PMINS <- NUTRIENTDYN$RPMINS  # g P m-2 d-1
-		R$KMINS <- NUTRIENTDYN$RKMINS  # g K m-2 d-1
+		R$NMINS <- NutD$RNMINS  # g N m-2 d-1
+		R$PMINS <- NutD$RPMINS  # g P m-2 d-1
+		R$KMINS <- NutD$RKMINS  # g K m-2 d-1
 		# Rate of the nutrient amount which becomes available due to fertilization.  
-		R$NMINF <- NUTRIENTDYN$RNMINF  # g N m-2 d-1
-		R$PMINF <- NUTRIENTDYN$RPMINF  # g P m-2 d-1
-		R$KMINF <- NUTRIENTDYN$RKMINF  # g K m-2 d-1
+		R$NMINF <- NutD$RNMINF  # g N m-2 d-1
+		R$PMINF <- NutD$RPMINF  # g P m-2 d-1
+		R$KMINF <- NutD$RKMINF  # g K m-2 d-1
 		
 		
 	#---LEAF GROWTH---------------------------------------------------#
@@ -450,9 +449,10 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 	out <- vector(length = length(season), mode = "list")
 	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
 	for (i in 1:length(season)) {
-#	for (i in 1:456) {
+#	for (i in 1:115) {
 		today = season[i]
 		W = wth[i,]
+		R = iR 
 		
 		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
 		states <- unlist(S)

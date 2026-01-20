@@ -41,22 +41,22 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     # amount of nutrients available and as a fraction of the amount of translocatable nutrients from the
     # stem and leaves. The total translocatable nutrients is the sum of this.
 
-	ATNLV <- max(0, S$ANLVG - S$WLVG * (NMINLV + S$FR_MAX * (NMAXLV - NMINLV)))
-	ATNST <- max(0, S$ANST - S$WST * (NMINST + S$FR_MAX * (NMAXST - NMINST)))
-	ATNSO <- max(0, S$ANSO - S$WSO * (NMINSO + S$FR_MAX * (NMAXSO - NMINSO)))
-	ATNRT <- max(0, S$ANRT - S$WRT * (NMINRT + S$FR_MAX * (NMAXRT - NMINRT)))
+	ATNLV <- max(0, S$ANLVG - S$WLVG * (NMINLV + crop$FR_MAX * (NMAXLV - NMINLV)))
+	ATNST <- max(0, S$ANST - S$WST * (NMINST + crop$FR_MAX * (NMAXST - NMINST)))
+	ATNSO <- max(0, S$ANSO - S$WSO * (NMINSO + crop$FR_MAX * (NMAXSO - NMINSO)))
+	ATNRT <- max(0, S$ANRT - S$WRT * (NMINRT + crop$FR_MAX * (NMAXRT - NMINRT)))
     ATN   <- ATNLV + ATNST + ATNSO + ATNRT # g N m-2   
 
-	ATPLV <- max(0, S$APLVG - S$WLVG * (PMINLV + S$FR_MAX * (PMAXLV - PMINLV)))
-	ATPST <- max(0, S$APST - S$WST * (PMINST + S$FR_MAX * (PMAXST - PMINST)))
-	ATPSO <- max(0, S$APSO - S$WSO * (PMINSO + S$FR_MAX * (PMAXSO - PMINSO)))
-	ATPRT <- max(0, S$APRT - S$WRT * (PMINRT + S$FR_MAX * (PMAXRT - PMINRT)))
+	ATPLV <- max(0, S$APLVG - S$WLVG * (PMINLV + crop$FR_MAX * (PMAXLV - PMINLV)))
+	ATPST <- max(0, S$APST - S$WST * (PMINST + crop$FR_MAX * (PMAXST - PMINST)))
+	ATPSO <- max(0, S$APSO - S$WSO * (PMINSO + crop$FR_MAX * (PMAXSO - PMINSO)))
+	ATPRT <- max(0, S$APRT - S$WRT * (PMINRT + crop$FR_MAX * (PMAXRT - PMINRT)))
     ATP   <- ATPLV + ATPST + ATPSO + ATPRT # g P m-2  
     
-	ATKLV <- max(0, S$AKLVG - S$WLVG * (KMINLV + S$FR_MAX * (KMAXLV - KMINLV)))
-	ATKST <- max(0, S$AKST - S$WST * (KMINST + S$FR_MAX * (KMAXST - KMINST)))
-	ATKSO <- max(0, S$AKSO - S$WSO * (KMINSO + S$FR_MAX * (KMAXSO - KMINSO)))
-	ATKRT <- max(0, S$AKRT - S$WRT * (KMINRT + S$FR_MAX * (KMAXRT - KMINRT)))
+	ATKLV <- max(0, S$AKLVG - S$WLVG * (KMINLV + crop$FR_MAX * (KMAXLV - KMINLV)))
+	ATKST <- max(0, S$AKST - S$WST * (KMINST + crop$FR_MAX * (KMAXST - KMINST)))
+	ATKSO <- max(0, S$AKSO - S$WSO * (KMINSO + crop$FR_MAX * (KMAXSO - KMINSO)))
+	ATKRT <- max(0, S$AKRT - S$WRT * (KMINRT + crop$FR_MAX * (KMAXRT - KMINRT)))
     ATK   <- ATKLV + ATKST + ATKSO + ATKRT # g K m-2  
   
     #---------------- Nutrient demand
@@ -245,8 +245,9 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     RAKSO2LVSO <- ifelse(S$WSO == 0, 0, R$REDISTSO * (S$AKSO / S$WSO))  # g K m-2 d-1
    
     #------------- Rate of change of N/P/K in crop organs
-    #        uptake + net translocation + cutting
+    # uptake + net translocation + cutting
     # N relocated to stem, P+K to storate roots
+	
     RANLVG <- RNULV + RNTLV + RANCUTLV + RANSO2LVLV  - RNDLVG # g N m-2 d-1
     RANST <- RNUST + RNTST + RANCUTST + RNDLV_REDIST          # g N m-2 d-1
     RANRT <- RNURT + RNTRT + RANCUTRT                         # g N m-2 d-1

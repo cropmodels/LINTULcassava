@@ -261,6 +261,7 @@ nutrientdyn <- function(Time, Pars, States,
     #------------- Rate of change of N/P/K in crop organs
     #        uptake + net translocation + cutting
     # N relocated to stem, P+K to storate roots
+	
     RANLVG <- RNULV + RNTLV + RANCUTLV + RANSO2LVLV  - RNDLVG # g N m-2 d-1
     RANST <- RNUST + RNTST + RANCUTST + RNDLV_REDIST          # g N m-2 d-1
     RANRT <- RNURT + RNTRT + RANCUTRT                         # g N m-2 d-1
