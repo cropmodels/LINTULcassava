@@ -16,24 +16,23 @@ run <- function(level) {
 m <- readRDS(file.path(system.file(package="LINTULcassava"), "ex/test.rds"))
 tinytest::expect_equal(m, run(3))
 
-#for (i in 1:2) {
-#	d <- run(i)
-#	nms <- intersect(names(m[[1]]), names(d[[1]]))
-#	tinytest::expect_true(
-#		all(sapply(1:length(d), function(j) all.equal(m[[j]][,nms], d[[j]][,nms])))
-#	)
-#}
 
-
-## NPK, original model
-z <- readRDS(system.file(package="LINTULcassava", "ex/edo17npk2.rds"))
-p <- Adiele("Edo", 2017, NPK=TRUE)
+library(LINTULcassava)
 crop <- LC_crop("Adiele", TRUE)
-x <- list()
-x$W <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=F, IRRIGF=F), level=1)
-x$WN <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=T, IRRIGF=F), level=1)
-x$N <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=F, IRRIGF=T), level=1)
-x$none <- LINTCAS(p$weather, crop, p$soil, p$management, c(p$control, NUTRIENT_LIMITED=T, IRRIGF=T), level=1)
+y <- expand.grid(NL=c(TRUE, FALSE), IRRI=c(TRUE, FALSE), site=c("Edo", "CRS", "Benue"), year = c(2016, 2017), stringsAsFactors=FALSE)
+y$name <- c("NL", "none", "NWL", "WL")
 
-all.equal(x, z)
+runNPK <- function(level) {
+	mod <- lapply(1:nrow(y), function(i)  {
+	  p <- Adiele(y$site[i], y$year[i], NPK=TRUE)
+	  data.frame(Location=y$site[i], 
+	  LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, NUTRIENT_LIMITED=y$NL[i], IRRIGF=y$IRRI[i]), level=level))  
+	})
+	names(mod) <- y$name
+	mod
+}
+
+#r <- readRDS(system.file(package="LINTULcassava", "ex/testNPK.rds"))
+#x <- runNPK(2)
+#isTRUE(all.equal(r, x))
 
