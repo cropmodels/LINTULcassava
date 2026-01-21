@@ -4,6 +4,14 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 # Alternative R implementation of the model used as a bridge to develope the C++ version
 # Robert Hijmans, January 2026
 
+	iniSoil <- function(season_length) {
+		soil$WCI = soil[["WCFC"]]
+		soil[["RTNMINS"]] = (1/0.9) * soil[["NMINI"]] / season_length
+		soil[["RTPMINS"]] = (1/0.9) * soil[["PMINI"]] / season_length
+		soil[["RTKMINS"]] = (1/0.9) * soil[["KMINI"]] / season_length
+		soil
+	}
+
 	iniRates <- function() {
 		as.list(c(
 			ROOTD=0,# m d-1
@@ -50,12 +58,13 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 	}
 
 
-	get_rates <- function(today, W, S, R, crop, soil, management, control, DELT=1) {
+	get_rates <- function(today, W, S, R, crop, soil, management, control) {
 
 		if (S$TSUM >= crop$FINTSUM) {
 			# If the plant is not growing anymore all plant related rates are set to 0.
 			return(R)
 		}		 
+		DELT = control$timestep
 			
 		#Daily weather data. 
 		SatVP_TMMN = 0.611 * exp(17.4 * W$TMIN / (W$TMIN + 239)) 
@@ -392,31 +401,26 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 ## MAIN
 
 	management$FERTAB <- data.frame(management$FERTAB)
-	DELT <- control$timestep
-	pars <- c(crop, soil, DELT = DELT)
 	iR <- iniRates()
 	wth <- weather[weather$date >= control$startDATE, ]
 	names(wth) <- toupper(names(wth))
 	wth$DOYS <- 1:nrow(wth)
-	soil$WCI = soil[["WCFC"]]
 	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
 	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
 	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
-	soil[["RTNMINS"]] = (1/0.9) * soil[["NMINI"]]/season_length
-	soil[["RTPMINS"]] = (1/0.9) * soil[["PMINI"]]/season_length
-	soil[["RTKMINS"]] = (1/0.9) * soil[["KMINI"]]/season_length
+	soil <- iniSoil(season_length)
+
 	startDOY <- as.integer(format(control$startDATE, "%j"))
 	season <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
 
 	out <- vector(length = length(season), mode = "list")
-	S <- as.list(LINTULcassava:::LC_NPK_iniSTATES(pars))
+	S <- as.list(LC_NPK_iniSTATES(c(crop, soil, DELT=control$timestep)))
 	for (i in 1:length(season)) {
 #	for (i in 1:130) {
-		today = season[i]
-		W = wth[i,]
-		R = iR 
-		
-		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
+#		today = season[i]
+#		W = wth[i,]
+#		R = iR 
+		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control)
 		states <- unlist(S)
 		R <- R[names(S)]
 		rates <- unlist(R)
