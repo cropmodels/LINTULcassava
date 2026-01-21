@@ -17,24 +17,20 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, EMERG, DELT,
 			NMINLV, PMINLV, KMINLV, NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, 
 			NMINRT, PMINRT, KMINRT, NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, 
 			NMAXSO, PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, TRANRF, 
-			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST) {
+			NNI, PNI, KNI, FLV, FST, FRT, FSO, PUSHREDIST) {
 
-	NNI <- NPKICAL$NNI
-	PNI <- NPKICAL$PNI
-	KNI <- NPKICAL$KNI
-  
+
     #---------------- Fertilizer application
     # Ferilizer N/P/K application (kg N/P/K ha-1 d-1)
-    RFERTN <- approx(management$FERNTAB[,1], management$FERNTAB[,2], Time)$y    # kg N ha-1 d-1
-    RFERTN <- (RFERTN * 1000) / 10000                     # g N m-2 d-1 
-    
-    RFERTP <- approx(management$FERPTAB[,1], management$FERPTAB[,2], Time)$y    # kg P ha-1 d-1
-    RFERTP <- (RFERTP * 1000) / 10000                     # g P m-2 d-1
-    
-    RFERTK <- approx(management$FERKTAB[,1], management$FERKTAB[,2], Time)$y    # kg N ha-1 d-1
-    RFERTK <- (RFERTK * 1000) / 10000                     # g N m-2 d-1
- 
-
+	i <- match(Time, management$FERTAB[,1])
+	if (is.na(i)) {
+		RFERTN <- RFERTP <- RFERTK <- 0
+	} else {
+		RFERTN <- management$FERTAB$N[i] * crop$N_RECOV / 10 # kg ha-1 to g m-2 
+		RFERTP <- management$FERTAB$P[i] * crop$P_RECOV / 10 # kg ha-1 to g m-2 
+		RFERTK <- management$FERTAB$K[i] * crop$K_RECOV / 10 # kg ha-1 to g m-2 
+	}
+	
     #---------------- Translocatable nutrient amounts
     # The amount of translocatable nutrients to the storage organs is the actual nutrient amount minus the 
     # optimal amount in the plant leaves, stems and roots. For the roots it is the minimum between the 
@@ -291,7 +287,7 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, EMERG, DELT,
     R$PMINT <- crop$RTPMINF * S$PMINF * WLIMIT + (-R$PMINS) - RPUPTR   # g P m-2 d-1
     R$KMINT <- crop$RTKMINF * S$KMINF * WLIMIT + (-R$KMINS) - RKUPTR   # g K m-2 d-1
    
-	if ((EMERG == 1) && (S$WST == 0)) {
+	if (EMERG && (S$WST == 0)) {
 		R$ANLVG <- R$ANLVD <- R$ANST <- R$ANRT <- R$ANSO <- 0
 		R$APLVG <- R$APLVD <- R$APST <- R$APRT <- R$APSO <- 0
 		R$AKLVG <- R$AKLVD <- R$AKST <- R$AKRT <- R$AKSO <- 0

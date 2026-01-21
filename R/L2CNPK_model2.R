@@ -371,7 +371,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
 			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, NMAXSO, 
 			PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, TRANRF, 
-			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST)
+			NPKICAL$NNI, NPKICAL$PNI, NPKICAL$KNI, FLV, FST, FRT, FSO, PUSHREDIST)
 		
 	#---LEAF GROWTH---------------------------------------------------#
 		
@@ -391,23 +391,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 ## MAIN
 
-	management$FERNTAB <- management$FERTAB[, 1:2]
-	management$FERPTAB <- management$FERTAB[, c(1, 3)]
-	management$FERKTAB <- management$FERTAB[, c(1, 4)]
-	
-	surround_days <- function(d, recovery) {
-		if (is.null(d)) return(d)
-		d[, 2] <- d[, 2] * recovery
-		d <- d[rep(1:nrow(d), each = 3), ]
-		d[, 1] <- d[, 1] + c(-1:1)
-		d[-seq(2, nrow(d), by = 3), 2] = 0
-		rbind(cbind(0, 0), d, cbind(2000, 0))
-	}
-	
-	for (v in c("FERNTAB", "FERPTAB", "FERKTAB")) {
-		management[[v]] <- surround_days(management[[v]], crop[[paste0(substr(v, 4, 4), "_RECOV")]])
-	}
-	
+	management$FERTAB <- data.frame(management$FERTAB)
 	DELT <- control$timestep
 	pars <- c(crop, soil, DELT = DELT)
 	iR <- iniRates()
