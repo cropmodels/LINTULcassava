@@ -13,11 +13,11 @@
 # modified by RH, 2026-01-13
 #--------------------------------------------------------------------------------------------------#
 
-nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV, 
-			KMINLV, NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMINRT, 
-			PMINRT, KMINRT, NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, 
-			NMAXSO, PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, EMERG, TRANRF, 
-			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST, DELT) {
+nutrientdyn2 <- function (Time, S, R, crop, soil, management, EMERG, DELT, 
+			NMINLV, PMINLV, KMINLV, NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, 
+			NMINRT, PMINRT, KMINRT, NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, 
+			NMAXSO, PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, TRANRF, 
+			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST) {
 
 	NNI <- NPKICAL$NNI
 	PNI <- NPKICAL$PNI
@@ -211,27 +211,27 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     
 	
     #------------ Nutrient redistribution because of leaf death
-    if( S$WLVG > 0){
+    if (S$WLVG > 0) {
       #Nutrients lost due to dying leaves
-      RANLVD <- R$WLVD * crop$NFLVD # g N m-2 d-1
-      RAPLVD <- R$WLVD * crop$PFLVD # g P m-2 d-1
-      RAKLVD <- R$WLVD * crop$KFLVD # g K m-2 d-1
+      R$ANLVD <- R$WLVD * crop$NFLVD # g N m-2 d-1
+      R$APLVD <- R$WLVD * crop$PFLVD # g P m-2 d-1
+      R$AKLVD <- R$WLVD * crop$KFLVD # g K m-2 d-1
       #Total nutrients in dying leaves
       RNDLVG <- R$WLVD * (S$ANLVG / S$WLVG) # g N m-2 d-1
       RPDLVG <- R$WLVD * (S$APLVG / S$WLVG) # g P m-2 d-1
       RKDLVG <- R$WLVD * (S$AKLVG / S$WLVG) # g K m-2 d-1
-    }else{
+    } else {
       RNDLVG <- 0
       RPDLVG <- 0
       RKDLVG <- 0
-      RANLVD <- 0
-      RAPLVD <- 0
-      RAKLVD <- 0
+      R$ANLVD <- 0
+      R$APLVD <- 0
+      R$AKLVD <- 0
     }
     #What is not lost to dead leaves most be redistributed to other organs
-    RNDLV_REDIST <- max(0, RNDLVG - RANLVD) # g N m-2 d-1
-    RPDLV_REDIST <- max(0, RPDLVG - RAPLVD)
-    RKDLV_REDIST <- max(0, RKDLVG - RAKLVD)
+    RNDLV_REDIST <- max(0, RNDLVG - R$ANLVD) # g N m-2 d-1
+    RPDLV_REDIST <- max(0, RPDLVG - R$APLVD)
+    RKDLV_REDIST <- max(0, RKDLVG - R$AKLVD)
 
     
     #------------ Nutrient redistribution because of storage root DM redistribution after dormancy
@@ -250,48 +250,51 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, NMINLV, PMINLV,
     # uptake + net translocation + cutting
     # N relocated to stem, P+K to storate roots
 	
-    RANLVG <- RNULV + RNTLV + RANCUTLV + RANSO2LVLV  - RNDLVG # g N m-2 d-1
-    RANST <- RNUST + RNTST + RANCUTST + RNDLV_REDIST          # g N m-2 d-1
-    RANRT <- RNURT + RNTRT + RANCUTRT                         # g N m-2 d-1
-    RANSO <- RNUSO + RNTSO + RANCUTSO - RANSO2LVSO            # g N m-2 d-1
+    R$ANLVG <- RNULV + RNTLV + RANCUTLV + RANSO2LVLV  - RNDLVG # g N m-2 d-1
+    R$ANST <- RNUST + RNTST + RANCUTST + RNDLV_REDIST          # g N m-2 d-1
+    R$ANRT <- RNURT + RNTRT + RANCUTRT                         # g N m-2 d-1
+    R$ANSO <- RNUSO + RNTSO + RANCUTSO - RANSO2LVSO            # g N m-2 d-1
     
-    RAPLVG <- RPULV + RPTLV + RAPCUTLV + RAPSO2LVLV  - RPDLVG # g P m-2 d-1
-    RAPST <- RPUST + RPTST + RAPCUTST                         # g P m-2 d-1
-    RAPRT <- RPURT + RPTRT + RAPCUTRT                         # g P m-2 d-1
-    RAPSO <- RPUSO + RPTSO + RAPCUTSO - RAPSO2LVSO + RPDLV_REDIST   # g P m-2 d-1
+    R$APLVG <- RPULV + RPTLV + RAPCUTLV + RAPSO2LVLV  - RPDLVG # g P m-2 d-1
+    R$APST <- RPUST + RPTST + RAPCUTST                         # g P m-2 d-1
+    R$APRT <- RPURT + RPTRT + RAPCUTRT                         # g P m-2 d-1
+    R$APSO <- RPUSO + RPTSO + RAPCUTSO - RAPSO2LVSO + RPDLV_REDIST   # g P m-2 d-1
     
-    RAKLVG <- RKULV + RKTLV + RAKCUTLV + RAKSO2LVLV  - RKDLVG # g K m-2 d-1
-    RAKST <- RKUST + RKTST + RAKCUTST                         # g K m-2 d-1
-    RAKRT <- RKURT + RKTRT + RAKCUTRT                         # g K m-2 d-1
-    RAKSO <- RKUSO + RKTSO + RAKCUTSO - RAKSO2LVSO + RKDLV_REDIST   # g K m-2 d-1
+    R$AKLVG <- RKULV + RKTLV + RAKCUTLV + RAKSO2LVLV  - RKDLVG # g K m-2 d-1
+    R$AKST <- RKUST + RKTST + RAKCUTST                         # g K m-2 d-1
+    R$AKRT <- RKURT + RKTRT + RAKCUTRT                         # g K m-2 d-1
+    R$AKSO <- RKUSO + RKTSO + RAKCUTSO - RAKSO2LVSO + RKDLV_REDIST   # g K m-2 d-1
     
 	
     #------------ Soil supply
     # Soil nutrient supply through mineralization during crop growth(not affected by water supply)
     #The reason for this is that soil supply isn't modelled but a given from control plots. 
     #With unknown number of days with water limitations it is impossible to know the potential uptake rate from this pool.
-	RNMINS <- ifelse(S$NMINS < soil$RTNMINS, -S$NMINS/DELT, -soil$RTNMINS) # g N m-2 d-1
-	RPMINS <- ifelse(S$NMINS < soil$RTPMINS, -S$PMINS/DELT, -soil$RTPMINS) # g P m-2 d-1
-	RKMINS <- ifelse(S$NMINS < soil$RTKMINS, -S$KMINS/DELT, -soil$RTKMINS) # g K m-2 d-1
+	# Rate of the nutrient amount which becomes available due to soil mineralization.  
+	R$NMINS <- ifelse(S$NMINS < soil$RTNMINS, -S$NMINS/DELT, -soil$RTNMINS) # g N m-2 d-1
+	R$PMINS <- ifelse(S$NMINS < soil$RTPMINS, -S$PMINS/DELT, -soil$RTPMINS) # g P m-2 d-1
+	R$KMINS <- ifelse(S$NMINS < soil$RTKMINS, -S$KMINS/DELT, -soil$RTKMINS) # g K m-2 d-1
   
     #------------ Fertilizer supply
     #Fertilizer nutrient supply 
     #Pool in the soil which is not yet avalable for plant uptake
-    #        supply rate      rate that becomes available for uptake
-    RNMINF <- RFERTN - crop$RTNMINF * S$NMINF * WLIMIT   # g N m-2 d-1
-    RPMINF <- RFERTP - crop$RTPMINF * S$PMINF * WLIMIT   # g P m-2 d-1 
-    RKMINF <- RFERTK - crop$RTKMINF * S$KMINF * WLIMIT   # g K m-2 d-1
+    #        supply rate rate that becomes available for uptake
+	# Rate of the nutrient amount which becomes available due to fertilization.  
+    R$NMINF <- RFERTN - crop$RTNMINF * S$NMINF * WLIMIT   # g N m-2 d-1
+    R$PMINF <- RFERTP - crop$RTPMINF * S$PMINF * WLIMIT   # g P m-2 d-1 
+    R$KMINF <- RFERTK - crop$RTKMINF * S$KMINF * WLIMIT   # g K m-2 d-1
 
     # Change in total inorganic N/P/K in soil as function of fertilizer input, 
     # soil N/P/K mineralization and crop uptake.
-    RNMINT <- crop$RTNMINF * S$NMINF * WLIMIT + (-RNMINS) - RNUPTR   # g N m-2 d-1
-    RPMINT <- crop$RTPMINF * S$PMINF * WLIMIT + (-RPMINS) - RPUPTR   # g P m-2 d-1
-    RKMINT <- crop$RTKMINF * S$KMINF * WLIMIT + (-RKMINS) - RKUPTR   # g K m-2 d-1
+	# Rate of change of the total mineral N, P and K available for crop uptake. 
+    R$NMINT <- crop$RTNMINF * S$NMINF * WLIMIT + (-R$NMINS) - RNUPTR   # g N m-2 d-1
+    R$PMINT <- crop$RTPMINF * S$PMINF * WLIMIT + (-R$PMINS) - RPUPTR   # g P m-2 d-1
+    R$KMINT <- crop$RTKMINF * S$KMINF * WLIMIT + (-R$KMINS) - RKUPTR   # g K m-2 d-1
    
-	data.frame(RANLVG = RANLVG, RANLVD = RANLVD, RANST = RANST, RANRT = RANRT, RANSO = RANSO, 
-                      RAPLVG = RAPLVG, RAPLVD = RAPLVD, RAPST = RAPST, RAPRT = RAPRT, RAPSO = RAPSO, 
-                      RAKLVG = RAKLVG, RAKLVD = RAKLVD, RAKST = RAKST, RAKRT = RAKRT, RAKSO = RAKSO, 
-                      RNMINT = RNMINT, RPMINT = RPMINT, RKMINT = RKMINT, 
-                      RNMINS = RNMINS, RPMINS = RPMINS, RKMINS = RKMINS,
-                      RNMINF = RNMINF, RPMINF = RPMINF, RKMINF = RKMINF)
+	if ((EMERG == 1) && (S$WST == 0)) {
+		R$ANLVG <- R$ANLVD <- R$ANST <- R$ANRT <- R$ANSO <- 0
+		R$APLVG <- R$APLVD <- R$APST <- R$APRT <- R$APSO <- 0
+		R$AKLVG <- R$AKLVD <- R$AKST <- R$AKRT <- R$AKSO <- 0
+	}	
+	R
 }

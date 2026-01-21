@@ -365,49 +365,13 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		#-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
 		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
 		# using the nutrientdyn function. 
-		NutD <- LINTULcassava:::nutrientdyn2(today, S, R, crop, soil, 
-			management, NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
+		R <- LINTULcassava:::nutrientdyn2(
+			today, S, R, crop, soil, management, EMERG, DELT, 
+			NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
 			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, NMAXSO, 
-			PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, EMERG, TRANRF, 
-			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST, DELT)
-
-		# Rate of change of the actual nitrogen amounts in the different crop organs. 
-		test <- EMERG == 1 && S$WST == 0
-		R$ANLVG <- ifelse(test, 0, NutD$RANLVG)  # g N m-2 d-1
-		R$ANLVD <- ifelse(test, 0, NutD$RANLVD)  # g N m-2 d-1
-		R$ANST <- ifelse(test, 0, NutD$RANST)  # g N m-2 d-1
-		R$ANRT <- ifelse(test, 0, NutD$RANRT)  # g N m-2 d-1
-		R$ANSO <- ifelse(test, 0, NutD$RANSO)  # g N m-2 d-1
-		
-		# Rate of change of the actual phosporus amounts in the different crop organs.
-		R$APLVG <- ifelse(test, 0, NutD$RAPLVG)  # g P m-2 d-1
-		R$APLVD <- ifelse(test, 0, NutD$RAPLVD)  # g P m-2 d-1
-		R$APST <- ifelse(test, 0, NutD$RAPST)  # g P m-2 d-1
-		R$APRT <- ifelse(test, 0, NutD$RAPRT)  # g P m-2 d-1
-		R$APSO <- ifelse(test, 0, NutD$RAPSO)  # g P m-2 d-1
-		
-		# Rate of change of the actual potassium amounts in the different crop organs.
-		R$AKLVG <- ifelse(test, 0, NutD$RAKLVG)  # g K m-2 d-1
-		R$AKLVD <- ifelse(test, 0, NutD$RAKLVD)  # g K m-2 d-1
-		R$AKST <- ifelse(test, 0, NutD$RAKST)  # g K m-2 d-1
-		R$AKRT <- ifelse(test, 0, NutD$RAKRT)  # g K m-2 d-1 
-		R$AKSO <- ifelse(test, 0, NutD$RAKSO)  # g K m-2 d-1
-		
-		# Rate of change of the total mineral N, P aNutD K available for crop uptake. 
-		R$NMINT <- NutD$RNMINT  # g N m-2 d-1
-		R$PMINT <- NutD$RPMINT  # g P m-2 d-1
-		R$KMINT <- NutD$RKMINT  # g K m-2 d-1
-		
-		# Rate of the nutrient amount which becomes available due to soil mineralization.  
-		R$NMINS <- NutD$RNMINS  # g N m-2 d-1
-		R$PMINS <- NutD$RPMINS  # g P m-2 d-1
-		R$KMINS <- NutD$RKMINS  # g K m-2 d-1
-		# Rate of the nutrient amount which becomes available due to fertilization.  
-		R$NMINF <- NutD$RNMINF  # g N m-2 d-1
-		R$PMINF <- NutD$RPMINF  # g P m-2 d-1
-		R$KMINF <- NutD$RKMINF  # g K m-2 d-1
-		
+			PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, TRANRF, 
+			NPKICAL, FLV, FST, FRT, FSO, PUSHREDIST)
 		
 	#---LEAF GROWTH---------------------------------------------------#
 		
