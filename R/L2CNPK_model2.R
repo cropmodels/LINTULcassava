@@ -400,8 +400,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 
 ## MAIN
 	management$FERTAB <- data.frame(management$FERTAB)
-	startYear <- as.Date(paste0(format(control$startDATE, "%Y"), "-01-01"))
-	management$FERTAB[,1] <- startYear + management$FERTAB[,1] - 1
+	management$FERTAB[,1] <- management$PLDATE + management$FERTAB[,1]
 
 	iR <- iniRates()
 	wth <- weather[weather$date >= control$startDATE, ]

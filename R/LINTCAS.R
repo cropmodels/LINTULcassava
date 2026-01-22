@@ -55,6 +55,10 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 # Author: AGT Schut
 # modfied by RH
 
+	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
+	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
+
+	management$FERTAB[,1] <- management$FERTAB[,1] + management$DOYPL
 	management$FERNTAB <- management$FERTAB[,1:2]
 	management$FERPTAB <- management$FERTAB[,c(1,3)]
 	management$FERKTAB <- management$FERTAB[,c(1,4)]
@@ -76,12 +80,9 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 	names(wdata) <- toupper(names(wdata))
 	wdata$DOYS <- 1:nrow(wdata)
 
-	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
-	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
-	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
-
 	#Uptake of control treatment should be taken up in period to harvest. Assumed that all becomes gradually available with fixed rate per day. Available nutrients can be taken up in 90% of the season 
 	## RH. What about very short or long seasons? Perhaps better use a decay function in the model?
+	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
 	soil[["RTNMINS"]] =  (1/0.9) * soil[["NMINI"]] / season_length # gN m-2 d-1
 	soil[["RTPMINS"]] =  (1/0.9) * soil[["PMINI"]] / season_length # gP m-2 d-1
 	soil[["RTKMINS"]] =  (1/0.9) * soil[["KMINI"]] / season_length # gK m-2 d-1
