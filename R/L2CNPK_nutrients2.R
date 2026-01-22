@@ -21,7 +21,7 @@ nutrientdyn2 <- function (Time, S, R, crop, soil, management, EMERG, DELT,
 
 
     #---------------- Fertilizer application
-    # Ferilizer N/P/K application (kg N/P/K ha-1 d-1)
+    # Fertilizer N/P/K application (kg N/P/K ha-1 d-1)
 	i <- match(Time, management$FERTAB[,1])
 	if (is.na(i)) {
 		RFERTN <- RFERTP <- RFERTK <- 0

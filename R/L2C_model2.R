@@ -59,7 +59,9 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 		S
 	}	   
 		   
-	get_rates <- function(today, W, S, R, crop, soil, management, control, DELT=1) {
+	get_rates <- function(today, W, S, R, crop, soil, management, control) {
+
+		DELT <- control$timestep
 
 		if (S$TSUM >= crop$FINTSUM) {
 			# If the plant is not growing anymore all plant related rates are set to 0.
@@ -310,17 +312,14 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 		R
 	}
 
-
-	DELT <- control$timestep
-	pars <- c(crop, soil, DELT=DELT)
 	iR <- iniRates() 	
 	wth <- weather[weather$date >= control$startDATE, ]
 	names(wth) <- toupper(names(wth))
-	season <- seq(control$startDATE, management$HVDATE, by = DELT)
+	season <- seq(control$startDATE, management$HVDATE, by = control$timestep)
 	out <- vector(length=length(season), mode="list")
-	S <- as.list(LC_iniSTATES(pars))
+	S <- as.list(LC_iniSTATES(c(crop, soil, DELT=control$timestep)))
 	for (i in 1:length(season)) {
-		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control, DELT)
+		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control)
 		states <- unlist(S)
 #		AUX <- c(WSOTHA = S[["WSO"]] * 0.01, TRANRF = ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN), 
 #				HI = states[["WSO"]] / sum(states[c("WSO", "WLV", "WST", "WRT")]))

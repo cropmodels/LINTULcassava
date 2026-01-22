@@ -399,27 +399,20 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 	}
 
 ## MAIN
-
 	management$FERTAB <- data.frame(management$FERTAB)
+	startYear <- as.Date(paste0(format(control$startDATE, "%Y"), "-01-01"))
+	management$FERTAB[,1] <- startYear + management$FERTAB[,1] - 1
+
 	iR <- iniRates()
 	wth <- weather[weather$date >= control$startDATE, ]
 	names(wth) <- toupper(names(wth))
-	wth$DOYS <- 1:nrow(wth)
-	management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
-	management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
-	season_length <- management[["DOYHAR"]] - management[["DOYPL"]]
+	season_length <- as.integer(management$HVDATE - management$PLDATE)
 	soil <- iniSoil(season_length)
-
-	startDOY <- as.integer(format(control$startDATE, "%j"))
-	season <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
+	season <- seq(control$startDATE, management$HVDATE, by = control$timestep)
 
 	out <- vector(length = length(season), mode = "list")
 	S <- as.list(LC_NPK_iniSTATES(c(crop, soil, DELT=control$timestep)))
 	for (i in 1:length(season)) {
-#	for (i in 1:130) {
-#		today = season[i]
-#		W = wth[i,]
-#		R = iR 
 		R <- get_rates(season[i], wth[i, ], S, iR, crop, soil, management, control)
 		states <- unlist(S)
 		R <- R[names(S)]
@@ -433,3 +426,4 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 	out <- data.frame(date = wth$DATE[1:nrow(out)], step = 1:nrow(out), out)
 	out
 }
+

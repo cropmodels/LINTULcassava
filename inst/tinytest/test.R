@@ -1,6 +1,6 @@
 
 library(LINTULcassava)
-crop <- LC_crop("Adiele")
+crop <- LC_crop("Adiele", TRUE)
 x <- expand.grid(IRRI=c(TRUE, FALSE), site=c("Edo", "CRS", "Benue"), year = c(2016, 2017), stringsAsFactors=FALSE)
 
 
@@ -32,7 +32,7 @@ runNPK <- function(level) {
 	mod
 }
 
-#r <- readRDS(system.file(package="LINTULcassava", "ex/testNPK.rds"))
-#x <- runNPK(2)
-#isTRUE(all.equal(r, x))
+r <- readRDS(system.file(package="LINTULcassava", "ex/testNPK.rds"))
+x <- runNPK(2)
+isTRUE(all.equal(r, x))
 
