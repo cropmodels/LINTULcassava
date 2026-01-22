@@ -137,6 +137,15 @@ public:
 	void evaptr();
 	void GLAI();
 	void drunir();
+
+
+
+	void LINcasModel::nutrientdyn(bool EMERG, 
+			double NMINLV, double PMINLV, double KMINLV, double NMINST, double PMINST, double KMINST, 
+			double NMINSO, double PMINSO, double KMINSO, double NMINRT, double PMINRT, double KMINRT, 
+			double NMAXLV, double PMAXLV, double KMAXLV, double NMAXST, double PMAXST, double KMAXST, 
+			double NMAXSO, double PMAXSO, double KMAXSO, double NMAXRT, double PMAXRT, double KMAXRT, 
+			double TRANRF, double NNI, double PNI, double KNI, double FLV, double FST, double FRT, double FSO, 
+			bool PUSHREDIST);
+
 };
-
-
