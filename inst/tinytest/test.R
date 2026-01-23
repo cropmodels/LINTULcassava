@@ -27,7 +27,6 @@ m <- readRDS(file.path(system.file(package="LINTULcassava"), "ex/test.rds"))
 tinytest::expect_equal(m, run(3))
 
 
-
 library(LINTULcassava)
 crop <- LC_crop("Adiele", TRUE)
 y <- expand.grid(NL=c(TRUE, FALSE), watlim=c(FALSE, TRUE), site=c("Edo", "CRS", "Benue"), year = c(2016, 2017), stringsAsFactors=FALSE)
@@ -44,7 +43,7 @@ runNPK <- function(level) {
 	mod
 }
 
-r <- readRDS(system.file(package="LINTULcassava", "ex/testNPK.rds"))
+#r <- readRDS(system.file(package="LINTULcassava", "ex/testNPK.rds"))
 #tinytest::expect_true(compare(r, runNPK(1)))
 #tinytest::expect_equal(r, runNPK(2))
 
