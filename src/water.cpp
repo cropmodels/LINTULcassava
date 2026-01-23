@@ -110,7 +110,7 @@ void LINcasModel::drunir() {
 	// Drainage below the root zone occurs when the amount of water in the soil exceeds field capacity
 	// or when the amount of rainfall in excess of interception and evapotranspiration fills up soil
 	// water above field capacity.
-	double DRAIN =(S.WA-WAFC)/control.DELT + (A.PREC - (R.NINTC + R.EVAP + R.TRAN));  // mm d-1 
+	double DRAIN = (S.WA-WAFC)/control.DELT + (A.PREC - (R.NINTC + R.EVAP + R.TRAN));  // mm d-1 
 	R.DRAIN = std::min(soil.DRATE, std::max(0., DRAIN));              // mm d-1
 	
 	// Surface runoff occurs when the amount of soil water exceeds total saturation or when the amount
@@ -119,11 +119,11 @@ void LINcasModel::drunir() {
 	R.RUNOFF = std::max(0., (S.WA - WAST) / control.DELT + (A.PREC - (R.NINTC + R.EVAP + R.TRAN + R.DRAIN))); // mm d-1
 
 	// The irrigation rate is the extra amount of water that is needed to keep soil water at a fraction
-	// of field capacity that is defined by setting the parameter IRRIGF. If IRRIGF is set to 1, the
-	// soil will be irrigated every timestep to keep the amount of water in the soil at field capacity.
-	// IRRIGF = 0 implies rainfed conditions.
-	
-	 R.IRRIG = control.IRRIGF ? std::max(0., (WAFC - S.WA) / control.DELT - (A.PREC - (R.NINTC + R.EVAP + R.TRAN + R.DRAIN + R.RUNOFF))) : 0; // mm d-1 
+	// of field capacity. If (!water_limited) the field is irrigated every timestep to keep the amount 
+	// of water in the soil at field capacity.
+
+	 R.IRRIG = control.water_limited ? 0 : std::max(0., (WAFC - S.WA) / control.DELT - (A.PREC - (R.NINTC + R.EVAP + R.TRAN + R.DRAIN + R.RUNOFF))); // mm d-1 
+	 
 }
 
 

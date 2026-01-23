@@ -28,7 +28,8 @@ public:
 	virtual ~LINcasControl(){}
 	double DELT=1;
 	long modelstart;
-	bool IRRIGF=false;	
+	bool water_limited=false;	
+	bool nutrient_limited=false;	
 	std::string outvars;
 };
 
@@ -80,6 +81,35 @@ public:
 	double REDISTLVG=0; double REDISTSO=0;// g DM m-2 d-1
 	double PUSHREDISTSUM=0;// Deg. C d-1
 	double WSOFASTRANSLSO=0; // g DM m-2 d-1
+	
+	double NCUTTING=0;
+	double PCUTTING=0;
+	double KCUTTING=0;
+	double ANLVG=0; // g N m-2 d-1
+	double ANLVD=0;
+	double ANST=0;
+	double ANRT=0;
+	double ANSO=0;
+	double APLVG=0; // g P m-2 d-1
+	double APLVD=0;
+	double APST=0;
+	double APRT=0;
+	double APSO=0;
+	double AKLVG=0; // g K m-2 d-1
+	double AKLVD=0;
+	double AKST=0;
+	double AKRT=0;
+	double AKSO=0;
+	double NMINT=0; // g N,P,K m-2 d-1
+	double PMINT=0;
+	double KMINT=0;
+	double NMINS=0; // g N,P,K m-2 d-1
+	double PMINS=0;
+	double KMINS=0;
+	double NMINF=0; // # g N,P,K m-2 d-1
+	double PMINF=0;
+	double KMINF=0;
+	
 	double IRRIG=0;
 };
 
@@ -138,14 +168,12 @@ public:
 	void GLAI();
 	void drunir();
 
-
-
-	void LINcasModel::nutrientdyn(bool EMERG, 
-			double NMINLV, double PMINLV, double KMINLV, double NMINST, double PMINST, double KMINST, 
-			double NMINSO, double PMINSO, double KMINSO, double NMINRT, double PMINRT, double KMINRT, 
-			double NMAXLV, double PMAXLV, double KMAXLV, double NMAXST, double PMAXST, double KMAXST, 
-			double NMAXSO, double PMAXSO, double KMAXSO, double NMAXRT, double PMAXRT, double KMAXRT, 
-			double TRANRF, double NNI, double PNI, double KNI, double FLV, double FST, double FRT, double FSO, 
-			bool PUSHREDIST);
+	void nutrientdyn(bool EMERG, 
+		double NMINLV, double PMINLV, double KMINLV, double NMINST, double PMINST, double KMINST, 
+		double NMINSO, double PMINSO, double KMINSO, double NMINRT, double PMINRT, double KMINRT, 
+		double NMAXLV, double PMAXLV, double KMAXLV, double NMAXST, double PMAXST, double KMAXST, 
+		double NMAXSO, double PMAXSO, double KMAXSO, double NMAXRT, double PMAXRT, double KMAXRT, 
+		double TRANRF, double NNI, double PNI, double KNI, double FLV, double FST, double FRT, double FSO, 
+		bool PUSHREDIST);
 
 };

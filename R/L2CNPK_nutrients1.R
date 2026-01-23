@@ -29,13 +29,13 @@ nutrientdyn <- function(Time, Pars, States,
   with(as.list(c(States, Pars)),{
     #---------------- Fertilizer application
     # Ferilizer N/P/K application (kg N/P/K ha-1 d-1)
-    RFERTN <- approx(FERNTAB[,1], FERNTAB[,2], Time)$y    # kg N ha-1 d-1
+    RFERTN <- stats::approx(FERNTAB[,1], FERNTAB[,2], Time)$y    # kg N ha-1 d-1
     RFERTN <- (RFERTN * 1000) / 10000                     # g N m-2 d-1 
     
-    RFERTP <- approx(FERPTAB[,1], FERPTAB[,2], Time)$y    # kg P ha-1 d-1
+    RFERTP <- stats::approx(FERPTAB[,1], FERPTAB[,2], Time)$y    # kg P ha-1 d-1
     RFERTP <- (RFERTP * 1000) / 10000                     # g P m-2 d-1
     
-    RFERTK <- approx(FERKTAB[,1], FERKTAB[,2], Time)$y    # kg N ha-1 d-1
+    RFERTK <- stats::approx(FERKTAB[,1], FERKTAB[,2], Time)$y    # kg N ha-1 d-1
     RFERTK <- (RFERTK * 1000) / 10000                     # g N m-2 d-1
     #---------------- 
  

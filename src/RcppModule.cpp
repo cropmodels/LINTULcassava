@@ -32,7 +32,8 @@ RCPP_MODULE(LINcas){
 
     class_<LINcasControl>("LINcasControl")
 		.field("modelstart", &LINcasControl::modelstart) 
-		.field("IRRIGF",  &LINcasControl::IRRIGF)
+		.field("water_limited", &LINcasControl::water_limited)
+		.field("nutrient_limited", &LINcasControl::nutrient_limited)
 		.field("outvars",  &LINcasControl::outvars)
 	;
 

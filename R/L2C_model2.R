@@ -134,9 +134,9 @@ LINTCAS2 <- function(weather, crop, soil, management, control) {
 		TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
 		
 		# Drainage and Runoff is calculated using the drunir function.
-		DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, control$IRRIGF, soil$DRATE,
+		DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, !control$water_limited, soil$DRATE,
 							   DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
-		R$DRAIN  <- DRUNIR$DRAIN			    # mm d-1
+		R$DRAIN  <- DRUNIR$DRAIN			   # mm d-1
 		R$RUNOFF <- DRUNIR$RUNOFF			   # mm d-1
 		
 		# Rate of change of soil water amount

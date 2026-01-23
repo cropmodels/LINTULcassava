@@ -22,11 +22,10 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 
 	cntr.modelstart = valueFromList<long>(control, "startDATE");
 	cntr.outvars = valueFromListDefault<std::string>(control, "outvars", "full");
-	cntr.IRRIGF = valueFromListDefault<bool>(control, "IRRIGF", true); 
+	cntr.water_limited = valueFromListDefault<bool>(control, "water_limited", true); 
 
 	mgm.PLDATE = valueFromList<long>(management, "PLDATE");
 	mgm.HVDATE = valueFromList<long>(management, "HVDATE");
-//	mgm.IRRIGF = valueFromList<unsigned>(management, "IRRIGF");
 
 	crp.TWCSD = valueFromList<double>(crop, "TWCSD");
 	crp.FRACRNINTC = valueFromList<double>(crop, "FRACRNINTC");

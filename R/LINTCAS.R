@@ -1,15 +1,16 @@
 
+
 LINTCAS <- function(weather, crop, soil, management, control, level=3) {
 	if (level == 3) {
 		LINTCAS3(weather, crop, soil, management, control)
 	} else if (level == 2) {
-		if (isTRUE(control$NPK_model)) {
+		if (isTRUE(control$NPK_model) || isTRUE(control$nutrient_limited)) {
 			LINTCAS2_NPK(weather, crop, soil, management, control)
 		} else {
 			LINTCAS2(weather, crop, soil, management, control)		
 		}
 	} else {
-		if (isTRUE(control$NPK_model)) {
+		if (isTRUE(control$NPK_model) || isTRUE(control$nutrient_limited)) {
 			LINTCAS1_NPK(weather, crop, soil, management, control)			
 		} else {
 			LINTCAS1(weather, crop, soil, management, control)	
@@ -37,7 +38,9 @@ LINTCAS1 <- function(weather, crop, soil, management, control){
   weather$DAYS <- as.integer(format(weather$DATE[1], "%j")) + (1:nrow(weather))-1
   management$DOYPL <- as.integer(format(management$PLDATE, "%j"))
   management$DOYHAR <- management$DOYPL + as.integer(management$HVDATE - management$PLDATE)
-  pars <- c(crop, soil, management, IRRIGF=control$IRRIGF, DELT=control$timestep)
+
+
+  pars <- c(crop, soil, management, IRRIGF=!control$water_limited, DELT=control$timestep)
 
   startDOY <- as.integer(format(control$startDATE, "%j"))
   ini_states <- LC_iniSTATES(pars)
@@ -87,7 +90,8 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 	soil[["RTPMINS"]] =  (1/0.9) * soil[["PMINI"]] / season_length # gP m-2 d-1
 	soil[["RTKMINS"]] =  (1/0.9) * soil[["KMINI"]] / season_length # gK m-2 d-1
 
-	pars <- c(management, soil, crop, control, DELT=control$timestep)
+	pars <- c(management, soil, crop, control, 
+			NUTRIENT_LIMITED=control$nutrient_limited, IRRIGF=!control$water_limited, DELT=control$timestep)
 	startDOY <- as.integer(format(control$startDATE, "%j"))
 	steps <- seq(startDOY, management[["DOYHAR"]], by = control$timestep)
 	ini <- LC_NPK_iniSTATES(pars)

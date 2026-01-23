@@ -115,7 +115,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))	 # mm d-1
 		
 		# Potential evaporation and transpiration are calculated using the Penman equation.
-		PENM <- LINTULcassava:::penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
+		PENM <- penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
 		R$PTRAN <- PENM$PTRAN					# mm d-1
 		R$PEVAP <- PENM$PEVAP					# mm d-1
 		# Soil moisture content at severe drought and the critical soil moisture content are calculated to see if drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
@@ -123,7 +123,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		WCCR <- soil$WCWP + max(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
 
 		# The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.
-		EVA <- LINTULcassava:::evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
+		EVA <- evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
 						soil$WCFC, soil$WCWET, soil$WCST, crop$TRANCO, DELT)
 		R$TRAN <- EVA$TRAN					 # mm d-1
 		R$EVAP <- EVA$EVAP					 # mm d-1
@@ -132,7 +132,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
 		
 		# Drainage and Runoff is calculated using the drunir function.
-		DRUNIR  <- LINTULcassava:::drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, control$IRRIGF, soil$DRATE,
+		DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, !control$water_limited, soil$DRATE,
 								 DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
 		R$DRAIN  <- DRUNIR$DRAIN				# mm d-1
 		R$RUNOFF <- DRUNIR$RUNOFF				 # mm d-1
@@ -147,41 +147,41 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		# The nutrient limitation is based on the nutrient concentrations in the organs of the crop. A nutrition index is calculated to quantify nutrient limitation. 
 		
 		# Minimum and maximum nutrient concentrations in the leaves
-		NMINLV <- approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,2], S$TSUMCROP)$y   # g N g-1 DM
-		PMINLV <- approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,2], S$TSUMCROP)$y   # g P g-1 DM
-		KMINLV <- approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,2], S$TSUMCROP)$y   # g K g-1 DM
-		NMAXLV <- approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,3], S$TSUMCROP)$y   # g N g-1 DM
-		PMAXLV <- approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,3], S$TSUMCROP)$y   # g P g-1 DM
-		KMAXLV <- approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,3], S$TSUMCROP)$y   # g K g-1 DM
+		NMINLV <- stats::approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINLV <- stats::approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINLV <- stats::approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXLV <- stats::approx(crop$NMINMAXLV[,1], crop$NMINMAXLV[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXLV <- stats::approx(crop$PMINMAXLV[,1], crop$PMINMAXLV[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXLV <- stats::approx(crop$KMINMAXLV[,1], crop$KMINMAXLV[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum concentrations in the stems
-		NMINST <- approx(crop$NMINMAXST[,1], crop$NMINMAXST[,2], S$TSUMCROP)$y   # g N g-1 DM
-		PMINST <- approx(crop$PMINMAXST[,1], crop$PMINMAXST[,2], S$TSUMCROP)$y   # g P g-1 DM
-		KMINST <- approx(crop$KMINMAXST[,1], crop$KMINMAXST[,2], S$TSUMCROP)$y   # g K g-1 DM
-		NMAXST <- approx(crop$NMINMAXST[,1], crop$NMINMAXST[,3], S$TSUMCROP)$y   # g N g-1 DM
-		PMAXST <- approx(crop$PMINMAXST[,1], crop$PMINMAXST[,3], S$TSUMCROP)$y   # g P g-1 DM
-		KMAXST <- approx(crop$KMINMAXST[,1], crop$KMINMAXST[,3], S$TSUMCROP)$y   # g K g-1 DM
+		NMINST <- stats::approx(crop$NMINMAXST[,1], crop$NMINMAXST[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINST <- stats::approx(crop$PMINMAXST[,1], crop$PMINMAXST[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINST <- stats::approx(crop$KMINMAXST[,1], crop$KMINMAXST[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXST <- stats::approx(crop$NMINMAXST[,1], crop$NMINMAXST[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXST <- stats::approx(crop$PMINMAXST[,1], crop$PMINMAXST[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXST <- stats::approx(crop$KMINMAXST[,1], crop$KMINMAXST[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum nutrient concentrations in the storage organs
-		NMINSO <- approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,2], S$TSUMCROP)$y   # g N g-1 DM
-		PMINSO <- approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,2], S$TSUMCROP)$y   # g P g-1 DM
-		KMINSO <- approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,2], S$TSUMCROP)$y   # g K g-1 DM
-		NMAXSO <- approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,3], S$TSUMCROP)$y   # g N g-1 DM
-		PMAXSO <- approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,3], S$TSUMCROP)$y   # g P g-1 DM
-		KMAXSO <- approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,3], S$TSUMCROP)$y   # g K g-1 DM
+		NMINSO <- stats::approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINSO <- stats::approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINSO <- stats::approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXSO <- stats::approx(crop$NMINMAXSO[,1], crop$NMINMAXSO[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXSO <- stats::approx(crop$PMINMAXSO[,1], crop$PMINMAXSO[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXSO <- stats::approx(crop$KMINMAXSO[,1], crop$KMINMAXSO[,3], S$TSUMCROP)$y   # g K g-1 DM
 		# Minimum and maximum nutrient concentrations in the roots
-		NMINRT <- approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,2], S$TSUMCROP)$y   # g N g-1 DM
-		PMINRT <- approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,2], S$TSUMCROP)$y   # g P g-1 DM
-		KMINRT <- approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,2], S$TSUMCROP)$y   # g K g-1 DM
-		NMAXRT <- approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,3], S$TSUMCROP)$y   # g N g-1 DM
-		PMAXRT <- approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,3], S$TSUMCROP)$y   # g P g-1 DM
-		KMAXRT <- approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,3], S$TSUMCROP)$y   # g K g-1 DM
+		NMINRT <- stats::approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,2], S$TSUMCROP)$y   # g N g-1 DM
+		PMINRT <- stats::approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,2], S$TSUMCROP)$y   # g P g-1 DM
+		KMINRT <- stats::approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,2], S$TSUMCROP)$y   # g K g-1 DM
+		NMAXRT <- stats::approx(crop$NMINMAXRT[,1], crop$NMINMAXRT[,3], S$TSUMCROP)$y   # g N g-1 DM
+		PMAXRT <- stats::approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,3], S$TSUMCROP)$y   # g P g-1 DM
+		KMAXRT <- stats::approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,3], S$TSUMCROP)$y   # g K g-1 DM
 		
-		NPKICAL <- LINTULcassava:::npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
+		NPKICAL <- npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
 				NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV,
 				NMAXST, PMAXST, KMAXST, NMAXSO, PMAXSO, KMAXSO)
 		
 
 		# Nutrient limitation reduction factor when nutrient limition is switched on
-		if (control$NUTRIENT_LIMITED){
+		if (control$nutrient_limited){
 			#Simple based on daily values
 			NPKI <- max(0, min(1, NPKICAL$NPKI)) # (-)
 			#Shortly after emergence nutrient stress does not occur
@@ -374,7 +374,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		#-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
 		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
 		# using the nutrientdyn function. 
-		R <- LINTULcassava:::nutrientdyn2(
+		R <- nutrientdyn2(
 			today, S, R, crop, soil, management, EMERG, DELT, 
 			NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
@@ -388,13 +388,12 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		GLV <- FLV * (GTOTAL + abs(R$WCUTTING)) + R$REDISTLVG * PUSHREDIST  # g green leaves DM m-2 d-1
 		
 		# Growth of the leaf are index
-		GLAI <- LINTULcassava:::gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
+		GLAI <- gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 					crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
 					crop$LAIEXPOEND, DORMANCY, NPKI)	 # m2 m-2 d-1
 			
 		# Change in LAI due to new growth of leaves
 		R$LAI <- GLAI - DLAI	# m2 m-2 d-1
-
 		R
 	}
 

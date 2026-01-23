@@ -21,16 +21,17 @@ library(LINTULcassava)
 crop <- LC_crop("Adiele")
 
 #model run combinations
-x <- expand.grid(IRRI=c(TRUE, FALSE), site=c("Edo", "CRS", "Benue"), 
+x <- expand.grid(watlim=c(FALSE, TRUE), site=c("Edo", "CRS", "Benue"), 
                  year = c(2016, 2017), stringsAsFactors=FALSE)
 
 mod <- lapply(1:nrow(x), function(i)  {
     p <- Adiele(x$site[i], x$year[i])
     data.frame(Location=x$site[i], 
-        LINTCAS(p$weather, crop, p$soil, p$management, control=c(p$control, IRRIGF=x$IRRI[i]))
+        LINTCAS(p$weather, crop, p$soil, p$management, 
+			control=c(p$control, water_limited=x$watlim[i]))
     )
 })
-names(mod) <- apply(x, 1, function(i) paste0(c(ifelse(i[1], "pot", "wlim"), i[2:3]), collapse="_"))
+names(mod) <- apply(x, 1, function(i) paste0(c(ifelse(i[1], "wlim", "pot"), i[2:3]), collapse="_"))
 ```
 
 

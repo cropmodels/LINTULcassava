@@ -56,7 +56,7 @@ Adiele <- function(site, year, NPK=FALSE) {
 	HVDATE <- PLDATE + (x$DOYHAR-x$DOYPL)
 	#mng <- list(DOYPL=x$DOYPL, DOYHAR=x$DOYHAR, PLDATE=PLDATE, HVDATE=HVDATE)
 	mng <- list(PLDATE=PLDATE, HVDATE=HVDATE)
-	cntr <- list(timestep=1, startDATE=PLDATE-100)
+	cntr <- list(timestep=1, startDATE=PLDATE-100, NPK_model=NPK)
 	x$DOYPL <- x$DOYHAR <- NULL
 	
 	if (site=="Edo") {
@@ -79,7 +79,7 @@ Adiele <- function(site, year, NPK=FALSE) {
 		NPK <- cbind(N = c(  0, 100, 100, 100),#kg/ha N
 					 P = c(100,   0,   0,   0),#kg/ha P
 					 K = c(  0, 100, 100, 100)) #kg/ha K
-		mg <- FIELD_MANAGEMENT_NPK(sinfo, crop, NPK)
+		mg <- FIELD_MANAGEMENT_NPK(sinfo, NPK)
 		p$soil <- c(p$soil, mg$soil_chem)
 		p$management$FERTAB <- mg$mgmt$FERTAB
 		p$control$NPK_model=TRUE
@@ -100,7 +100,7 @@ Adiele_weather <- function(site, year) {
 
 
 
-FIELD_MANAGEMENT_NPK <- function(SiteInfo, MODEL_PARAM, fertilizerNPK) { 
+FIELD_MANAGEMENT_NPK <- function(SiteInfo, fertilizerNPK) { 
 
 	phys_soil = c(
 		ROOTDM = SiteInfo[1,"Maximum_rooting_depth.m"] ,    # m            :     maximum rooting depth

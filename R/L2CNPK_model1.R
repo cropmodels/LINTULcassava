@@ -139,33 +139,33 @@ LC_model_NPK <- function(Time, State, Pars, WDATA){
       # is calculated to quantify nutrient limitation. 
       
       # Minimum and maximum nutrient concentrations in the leaves
-      NMINLV <- approx(NMINMAXLV[,1], NMINMAXLV[,2], TSUMCROP)$y   # g N g-1 DM
-      PMINLV <- approx(PMINMAXLV[,1], PMINMAXLV[,2], TSUMCROP)$y   # g P g-1 DM
-      KMINLV <- approx(KMINMAXLV[,1], KMINMAXLV[,2], TSUMCROP)$y   # g K g-1 DM
-      NMAXLV <- approx(NMINMAXLV[,1], NMINMAXLV[,3], TSUMCROP)$y   # g N g-1 DM
-      PMAXLV <- approx(PMINMAXLV[,1], PMINMAXLV[,3], TSUMCROP)$y   # g P g-1 DM
-      KMAXLV <- approx(KMINMAXLV[,1], KMINMAXLV[,3], TSUMCROP)$y   # g K g-1 DM
+      NMINLV <- stats::approx(NMINMAXLV[,1], NMINMAXLV[,2], TSUMCROP)$y   # g N g-1 DM
+      PMINLV <- stats::approx(PMINMAXLV[,1], PMINMAXLV[,2], TSUMCROP)$y   # g P g-1 DM
+      KMINLV <- stats::approx(KMINMAXLV[,1], KMINMAXLV[,2], TSUMCROP)$y   # g K g-1 DM
+      NMAXLV <- stats::approx(NMINMAXLV[,1], NMINMAXLV[,3], TSUMCROP)$y   # g N g-1 DM
+      PMAXLV <- stats::approx(PMINMAXLV[,1], PMINMAXLV[,3], TSUMCROP)$y   # g P g-1 DM
+      KMAXLV <- stats::approx(KMINMAXLV[,1], KMINMAXLV[,3], TSUMCROP)$y   # g K g-1 DM
       # Minimum and maximum concentrations in the stems
-      NMINST <- approx(NMINMAXST[,1], NMINMAXST[,2], TSUMCROP)$y   # g N g-1 DM
-      PMINST <- approx(PMINMAXST[,1], PMINMAXST[,2], TSUMCROP)$y   # g P g-1 DM
-      KMINST <- approx(KMINMAXST[,1], KMINMAXST[,2], TSUMCROP)$y   # g K g-1 DM
-      NMAXST <- approx(NMINMAXST[,1], NMINMAXST[,3], TSUMCROP)$y   # g N g-1 DM
-      PMAXST <- approx(PMINMAXST[,1], PMINMAXST[,3], TSUMCROP)$y   # g P g-1 DM
-      KMAXST <- approx(KMINMAXST[,1], KMINMAXST[,3], TSUMCROP)$y   # g K g-1 DM
+      NMINST <- stats::approx(NMINMAXST[,1], NMINMAXST[,2], TSUMCROP)$y   # g N g-1 DM
+      PMINST <- stats::approx(PMINMAXST[,1], PMINMAXST[,2], TSUMCROP)$y   # g P g-1 DM
+      KMINST <- stats::approx(KMINMAXST[,1], KMINMAXST[,2], TSUMCROP)$y   # g K g-1 DM
+      NMAXST <- stats::approx(NMINMAXST[,1], NMINMAXST[,3], TSUMCROP)$y   # g N g-1 DM
+      PMAXST <- stats::approx(PMINMAXST[,1], PMINMAXST[,3], TSUMCROP)$y   # g P g-1 DM
+      KMAXST <- stats::approx(KMINMAXST[,1], KMINMAXST[,3], TSUMCROP)$y   # g K g-1 DM
       # Minimum and maximum nutrient concentrations in the storage organs
-      NMINSO <- approx(NMINMAXSO[,1], NMINMAXSO[,2], TSUMCROP)$y   # g N g-1 DM
-      PMINSO <- approx(PMINMAXSO[,1], PMINMAXSO[,2], TSUMCROP)$y   # g P g-1 DM
-      KMINSO <- approx(KMINMAXSO[,1], KMINMAXSO[,2], TSUMCROP)$y   # g K g-1 DM
-      NMAXSO <- approx(NMINMAXSO[,1], NMINMAXSO[,3], TSUMCROP)$y   # g N g-1 DM
-      PMAXSO <- approx(PMINMAXSO[,1], PMINMAXSO[,3], TSUMCROP)$y   # g P g-1 DM
-      KMAXSO <- approx(KMINMAXSO[,1], KMINMAXSO[,3], TSUMCROP)$y   # g K g-1 DM
+      NMINSO <- stats::approx(NMINMAXSO[,1], NMINMAXSO[,2], TSUMCROP)$y   # g N g-1 DM
+      PMINSO <- stats::approx(PMINMAXSO[,1], PMINMAXSO[,2], TSUMCROP)$y   # g P g-1 DM
+      KMINSO <- stats::approx(KMINMAXSO[,1], KMINMAXSO[,2], TSUMCROP)$y   # g K g-1 DM
+      NMAXSO <- stats::approx(NMINMAXSO[,1], NMINMAXSO[,3], TSUMCROP)$y   # g N g-1 DM
+      PMAXSO <- stats::approx(PMINMAXSO[,1], PMINMAXSO[,3], TSUMCROP)$y   # g P g-1 DM
+      KMAXSO <- stats::approx(KMINMAXSO[,1], KMINMAXSO[,3], TSUMCROP)$y   # g K g-1 DM
       # Minimum and maximum nutrient concentrations in the roots
-      NMINRT <- approx(NMINMAXRT[,1], NMINMAXRT[,2], TSUMCROP)$y   # g N g-1 DM
-      PMINRT <- approx(PMINMAXRT[,1], PMINMAXRT[,2], TSUMCROP)$y   # g P g-1 DM
-      KMINRT <- approx(KMINMAXRT[,1], KMINMAXRT[,2], TSUMCROP)$y   # g K g-1 DM
-      NMAXRT <- approx(NMINMAXRT[,1], NMINMAXRT[,3], TSUMCROP)$y   # g N g-1 DM
-      PMAXRT <- approx(PMINMAXRT[,1], PMINMAXRT[,3], TSUMCROP)$y   # g P g-1 DM
-      KMAXRT <- approx(KMINMAXRT[,1], KMINMAXRT[,3], TSUMCROP)$y   # g K g-1 DM
+      NMINRT <- stats::approx(NMINMAXRT[,1], NMINMAXRT[,2], TSUMCROP)$y   # g N g-1 DM
+      PMINRT <- stats::approx(PMINMAXRT[,1], PMINMAXRT[,2], TSUMCROP)$y   # g P g-1 DM
+      KMINRT <- stats::approx(KMINMAXRT[,1], KMINMAXRT[,2], TSUMCROP)$y   # g K g-1 DM
+      NMAXRT <- stats::approx(NMINMAXRT[,1], NMINMAXRT[,3], TSUMCROP)$y   # g N g-1 DM
+      PMAXRT <- stats::approx(PMINMAXRT[,1], PMINMAXRT[,3], TSUMCROP)$y   # g P g-1 DM
+      KMAXRT <- stats::approx(KMINMAXRT[,1], KMINMAXRT[,3], TSUMCROP)$y   # g K g-1 DM
       
       NPKICAL <- npkical(WLVG, WST, WSO,
                          NMINLV, PMINLV, KMINLV, 
@@ -250,7 +250,7 @@ LC_model_NPK <- function(Time, State, Pars, WDATA){
       #------------------------------------LIGHT INTERCEPTION AND GROWTH-----------------------------------------#
       # Light interception and total crop growth rate.
       PARINT <- RPAR * (1 - exp(-K_EXT * LAI))                             # MJ m-2 d-1
-      LUE    <- LUE_OPT * approx(TTB[,1], TTB[,2], WDATA$TAVG)$y   # g DM m-2 d-1
+      LUE    <- LUE_OPT * stats::approx(TTB[,1], TTB[,2], WDATA$TAVG)$y   # g DM m-2 d-1
       
       # When water stress is more severe or nutrient is stress is more severe
       if (TRANRF <= NPKI){
@@ -267,7 +267,7 @@ LC_model_NPK <- function(Time, State, Pars, WDATA){
       RTSUMCROPLEAFAGE <- DTEFF * EMERG - (TSUMCROPLEAFAGE/DELT) * PUSHREDIST     # Deg. C
       
       # Relative death rate due to aging depending on leaf age and the daily average temperature. 
-      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, approx(RDRT[,1], RDRT[,2], WDATA$TAVG)$y, 0) # d-1
+      RDRDV = ifelse(TSUMCROPLEAFAGE - TSUMLLIFE >= 0, stats::approx(RDRT[,1], RDRT[,2], WDATA$TAVG)$y, 0) # d-1
       #--------
       
       #-------- SHEDDING
@@ -307,7 +307,7 @@ LC_model_NPK <- function(Time, State, Pars, WDATA){
       
       # Fraction of the maximum specific leaf area index depending on the temperature sum of the crop. And its specific leaf
       # area index. 
-      FRACSLACROPAGE <- approx(FRACSLATB[,1], FRACSLATB[,2], TSUMCROP)$y  # (-)
+      FRACSLACROPAGE <- stats::approx(FRACSLATB[,1], FRACSLATB[,2], TSUMCROP)$y  # (-)
       SLA <- SLA_MAX *FRACSLACROPAGE                                      # m2 g-1 DM
       
       # The rate of storage root DM production with DM supplied by the leaves before abscission. 
@@ -325,14 +325,14 @@ LC_model_NPK <- function(Time, State, Pars, WDATA){
       # Nutrient limitation is also assumed to affect partitioning to the roots. 
       FRTMOD <- max(1, 1/(TRANRF * NPKI + 0.5))			                             # (-)
       # Fibrous roots
-      FRT    <- approx(FRTTB[,1],FRTTB[,2],TSUMCROP)$y * FRTMOD		       # (-)
+      FRT    <- stats::approx(FRTTB[,1],FRTTB[,2],TSUMCROP)$y * FRTMOD		       # (-)
       FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)                           # (-)
       # Leaves
-      FLV    <- approx(FLVTB[,1],FLVTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FLV    <- stats::approx(FLVTB[,1],FLVTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
       # Stems
-      FST    <- approx(FSTTB[,1],FSTTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FST    <- stats::approx(FSTTB[,1],FSTTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
       # Storage roots
-      FSO    <- approx(FSOTB[,1],FSOTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
+      FSO    <- stats::approx(FSOTB[,1],FSOTB[,2],TSUMCROP)$y * FSHMOD	         # (-)
 
       #When plants emerge from dormancy, leaf growth may go far too quickly. 
       #Adjust partitioning if LAI too large

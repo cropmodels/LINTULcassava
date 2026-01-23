@@ -16,17 +16,12 @@ L2C_PARAMETERS_EZUI <- function() {
   #All defaults
   PARAM = c( 
     #-------------------------------LINTUL2-Cassava--------------------------------------------------#
-    # Day of planting
-    DELT         = 1,      # d           : Model time step
-
     # Water balance
     TWCSD        = 1.05,   # (-)         : Proportion of WCWP at which water content at severe drought (WCSD) is assumed to be reached
     FRACRNINTC   = 0.25,   # (-)         : Fraction of rain intercepted
     RECOV        = 0.7,    # (-)         : Proportion of critical soil water content above which the crop recovers from drought
     TRANCO       = 8,      # mm d-1      : Transpiration constant (indicating level of drought tolerance)
-   
-    IRRIGF       = 0,      # (-)         : Irrigation present (1 = yes, 0 = no)
-    
+       
     # Stem cutting information
     WCUTTINGUNIT = 18,     # g                 :    Average weight per cutting
     NCUTTINGS    = 1.5625, # m-2               :    Number of cuttings planted per m2
