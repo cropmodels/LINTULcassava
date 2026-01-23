@@ -203,6 +203,16 @@ public:
 	void GLAI();
 	void drunir();
 
+
+	std::vector<double> npkical(
+		double NMINLV, double PMINLV, double KMINLV,
+		double NMINST, double PMINST, double KMINST, 
+		double NMINSO, double PMINSO, double KMINSO, 
+		double NMAXLV, double PMAXLV, double KMAXLV, 
+		double NMAXST, double PMAXST, double KMAXST,
+		double NMAXSO, double PMAXSO, double KMAXSO);
+
+
 	void nutrientdyn(bool EMERG, 
 		double NMINLV, double PMINLV, double KMINLV, double NMINST, double PMINST, double KMINST, 
 		double NMINSO, double PMINSO, double KMINSO, double NMINRT, double PMINRT, double KMINRT, 

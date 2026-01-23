@@ -3,15 +3,11 @@ License: EUPL
 
 Author:       Rob van den Beuken, adapted by AGT Schut 18 DEC 2019
 Copyright:    Copyright 2019, PPS
-Email:        tom.schut@wur.nl
 Date:         18-12-2019
 
-This file contains a component of the LINTUL-CASSAVA_NPK model. The purpose of this function is to
-compute the rates of the crop nutrient amounts and the soil nutrient amounts available for crop 
-uptake.   
+compute the rates of the crop nutrient amounts and the soil nutrient amounts available for crop uptake.   
 
 C++ version by RH, 2026-01-20
-
 */
 
 
@@ -37,6 +33,68 @@ inline double approx2(std::vector<double> X, std::vector<double> Y, double v) {
 	return(r);
 }	
 
+
+
+
+inline double Mirrored_Monod(double x, double K, double Kmax) {
+	if (K <= Kmax){
+		return(x == 0 ? 0 : (K+1) * x/(x+K));
+	} else {
+		K = std::max(0., 2 * Kmax - K);
+		x = 1-x;
+		return(1. - (x == 0 ? 0 : (K+1) * x/(x+K)));
+	}
+}
+
+
+    
+
+std::vector<double> LINcasModel::npkical(
+		double NMINLV, double PMINLV, double KMINLV,
+		double NMINST, double PMINST, double KMINST, 
+		double NMINSO, double PMINSO, double KMINSO, 
+		double NMAXLV, double PMAXLV, double KMAXLV, 
+		double NMAXST, double PMAXST, double KMAXST,
+		double NMAXSO, double PMAXSO, double KMAXSO) {
+
+	//---------------- Nutrient concentrations
+	// Minimum nutrient content in the living biomass
+	double NMIN = S.WLVG * NMINLV + S.WST * NMINST + S.WSO * NMINSO;    // g N m-2
+	double PMIN = S.WLVG * PMINLV + S.WST * PMINST + S.WSO * PMINSO;    // g P m-2
+	double KMIN = S.WLVG * KMINLV + S.WST * KMINST + S.WSO * KMINSO;    // g K m-2
+
+	// Maximum nutrient content in the living biomass
+	double NMAX = NMAXLV * S.WLVG + NMAXST * S.WST + NMAXSO * S.WSO;   // g N m-2 
+	double PMAX = PMAXLV * S.WLVG + PMAXST * S.WST + PMAXSO * S.WSO;   // g P m-2 
+	double KMAX = KMAXLV * S.WLVG + KMAXST * S.WST + KMAXSO * S.WSO;   // g K m-2 
+
+	// Optimal nutrient content in the living biomass
+	double NOPT = NMIN + crop.FR_MAX * (NMAX - NMIN);   // g N m-2 
+	double POPT = PMIN + crop.FR_MAX * (PMAX - PMIN);   // g P m-2 
+	double KOPT = KMIN + crop.FR_MAX * (KMAX - KMIN);   // g K m-2 
+
+	//---------------- Actual nutrient concentrations
+	// Actual nutrient amounts in the living biomass 
+	double NACT = S.ANLVG + S.ANST + S.ANSO;  // g N m-2
+	double PACT = S.APLVG + S.APST + S.APSO;   // g P m-2
+	double KACT = S.AKLVG + S.AKST + S.AKSO;   // g K m-2 
+
+	//-------------- Nutrition Indices
+	double NNI = (NOPT - NMIN) == 0 ? 0 : (NACT - NMIN) / (NOPT - NMIN);  // (-)
+	double PNI = (POPT - PMIN) == 0 ? 0 : (PACT - PMIN) / (POPT - PMIN);  // (-)
+	double KNI = (KOPT - KMIN) == 0 ? 0 : (KACT - KMIN) / (KOPT - KMIN);  // (-)
+
+	NNI = std::min(1., std::max(0., NNI));
+	PNI = std::min(1., std::max(0., PNI));
+	KNI = std::min(1., std::max(0., KNI));
+
+	//Combined effect. 
+	//Multiplication allows to have extra growth reduction if multiple nutrients are deficient
+	//The "Monod" acts as scalar to reduce effect of minor deficiencies that do not affect growth rates but are compensated by dilution. A mirrored Monod function to determine effect of N, P and K stress on NPKI 
+	double NPKI = Mirrored_Monod(NNI*PNI*KNI, crop.K_NPK_NI, crop.K_MAX);
+  
+	return std::vector<double> {NNI, PNI, KNI, NPKI};
+}
 
 
 //Time, S, R, crop, soil, management, DELT
@@ -261,7 +319,7 @@ void LINcasModel::nutrientdyn(bool EMERG,
 	//------------- Rate of change of N/P/K in crop organs;
 	// uptake + net translocation + cutting;
 	// N relocated to stem, P+K to storate roots;
-	
+
 	R.ANLVG = RNULV + RNTLV + RANCUTLV + RANSO2LVLV  - RNDLVG; // g N m-2 d-1
 	R.ANST = RNUST + RNTST + RANCUTST + RNDLV_REDIST;          // g N m-2 d-1
 	R.ANRT = RNURT + RNTRT + RANCUTRT;                         // g N m-2 d-1
