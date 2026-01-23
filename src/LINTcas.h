@@ -39,6 +39,11 @@ public:
 	virtual ~LINcasCropParameters(){}	
 	double TWCSD, FRACRNINTC, RECOV, TRANCO, WCUTTINGUNIT, NCUTTINGS, WCUTTINGIP, ROOTDI, SLAI, WLVI, LAII, WCUTTINGMINPRO, FST_CUTT, FRT_CUTT, FLV_CUTT, FSO_CUTT, RDRWCUTTING, FPAR, K_EXT, LUE_OPT, RRDMAX, RDRB, LAICR, RDRSHM, FRACTLLFENHSH, FASTRANSLSO, SLA_MAX, RGRL, LAIEXPOEND, TBASE, OPTEMERGTSUM, TSUMLA_MIN, TSUMSBR, TSUMLLIFE, TSUMREDISTMAX, FINTSUM, LAI_MIN, WSOREDISTFRACMAX, WLVGNEWN, SO2LV, RRREDISTSO, DELREDIST, SLAII;
 	std::vector<std::vector<double>> FRACSLATB, RDRT, TTB, FLVTB, FSTTB, FSOTB, FRTTB;
+
+// nutrients	
+	double NLAI, RDRNS, K_MAX, K_NPK_NI, TSUM_NPKI, K_WATER, SLOPE_NEQ_SOILSUPPLY_NEQ_PLANTUPTAKE, FR_MAX, N_RECOV, P_RECOV, K_RECOV, NFLVD, PFLVD, KFLVD, TCNPKT, RTNMINF, RTPMINF, RTKMINF;
+	std::vector<std::vector<double>> NMINMAXLV, PMINMAXLV, KMINMAXLV, NMINMAXST, PMINMAXST, KMINMAXST, NMINMAXSO, PMINMAXSO, KMINMAXSO, NMINMAXRT, PMINMAXRT, KMINMAXRT;
+
 } ;
 
 
@@ -61,6 +66,34 @@ public:
 	double PUSHREDISTSUM=0;// Deg. C d-1
 	double WSOFASTRANSLSO=0; // g DM m-2 d-1
 	double IRRIG=0;
+
+	double NCUTTING=0;
+	double PCUTTING=0;
+	double KCUTTING=0;
+	double ANLVG=0; // g N m-2 d-1
+	double ANLVD=0;
+	double ANST=0;
+	double ANRT=0;
+	double ANSO=0;
+	double APLVG=0; // g P m-2 d-1
+	double APLVD=0;
+	double APST=0;
+	double APRT=0;
+	double APSO=0;
+	double AKLVG=0; // g K m-2 d-1
+	double AKLVD=0;
+	double AKST=0;
+	double AKRT=0;
+	double AKSO=0;
+	double NMINT=0; // g N,P,K m-2 d-1
+	double PMINT=0;
+	double KMINT=0;
+	double NMINS=0; // g N,P,K m-2 d-1
+	double PMINS=0;
+	double KMINS=0;
+	double NMINF=0; // # g N,P,K m-2 d-1
+	double PMINF=0;
+	double KMINF=0;
 };
 
 class LINcasStates {
@@ -81,6 +114,7 @@ public:
 	double REDISTLVG=0; double REDISTSO=0;// g DM m-2 d-1
 	double PUSHREDISTSUM=0;// Deg. C d-1
 	double WSOFASTRANSLSO=0; // g DM m-2 d-1
+	double IRRIG=0;
 	
 	double NCUTTING=0;
 	double PCUTTING=0;
@@ -110,7 +144,6 @@ public:
 	double PMINF=0;
 	double KMINF=0;
 	
-	double IRRIG=0;
 };
 
 
@@ -118,6 +151,7 @@ class LINcasSoilParameters {
 public:
 	virtual ~LINcasSoilParameters(){}
 	double ROOTDM, WCAD, WCWP, WCFC, WCWET, WCST, DRATE;
+	double NMINI, PMINI, KMINI, RTNMINS, RTPMINS, RTKMINS;
 };
 
 
@@ -133,6 +167,7 @@ class LINcasManagement {
 public:
 	virtual ~LINcasManagement(){}
 	long PLDATE, HVDATE;
+	std::vector<std::vector<double>> FERTAB;
 };
 
 
@@ -177,3 +212,4 @@ public:
 		bool PUSHREDIST);
 
 };
+
