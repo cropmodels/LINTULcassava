@@ -5,7 +5,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 # Robert Hijmans, January 2026
 
 	iniSoil <- function(season_length) {
-		soil$WCI = soil[["WCFC"]]
+		#soil$WA = soil[["WCI"]]
 		soil[["RTNMINS"]] = (1/0.9) * soil[["NMINI"]] / season_length
 		soil[["RTPMINS"]] = (1/0.9) * soil[["PMINI"]] / season_length
 		soil[["RTKMINS"]] = (1/0.9) * soil[["KMINI"]] / season_length
@@ -241,12 +241,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
 		
       # When water stress is more severe or nutrient is stress is more severe
-      if (TRANRF <= NPKI){
-        GTOTAL <- LUE * PARINT * TRANRF * (!DORMANCY)  # g DM m-2 d-1
-        
-      } else{
-        GTOTAL <- LUE * PARINT * NPKI * (!DORMANCY)  # g DM m-2 d-1 
-      }
+      GTOTAL <- LUE * PARINT * min(TRANRF, NPKI) * (!DORMANCY)  # g DM m-2 d-1
 
 		
 	#---LEAF SENESCENCE------------------------------------------------------#
@@ -276,11 +271,10 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		# Relative death rate due to severe drought
 		RDRSD <- crop$RDRB * ENHSHED	# d-1
 
-      #-------- NUTRIENT LIMITATION
-      # Leaf death due to nutrient limitation is added on top op the relative death rate due to age, shade 
-      # and drought. 
-      RDRNS <- crop$RDRNS * (1-NPKI)    # d-1
-      #--------
+		#-------- NUTRIENT LIMITATION
+		# Leaf death due to nutrient limitation is added on top op the relative death rate due to age, shade 
+		# and drought. 
+		RDRNS <- crop$RDRNS * (1-NPKI)    # d-1
 		
 		# Effective relative death rate and the resulting decrease in LAI.
 
@@ -307,7 +301,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		
 	#---PARTITIONING---------------------------------------------------#
 		# Allocation of assimilates to the different organs. The fractions are modified for water availability.
-		FRTMOD <- max(1, 1/(TRANRF * NPKI + 0.5))			                             # (-)
+		FRTMOD <- max(1, 1/(TRANRF * NPKI + 0.5))			                    # (-)
 		# Fibrous roots
 		FRT	<- stats::approx(crop$FRTTB[,1], crop$FRTTB[,2], S$TSUMCROP)$y * FRTMOD # (-)
 		FSHMOD <- (1 - FRT) / (1 - FRT / FRTMOD)					 # (-)

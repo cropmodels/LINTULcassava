@@ -1,16 +1,16 @@
 
 
-LINTCAS <- function(weather, crop, soil, management, control, level=3) {
+LINTCAS <- function(weather, crop, soil, management, control, NPK=FALSE, level=3) {
 	if (level == 3) {
-		LINTCAS3(weather, crop, soil, management, control)
+		LINTCAS3(weather, crop, soil, management, control, NPK=NPK)
 	} else if (level == 2) {
-		if (isTRUE(control$NPK_model) || isTRUE(control$nutrient_limited)) {
+		if (isTRUE(NPK) || isTRUE(control$nutrient_limited)) {
 			LINTCAS2_NPK(weather, crop, soil, management, control)
 		} else {
 			LINTCAS2(weather, crop, soil, management, control)		
 		}
 	} else {
-		if (isTRUE(control$NPK_model) || isTRUE(control$nutrient_limited)) {
+		if (isTRUE(NPK) || isTRUE(control$nutrient_limited)) {
 			LINTCAS1_NPK(weather, crop, soil, management, control)			
 		} else {
 			LINTCAS1(weather, crop, soil, management, control)	
@@ -18,10 +18,11 @@ LINTCAS <- function(weather, crop, soil, management, control, level=3) {
 	}
 }
 
-LINTCAS3 <- function(weather, crop, soil, management, control) {
+LINTCAS3 <- function(weather, crop, soil, management, control, NPK) {
 ## R interface to C++ implementation 
 ## Robert Hijmans, January 2026
 	names(weather) <- tolower(names(weather))
+	control$NPKmodel <- isTRUE(NPK) || isTRUE(control$nutrient_limited)
 	d <- .LC(crop, weather, soil, management, control)
 	m <- data.frame(matrix(d[[1]], ncol=length(d[[2]]), byrow=TRUE))
 	names(m) <- d[[2]]
@@ -78,7 +79,7 @@ LINTCAS1_NPK <- function(wdata, crop, soil, management, control){
 	}
 
   ## initial soil water content set at field capacity
-	soil$WCI = soil[["WCFC"]]    # m3 m-3 
+	#soil$WCI = soil[["WCFC"]]    # m3 m-3 
 
 	names(wdata) <- toupper(names(wdata))
 	wdata$DOYS <- 1:nrow(wdata)

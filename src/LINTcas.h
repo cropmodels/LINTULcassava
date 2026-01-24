@@ -27,9 +27,11 @@ class LINcasControl {
 public:
 	virtual ~LINcasControl(){}
 	double DELT=1;
+	bool NPKmodel=false;
 	long modelstart;
 	bool water_limited=false;	
 	bool nutrient_limited=false;	
+	double WCI; // not yet used
 	std::string outvars;
 };
 
@@ -45,6 +47,16 @@ public:
 	std::vector<std::vector<double>> NMINMAXLV, PMINMAXLV, KMINMAXLV, NMINMAXST, PMINMAXST, KMINMAXST, NMINMAXSO, PMINMAXSO, KMINMAXSO, NMINMAXRT, PMINMAXRT, KMINMAXRT;
 
 } ;
+
+class LINcasSoilParameters {
+public:
+	virtual ~LINcasSoilParameters(){}
+
+	double ROOTDM, WCAD, WCWP, WCFC, WCWET, WCST, DRATE;
+
+// nutrients	
+	double NMINI=0, PMINI=0, KMINI=0, RTNMINS=0, RTPMINS=0, RTKMINS=0;
+};
 
 
 class LINcasRates {
@@ -115,7 +127,7 @@ public:
 	double PUSHREDISTSUM=0;// Deg. C d-1
 	double WSOFASTRANSLSO=0; // g DM m-2 d-1
 	double IRRIG=0;
-	
+
 	double NCUTTING=0;
 	double PCUTTING=0;
 	double KCUTTING=0;
@@ -147,13 +159,6 @@ public:
 };
 
 
-class LINcasSoilParameters {
-public:
-	virtual ~LINcasSoilParameters(){}
-	double ROOTDM, WCAD, WCWP, WCFC, WCWET, WCST, DRATE;
-	double NMINI, PMINI, KMINI, RTNMINS, RTPMINS, RTKMINS;
-};
-
 
 class LINcasOutput {
 public:
@@ -175,7 +180,7 @@ class LINcasModel {
 public:
 	virtual ~LINcasModel(){}
 
-	unsigned step, time;
+	unsigned step, time, season_length;
 
 	std::vector<std::string> messages;
 	bool fatalError=false;
@@ -197,6 +202,10 @@ public:
 	void output();
 	void initialize(long int maxdur);
 	void run();
+
+	void ratesNPK();
+	void statesNPK();
+	void outputNPK();
 
 	void Penman();
 	void evaptr();
@@ -222,4 +231,51 @@ public:
 		bool PUSHREDIST);
 
 };
+
+
+
+inline double SatVP(const double &tmp) {
+	return 0.611 * std::exp(17.4 * tmp / (tmp + 239)) ;
+}
+
+
+
+inline double approx(std::vector<std::vector<double>> tb, double x) {
+	int n = tb[0].size();
+	double y = NAN;
+	if (x <= tb[0][0]) {
+		y = tb[1][0];
+	} else if (x >= tb[0][n-1]) {
+		y = tb[1][n-1];
+	} else {
+		for(int i=1; i<n; i++) {
+			if (tb[0][i] >= x) {
+				double slope = (tb[1][i] - tb[1][i-1]) / (tb[0][i] - tb[0][i-1]);
+				y = tb[1][i-1] + (x - tb[0][i-1]) * slope;
+				break;
+			}
+		}
+	}
+	return(y);
+}	
+
+inline double approx2(std::vector<double> X, std::vector<double> Y, double v) {
+	int n = X.size();
+	double r = NAN;
+	if (v <= X[0]) {
+		r = Y[0];
+	} else if (v >= X[n-1]) {
+		r = Y[n-1];
+	} else {
+		for(int i=1; i<n; i++) {
+			if (X[i] >= v) {
+				double slope = (Y[i] - Y[i-1]) / (X[i] - X[i-1]);
+				r = Y[i-1] + (v - X[i-1]) * slope;
+				break;
+			}
+		}
+	}
+	return(r);
+}	
+
 
