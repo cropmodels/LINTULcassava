@@ -14,26 +14,6 @@ C++ version by RH, 2026-01-20
 #include "LINTcas.h"
 #include "Rcpp.h"
 
-inline double approx2(std::vector<double> X, std::vector<double> Y, double v) {
-	int n = X.size();
-	double r = NAN;
-	if (v <= X[0]) {
-		r = Y[0];
-	} else if (v >= X[n-1]) {
-		r = Y[n-1];
-	} else {
-		for(int i=1; i<n; i++) {
-			if (X[i] >= v) {
-				double slope = (Y[i] - Y[i-1]) / (X[i] - X[i-1]);
-				r = Y[i-1] + (v - X[i-1]) * slope;
-				break;
-			}
-		}
-	}
-	return(r);
-}	
-
-
 
 
 inline double Mirrored_Monod(double x, double K, double Kmax) {

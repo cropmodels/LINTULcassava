@@ -16,30 +16,8 @@ Original R code by Rob van den Beuken; rob.vandenbeuken@wur.nl; (c) 2019, PPS
 #include "Rcpp.h"
 
 
-void LINcasModel::initialize(long maxdur) {
 
-	S.ROOTD = crop.ROOTDI; 
-	S.WA = 1000 * crop.ROOTDI * soil.WCFC; // should be separate parameter
-	S.WCUTTING = crop.WCUTTINGUNIT * crop.NCUTTINGS; 
-
-	if (control.NPKmodel) {
-		soil.RTNMINS = (1/0.9) * soil.NMINI / season_length;
-		soil.RTPMINS = (1/0.9) * soil.PMINI / season_length;
-		soil.RTKMINS = (1/0.9) * soil.KMINI / season_length;
-	}
-	
-	if (control.outvars == "batch") {
-		out.names = {"step", "WSO"};
-	} else {
-		out.names = {"step", "ROOTD", "WA", "TSUM", "TSUMCROP", "TSUMCROPLEAFAGE", "DORMTSUM", "PUSHDORMRECTSUM", "PUSHREDISTENDTSUM", "DORMTIME", "WCUTTING", "PAR", "LAI", "WLVD", "WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", "PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", "REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "IRRIG"};
-		if (control.outvars == "full") {
-			out.names.insert(out.names.end(), {"RROOTD", "RWA", "RTSUM", "RTSUMCROP", "RTSUMCROPLEAFAGE", "RDORMTSUM", "RPUSHDORMRECTSUM", "RPUSHREDISTENDTSUM", "RDORMTIME", "RWCUTTING", "RPAR", "RLAI", "RWLVD", "RWLV", "RWST", "RWSO", "RWRT", "RWLVG", "RTRAN", "REVAP", "RPTRAN", "RPEVAP", "RRUNOFF", "RNINTC", "RDRAIN", "RREDISTLVG", "RREDISTSO", "RPUSHREDISTSUM", "RWSOFASTRANSLSO", "RIRRIG"} );
-		}
-	}	
-	out.values.reserve(maxdur * out.names.size());
-}
-
-void LINcasModel::states() {
+void LINcasModel::statesNPK() {
 	S.ROOTD = S.ROOTD + R.ROOTD;
 	S.WA = S.WA + R.WA;
 	S.TSUM = S.TSUM + R.TSUM;
@@ -71,9 +49,37 @@ void LINcasModel::states() {
 	S.REDISTSO = S.REDISTSO + R.REDISTSO;
 	S.PUSHREDISTSUM = S.PUSHREDISTSUM + R.PUSHREDISTSUM;
 	S.WSOFASTRANSLSO = S.WSOFASTRANSLSO + R.WSOFASTRANSLSO;
+
+	S.NCUTTING = S.NCUTTING + R.NCUTTING;
+	S.PCUTTING = S.PCUTTING + R.PCUTTING;
+	S.KCUTTING = S.KCUTTING + R.KCUTTING;
+	S.ANLVG = S.ANLVG + R.ANLVG;
+	S.ANLVD = S.ANLVD + R.ANLVD;
+	S.ANST = S.ANST + R.ANST;
+	S.ANRT = S.ANRT + R.ANRT;
+	S.ANSO = S.ANSO + R.ANSO;
+	S.APLVG = S.APLVG + R.APLVG;
+	S.APLVD = S.APLVD + R.APLVD;
+	S.APST = S.APST + R.APST;
+	S.APRT = S.APRT + R.APRT;
+	S.APSO = S.APSO + R.APSO;
+	S.AKLVG = S.AKLVG + R.AKLVG;
+	S.AKLVD = S.AKLVD + R.AKLVD;
+	S.AKST = S.AKST + R.AKST;
+	S.AKRT = S.AKRT + R.AKRT;
+	S.AKSO = S.AKSO + R.AKSO;
+	S.NMINT = S.NMINT + R.NMINT;
+	S.PMINT = S.PMINT + R.PMINT;
+	S.KMINT = S.KMINT + R.KMINT;
+	S.NMINS = S.NMINS + R.NMINS;
+	S.PMINS = S.PMINS + R.PMINS;
+	S.KMINS = S.KMINS + R.KMINS;
+	S.NMINF = S.NMINF + R.NMINF;
+	S.PMINF = S.PMINF + R.PMINF;
+	S.KMINF = S.KMINF + R.KMINF;
 }
 
-void LINcasModel::output(){
+void LINcasModel::outputNPK(){
 	
 	if (control.outvars == "batch") {
 		return;
@@ -98,28 +104,7 @@ void LINcasModel::output(){
 	}
 }
 
-
-
-
-bool LINcasModel::weather_step() {
-	A.date = weather.date[time];
-
-	A.SRAD = weather.srad[time] / 1000.;
-	A.WIND = weather.wind[time];
-	A.VAPR = weather.vapr[time];
-	A.PREC = weather.prec[time];
-
-	double SatVP_TMMN = SatVP(weather.tmin[time]);
-	double SatVP_TMMX = SatVP(weather.tmax[time]);
-  // vapour pressure deficits;
-	A.VPD_MN = std::max(0., SatVP_TMMN - A.VAPR);
-	A.VPD_MX = std::max(0., SatVP_TMMX - A.VAPR);
-	A.TAVG = 0.5 * (weather.tmin[time] + weather.tmax[time]);   // Deg. C     :     daily average temperature
-
-	return true;
-}
-
-void LINcasModel::rates() {
+void LINcasModel::ratesNPK() {
 
     if (S.TSUM >= crop.FINTSUM) {;
 		// If the plant is not growing anymore all plant related rates are set to 0.;
@@ -184,7 +169,55 @@ void LINcasModel::rates() {
 	// Rate of change of soil water amount;
 	R.WA = (A.PREC + EXPLOR + R.IRRIG) - (R.NINTC + R.RUNOFF + R.TRAN + R.EVAP + R.DRAIN);  // mm d-1;
 
-	if (!EMERG) return;
+//	if (!EMERG) return;
+
+	//---NUTRIENT LIMITATION-------------------------------------------//
+	// The nutrient limitation is based on the nutrient concentrations in the organs of the crop. A nutrition index is calculated to quantify nutrient limitation. 
+	
+	// Minimum and maximum nutrient concentrations in the leaves
+	double NMINLV = approx2(crop.NMINMAXLV[0], crop.NMINMAXLV[1], S.TSUMCROP);   // g N g-1 DM
+	double PMINLV = approx2(crop.PMINMAXLV[0], crop.PMINMAXLV[1], S.TSUMCROP);   // g P g-1 DM
+	double KMINLV = approx2(crop.KMINMAXLV[0], crop.KMINMAXLV[1], S.TSUMCROP);   // g K g-1 DM
+	double NMAXLV = approx2(crop.NMINMAXLV[0], crop.NMINMAXLV[2], S.TSUMCROP);   // g N g-1 DM
+	double PMAXLV = approx2(crop.PMINMAXLV[0], crop.PMINMAXLV[2], S.TSUMCROP);   // g P g-1 DM
+	double KMAXLV = approx2(crop.KMINMAXLV[0], crop.KMINMAXLV[2], S.TSUMCROP);   // g K g-1 DM
+	// Minimum and maximum concentrations in the stems
+	double NMINST = approx2(crop.NMINMAXST[0], crop.NMINMAXST[1], S.TSUMCROP);   // g N g-1 DM
+	double PMINST = approx2(crop.PMINMAXST[0], crop.PMINMAXST[1], S.TSUMCROP);   // g P g-1 DM
+	double KMINST = approx2(crop.KMINMAXST[0], crop.KMINMAXST[1], S.TSUMCROP);   // g K g-1 DM
+	double NMAXST = approx2(crop.NMINMAXST[0], crop.NMINMAXST[2], S.TSUMCROP);   // g N g-1 DM
+	double PMAXST = approx2(crop.PMINMAXST[0], crop.PMINMAXST[2], S.TSUMCROP);   // g P g-1 DM
+	double KMAXST = approx2(crop.KMINMAXST[0], crop.KMINMAXST[2], S.TSUMCROP);   // g K g-1 DM
+	// Minimum and maximum nutrient concentrations in the storage organs
+	double NMINSO = approx2(crop.NMINMAXSO[0], crop.NMINMAXSO[1], S.TSUMCROP);   // g N g-1 DM
+	double PMINSO = approx2(crop.PMINMAXSO[0], crop.PMINMAXSO[1], S.TSUMCROP);   // g P g-1 DM
+	double KMINSO = approx2(crop.KMINMAXSO[0], crop.KMINMAXSO[1], S.TSUMCROP);   // g K g-1 DM
+	double NMAXSO = approx2(crop.NMINMAXSO[0], crop.NMINMAXSO[2], S.TSUMCROP);   // g N g-1 DM
+	double PMAXSO = approx2(crop.PMINMAXSO[0], crop.PMINMAXSO[2], S.TSUMCROP);   // g P g-1 DM
+	double KMAXSO = approx2(crop.KMINMAXSO[0], crop.KMINMAXSO[2], S.TSUMCROP);   // g K g-1 DM
+	// Minimum and maximum nutrient concentrations in the roots
+	double NMINRT = approx2(crop.NMINMAXRT[0], crop.NMINMAXRT[1], S.TSUMCROP);   // g N g-1 DM
+	double PMINRT = approx2(crop.PMINMAXRT[0], crop.PMINMAXRT[1], S.TSUMCROP);   // g P g-1 DM
+	double KMINRT = approx2(crop.KMINMAXRT[0], crop.KMINMAXRT[1], S.TSUMCROP);   // g K g-1 DM
+	double NMAXRT = approx2(crop.NMINMAXRT[0], crop.NMINMAXRT[2], S.TSUMCROP);   // g N g-1 DM
+	double PMAXRT = approx2(crop.PMINMAXRT[0], crop.PMINMAXRT[2], S.TSUMCROP);   // g P g-1 DM
+	double KMAXRT = approx2(crop.KMINMAXRT[0], crop.KMINMAXRT[2], S.TSUMCROP);   // g K g-1 DM
+	
+	std::vector<double> NPKICAL = npkical(NMINLV, PMINLV, KMINLV, 
+		NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV,
+		NMAXST, PMAXST, KMAXST, NMAXSO, PMAXSO, KMAXSO);
+	
+
+	// Nutrient limitation reduction factor when nutrient limition is switched on
+	double NPKI;
+	if (control.nutrient_limited){
+		//Simple based on daily values
+		NPKI = std::max(0., std::min(1., NPKICAL[3])); // (-)
+		//Shortly after emergence nutrient stress does not occur
+		NPKI = S.TSUMCROP < crop.TSUM_NPKI ? 1 : NPKI;
+	} else {
+		NPKI = 1;
+	}
 
 //---DORMANCY AND RECOVERY-------------------------------------------//;
 	// The crop enters the dormancy phase as the soil water content is lower than the soil water content at ;
@@ -229,7 +262,7 @@ void LINcasModel::rates() {
 	double PARINT = R.PAR * (1 - std::exp(-crop.K_EXT * S.LAI));  // MJ m-2 d-1
 	double LUE = crop.LUE_OPT * approx(crop.TTB, A.TAVG);   // g DM m-2 d-1
 
-	double GTOTAL = LUE * PARINT * TRANRF * (!DORMANCY);  // g DM m-2 d-1
+	double GTOTAL = LUE * PARINT * std::min(NPKI, TRANRF) * (!DORMANCY);  // g DM m-2 d-1
 
 //---LEAF SENESCENCE------------------------------------------------------//;
 
@@ -254,10 +287,13 @@ void LINcasModel::rates() {
 
 	// Relative death rate due to severe drought
 	double RDRSD = crop.RDRB * ENHSHED;    // d-1
-	//---;
+
+    //-------- NUTRIENT LIMITATION
+    //Leaf death due to nutrient limitation is added on top op the relative death rate due to age, shade and drought. 
+    double RDRNS = crop.RDRNS * (1. - NPKI); //     d-1
 
 	// Effective relative death rate and the resulting decrease in LAI.
-	double RDR = (S.TSUMCROPLEAFAGE >= crop.TSUMLLIFE) ? std::max(RDRDV, std::max(RDRSH, RDRSD)) : 0; 	// d-1
+	double RDR = (S.TSUMCROPLEAFAGE >= crop.TSUMLLIFE) ? std::max(RDRDV, std::max(RDRSH, RDRSD)) + RDRNS : 0; 	// d-1
 
 	//	DLAI  = LAI * RDR * (1 - FASTRANSLSO) * (1 - DORMANCY)    // m2 m-2 d-1
 	double DLAI  = S.LAI * RDR * (!DORMANCY);    // m2 m-2 d-1
@@ -275,8 +311,8 @@ void LINcasModel::rates() {
 	R.WLVD = (DLV - R.WSOFASTRANSLSO);				   // g leaves DM m-2 d-1
 
 //---PARTITIONING---------------------------------------------------//;
-	// Allocation of assimilates to the different organs. The fractions are modified for water availability.;
-	double FRTMOD = std::max(1., 1/(TRANRF+0.5));			// (-);;
+	// Allocation of assimilates to the different organs. The fractions are modified for water availability and nutrient availability.
+	double FRTMOD = std::max(1., 1./(TRANRF * NPKI + 0.5)); // (-)
 	// Fibrous roots;
 	double FRT    = approx(crop.FRTTB, S.TSUMCROP) * FRTMOD; // (-)
 	double FSHMOD = (1 - FRT) / (1 - FRT / FRTMOD); // (-)
@@ -322,6 +358,13 @@ void LINcasModel::rates() {
 	// Growth of the leaf weight
 	R.WLV = R.WLVG + R.WLVD;			// g leaves DM m-2 d-1
 
+//Time, S, R, crop, soil, management, DELT
+	nutrientdyn(EMERG, NMINLV, PMINLV, KMINLV, NMINST, PMINST, 	KMINST,
+			NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
+			NMAXLV, PMAXLV, KMAXLV, NMAXST, PMAXST, KMAXST, 
+			NMAXSO, PMAXSO, KMAXSO, NMAXRT, PMAXRT, KMAXRT, TRANRF, 
+			NPKICAL[0], NPKICAL[1], NPKICAL[2], FLV, FST, FRT, FSO, PUSHREDIST);
+
 //---LEAF GROWTH---------------------------------------------------//;
 	// Green leaf weight ;
 	double GLV = FLV * (GTOTAL + abs(R.WCUTTING)) + R.REDISTLVG * PUSHREDIST;  // g green leaves DM m-2 d-1;
@@ -337,7 +380,7 @@ void LINcasModel::rates() {
 	} else if ((S.TSUMCROP < crop.TSUMLA_MIN) && (S.LAI < crop.LAIEXPOEND)) {
 		 // Growth during juvenile stage
 		GLAI = ((S.LAI * (std::exp(crop.RGRL * DTEFF * control.DELT) - 1) / control.DELT) 
-				+ std::abs(R.WCUTTING) * FLV * SLA) * TRANRF;  // m2 m-2 d-1
+				+ std::abs(R.WCUTTING) * FLV * SLA) * TRANRF * exp(-crop.NLAI * (1 - NPKI));  // m2 m-2 d-1
 	} else {
 		GLAI = SLA * GLV * (!DORMANCY);  // m2 m-2 d-1  
 	}
@@ -345,4 +388,6 @@ void LINcasModel::rates() {
 	// Change in LAI due to new growth of leaves
 	R.LAI = GLAI - DLAI;    // m2 m-2 d-1
 }
+
+
 

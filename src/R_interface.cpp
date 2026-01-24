@@ -23,10 +23,16 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 	cntr.modelstart = valueFromList<long>(control, "startDATE");
 	cntr.outvars = valueFromListDefault<std::string>(control, "outvars", "full");
 	cntr.water_limited = valueFromListDefault<bool>(control, "water_limited", true); 
+	cntr.NPKmodel = valueFromList<bool>(control, "NPKmodel");
 
+// management
 	mgm.PLDATE = valueFromList<long>(management, "PLDATE");
 	mgm.HVDATE = valueFromList<long>(management, "HVDATE");
-
+	if (cntr.NPKmodel) {
+		mgm.FERTAB = TableFromList2(management, "FERTAB", 4);
+	}
+	
+// crop
 	crp.TWCSD = valueFromList<double>(crop, "TWCSD");
 	crp.FRACRNINTC = valueFromList<double>(crop, "FRACRNINTC");
 	crp.RECOV = valueFromList<double>(crop, "RECOV");
@@ -78,6 +84,40 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 	crp.FRTTB = TableFromList2(crop, "FRTTB");
 	crp.SLAII = valueFromList<double>(crop, "SLAII");
 
+	if (cntr.NPKmodel) {
+		crp.NLAI = valueFromList<double>(crop, "NLAI");
+		crp.RDRNS = valueFromList<double>(crop, "RDRNS");
+		crp.K_MAX = valueFromList<double>(crop, "K_MAX");
+		crp.K_NPK_NI = valueFromList<double>(crop, "K_NPK_NI");
+		crp.TSUM_NPKI = valueFromList<double>(crop, "TSUM_NPKI");
+		crp.K_WATER = valueFromList<double>(crop, "K_WATER");
+		crp.SLOPE_NEQ_SOILSUPPLY_NEQ_PLANTUPTAKE = valueFromList<double>(crop, "SLOPE_NEQ_SOILSUPPLY_NEQ_PLANTUPTAKE");
+		crp.FR_MAX = valueFromList<double>(crop, "FR_MAX");
+		crp.N_RECOV = valueFromList<double>(crop, "N_RECOV");
+		crp.P_RECOV = valueFromList<double>(crop, "P_RECOV");
+		crp.K_RECOV = valueFromList<double>(crop, "K_RECOV");
+		crp.NFLVD = valueFromList<double>(crop, "NFLVD");
+		crp.PFLVD = valueFromList<double>(crop, "PFLVD");
+		crp.KFLVD = valueFromList<double>(crop, "KFLVD");
+		crp.TCNPKT = valueFromList<double>(crop, "TCNPKT");
+		crp.RTNMINF = valueFromList<double>(crop, "RTNMINF");
+		crp.RTPMINF = valueFromList<double>(crop, "RTPMINF");
+		crp.RTKMINF = valueFromList<double>(crop, "RTKMINF");
+		crp.NMINMAXLV = TableFromList2(crop, "NMINMAXLV", 3);
+		crp.PMINMAXLV = TableFromList2(crop, "PMINMAXLV", 3);
+		crp.KMINMAXLV = TableFromList2(crop, "KMINMAXLV", 3);
+		crp.NMINMAXST = TableFromList2(crop, "NMINMAXST", 3);
+		crp.PMINMAXST = TableFromList2(crop, "PMINMAXST", 3);
+		crp.KMINMAXST = TableFromList2(crop, "KMINMAXST", 3);
+		crp.NMINMAXSO = TableFromList2(crop, "NMINMAXSO", 3);
+		crp.PMINMAXSO = TableFromList2(crop, "PMINMAXSO", 3);
+		crp.KMINMAXSO = TableFromList2(crop, "KMINMAXSO", 3);
+		crp.NMINMAXRT = TableFromList2(crop, "NMINMAXRT", 3);
+		crp.PMINMAXRT = TableFromList2(crop, "PMINMAXRT", 3);
+		crp.KMINMAXRT = TableFromList2(crop, "KMINMAXRT", 3);
+	}
+	
+//soil 
 	sol.ROOTDM = valueFromList<double>(soil, "ROOTDM"); 
 	sol.WCAD = valueFromList<double>(soil, "WCAD");
 	sol.WCWP = valueFromList<double>(soil, "WCWP");
@@ -85,7 +125,12 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 	sol.WCWET = valueFromList<double>(soil, "WCWET");
 	sol.WCST = valueFromList<double>(soil, "WCST");
 	sol.DRATE = valueFromList<double>(soil, "DRATE");
-
+	if (cntr.NPKmodel) {
+		sol.NMINI = valueFromList<double>(soil, "NMINI");
+		sol.PMINI = valueFromList<double>(soil, "PMINI");
+		sol.KMINI = valueFromList<double>(soil, "KMINI");
+	}
+	
 // weather
 	wth.tmin = vectorFromDF<double>(weather, "tmin");
 	wth.tmax = vectorFromDF<double>(weather, "tmax");
