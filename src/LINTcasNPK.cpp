@@ -49,6 +49,7 @@ void LINcasModel::statesNPK() {
 	S.REDISTSO = S.REDISTSO + R.REDISTSO;
 	S.PUSHREDISTSUM = S.PUSHREDISTSUM + R.PUSHREDISTSUM;
 	S.WSOFASTRANSLSO = S.WSOFASTRANSLSO + R.WSOFASTRANSLSO;
+	S.TRAIN = S.TRAIN + R.TRAIN;
 
 	S.NCUTTING = S.NCUTTING + R.NCUTTING;
 	S.PCUTTING = S.PCUTTING + R.PCUTTING;
@@ -86,21 +87,30 @@ void LINcasModel::outputNPK(){
 //		out.values.insert(out.values.end(), {double(step), S.WSO});
 	} else if (control.outvars == "states") {
 		out.values.insert(out.values.end(),
-			{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
-			S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.PAR, S.LAI, 
-			S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
-			S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG });
+				{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
+				S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.TRAIN, S.PAR, S.LAI, 
+				S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
+				S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG,
+				S.NCUTTING, S.PCUTTING, S.KCUTTING, S.ANLVG, S.ANLVD, S.ANST, S.ANRT, S.ANSO, 
+				S.APLVG, S.APLVD, S.APST, S.APRT, S.APSO, S.AKLVG, S.AKLVD, S.AKST, S.AKRT, S.AKSO, 
+				S.NMINT, S.PMINT, S.KMINT, S.NMINS, S.PMINS, S.KMINS, S.NMINF, S.PMINF, S.KMINF});			
 	} else { // full
 		out.values.insert(out.values.end(),
-			{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
-			S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.PAR, S.LAI, 
-			S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
-			S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG,
+				{ double(step), S.ROOTD, S.WA, S.TSUM, S.TSUMCROP, S.TSUMCROPLEAFAGE, S.DORMTSUM, 
+				S.PUSHDORMRECTSUM, S.PUSHREDISTENDTSUM, S.DORMTIME, S.WCUTTING, S.TRAIN, S.PAR, S.LAI, 
+				S.WLVD, S.WLV, S.WST, S.WSO, S.WRT, S.WLVG, S.TRAN, S.EVAP, S.PTRAN, S.PEVAP, 
+				S.RUNOFF, S.NINTC, S.DRAIN, S.REDISTLVG, S.REDISTSO, S.PUSHREDISTSUM, S.WSOFASTRANSLSO, S.IRRIG,
+				S.NCUTTING, S.PCUTTING, S.KCUTTING, S.ANLVG, S.ANLVD, S.ANST, S.ANRT, S.ANSO, 
+				S.APLVG, S.APLVD, S.APST, S.APRT, S.APSO, S.AKLVG, S.AKLVD, S.AKST, S.AKRT, S.AKSO, 
+				S.NMINT, S.PMINT, S.KMINT, S.NMINS, S.PMINS, S.KMINS, S.NMINF, S.PMINF, S.KMINF,
 
-			R.ROOTD, R.WA, R.TSUM, R.TSUMCROP, R.TSUMCROPLEAFAGE, R.DORMTSUM, 
-			R.PUSHDORMRECTSUM, R.PUSHREDISTENDTSUM, R.DORMTIME, R.WCUTTING, R.PAR, R.LAI, 
-			R.WLVD, R.WLV, R.WST, R.WSO, R.WRT, R.WLVG, R.TRAN, R.EVAP, R.PTRAN, R.PEVAP, 
-			R.RUNOFF, R.NINTC, R.DRAIN, R.REDISTLVG, R.REDISTSO, R.PUSHREDISTSUM, R.WSOFASTRANSLSO, R.IRRIG	});
+				R.ROOTD, R.WA, R.TSUM, R.TSUMCROP, R.TSUMCROPLEAFAGE, R.DORMTSUM, 
+				R.PUSHDORMRECTSUM, R.PUSHREDISTENDTSUM, R.DORMTIME, R.WCUTTING, R.TRAIN, R.PAR, R.LAI, 
+				R.WLVD, R.WLV, R.WST, R.WSO, R.WRT, R.WLVG, R.TRAN, R.EVAP, R.PTRAN, R.PEVAP, 
+				R.RUNOFF, R.NINTC, R.DRAIN, R.REDISTLVG, R.REDISTSO, R.PUSHREDISTSUM, R.WSOFASTRANSLSO, R.IRRIG,
+				
+				R.NCUTTING, R.PCUTTING, R.KCUTTING, R.ANLVG, R.ANLVD, R.ANST, R.ANRT, R.ANSO, R.APLVG, R.APLVD, 
+				R.APST, R.APRT, R.APSO, R.AKLVG, R.AKLVD, R.AKST, R.AKRT, R.AKSO, R.NMINT, R.PMINT, R.KMINT, R.NMINS, R.PMINS, R.KMINS, R.NMINF, R.PMINF, R.KMINF});
 	}
 }
 
@@ -113,7 +123,7 @@ void LINcasModel::ratesNPK() {
 
 	double DTEFF  = std::max(0., A.TAVG - crop.TBASE); // Deg. C   : effective daily temperature
 	R.PAR  = crop.FPAR * A.SRAD;        // PAR MJ m-2 d-1   : PAR radiation
-
+	R.TRAIN = A.PREC;
     // Temperature sum after planting;
 	R.TSUM = (management.PLDATE <= A.date) ? DTEFF : 0; // Deg. C 
 
@@ -315,13 +325,14 @@ void LINcasModel::ratesNPK() {
 	double FRTMOD = std::max(1., 1./(TRANRF * NPKI + 0.5)); // (-)
 	// Fibrous roots;
 	double FRT    = approx(crop.FRTTB, S.TSUMCROP) * FRTMOD; // (-)
-	double FSHMOD = (1 - FRT) / (1 - FRT / FRTMOD); // (-)
+	double FSHMOD = (1. - FRT) / (1. - FRT / FRTMOD); // (-)
 	// Leaves;
 	double FLV    = approx(crop.FLVTB, S.TSUMCROP) * FSHMOD; // (-)
 	// Stems;
 	double FST    = approx(crop.FSTTB, S.TSUMCROP) * FSHMOD; // (-)
 	// Storage roots;
 	double FSO    = approx(crop.FSOTB, S.TSUMCROP) * FSHMOD; // (-)
+
 
 	//When plants emerge from dormancy, leaf growth may go far too quickly. ;
 	//Adjust partitioning if LAI too large;
@@ -340,18 +351,33 @@ void LINcasModel::ratesNPK() {
 		R.WST = crop.WCUTTINGIP * crop.FST_CUTT;	// g stem DM m-2 d-1
 		R.WLVG = crop.WCUTTINGIP * crop.FLV_CUTT;     // g leaves DM m-2 d-1
 		R.WSO  = crop.WCUTTINGIP * crop.FSO_CUTT;     // g storage root DM m-2 d-1
+
+		//The amount of N, P, K transfered depends on max. concentrations in LV, ST, RT and SO 
+		R.NCUTTING = -(R.WLVG * NMAXLV + R.WST * NMAXST + R.WSO * NMAXSO + R.WRT * NMAXRT);
+		R.PCUTTING = -(R.WLVG * PMAXLV + R.WST * PMAXST + R.WSO * PMAXSO + R.WRT * PMAXRT);
+		R.KCUTTING = -(R.WLVG * KMAXLV + R.WST * KMAXST + R.WSO * KMAXSO + R.WRT * KMAXRT);
+	
 	} else if (S.TSUM > crop.OPTEMERGTSUM) {	
 		R.WCUTTING = -crop.RDRWCUTTING * S.WCUTTING * ((S.WCUTTING-WCUTTINGMIN) >= 0) * TRANRF * EMERG * (!DORMANCY);  // g stem cutting DM m-2 d-1;
 		R.WRT   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FRT;	// g fibrous root DM m-2 d-1
 		R.WST   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FST;	// g stem DM m-2 d-1
 		R.WLVG  = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FLV - DLV + R.REDISTLVG * PUSHREDIST; // g leaves DM m-2 d-1 
 		R.WSO   = (std::abs(GTOTAL) + std::abs(R.WCUTTING)) * FSO + R.WSOFASTRANSLSO - R.REDISTSO; // g storage root DM m-2 d-1
+		
+		//The amount of N, P, K transfered depends on max. concentrations in LV, ST, RT and SO 
+		R.NCUTTING = (R.WCUTTING/S.WCUTTING) * S.NCUTTING; //g N m-2 d-1, proportional to DM
+		R.PCUTTING = (R.WCUTTING/S.WCUTTING) * S.PCUTTING; //g P m-2 d-1, proportional to DM
+		R.KCUTTING = (R.WCUTTING/S.WCUTTING) * S.KCUTTING; //g K m-2 d-1, proportional to DM
+		
 	} else {
 		R.WCUTTING = 0;   // g stem cutting DM m-2 d-1
 		R.WRT = 0;	// g fibrous root DM m-2 d-1
 		R.WST = 0;	// g stem DM m-2 d-1
 		R.WLVG = 0;	 // g leaves DM m-2 d-1
 		R.WSO  = 0;	 // g storage root DM m-2 d-1
+		R.NCUTTING = 0;	// g cutting N m-2 d-1
+		R.PCUTTING = 0;	// g cutting P m-2 d-1
+		R.KCUTTING = 0;	// g cutting K m-2 d-1		
 	};
 
 

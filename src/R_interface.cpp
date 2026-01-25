@@ -20,9 +20,11 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 	LINcasSoilParameters sol;
 	LINcasWeather wth;
 
+// control
 	cntr.modelstart = valueFromList<long>(control, "startDATE");
 	cntr.outvars = valueFromListDefault<std::string>(control, "outvars", "full");
 	cntr.water_limited = valueFromListDefault<bool>(control, "water_limited", true); 
+	cntr.nutrient_limited = valueFromListDefault<bool>(control, "nutrient_limited", true); 
 	cntr.NPKmodel = valueFromList<bool>(control, "NPKmodel");
 
 // management
@@ -30,6 +32,10 @@ Rcpp::List LC(List crop, DataFrame weather, List soil, List management, List con
 	mgm.HVDATE = valueFromList<long>(management, "HVDATE");
 	if (cntr.NPKmodel) {
 		mgm.FERTAB = TableFromList2(management, "FERTAB", 4);
+		// DAP to date
+		for (size_t j=0; j<mgm.FERTAB[0].size(); j++) {
+			mgm.FERTAB[0][j] = mgm.FERTAB[0][j] + mgm.PLDATE;
+		}
 	}
 	
 // crop

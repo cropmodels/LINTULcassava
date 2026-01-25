@@ -29,7 +29,8 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			REDISTLVG=0, REDISTSO=0,# g DM m-2 d-1
 			PUSHREDISTSUM=0,# Deg. C d-1
 			WSOFASTRANSLSO=0, # g DM m-2 d-1
-
+			IRRIG=0,
+			
 			NCUTTING=0, PCUTTING=0, KCUTTING=0, 
 			ANLVG=0, ANLVD=0, ANST=0, ANRT=0, ANSO=0, # g N m-2 d-1
 			APLVG=0, APLVD=0, APST=0, APRT=0, APSO=0, # g P m-2 d-1
@@ -46,8 +47,8 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 			"DORMTIME", "WCUTTING", "TRAIN", "PAR", "LAI", "WLVD", 
 			"WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", 
 			"PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", 
-			"REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "NCUTTING", 
-			"PCUTTING", "KCUTTING", "ANLVG", "ANLVD", "ANST", 
+			"REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "IRRIG",
+			"NCUTTING", "PCUTTING", "KCUTTING", "ANLVG", "ANLVD", "ANST", 
 			"ANRT", "ANSO", "APLVG", "APLVD", "APST", "APRT", 
 			"APSO", "AKLVG", "AKLVD", "AKST", "AKRT", "AKSO", 
 			"NMINT", "PMINT", "KMINT", "NMINS", "PMINS", 
@@ -115,7 +116,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		R$NINTC <- min(R$TRAIN, (crop$FRACRNINTC * S$LAI))	 # mm d-1
 		
 		# Potential evaporation and transpiration are calculated using the Penman equation.
-		PENM <- penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
+		PENM <- LINTULcassava:::penman(W$TAVG, W$VAPR, W$SRAD, S$LAI, W$WIND, R$NINTC)
 		R$PTRAN <- PENM$PTRAN					# mm d-1
 		R$PEVAP <- PENM$PEVAP					# mm d-1
 		# Soil moisture content at severe drought and the critical soil moisture content are calculated to see if drought stress occurs in the crop. The critical soil moisture content depends on the transpiration coefficient which is a measure of how drought resistant the crop is. 
@@ -123,7 +124,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		WCCR <- soil$WCWP + max(WCSD-soil$WCWP, (R$PTRAN/(R$PTRAN+crop$TRANCO) * (soil$WCFC-soil$WCWP)))
 
 		# The actual evaporation and transpiration is based on the soil moisture contents and the potential evaporation and transpiration rates.
-		EVA <- evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
+		EVA <- LINTULcassava:::evaptr(R$PEVAP, R$PTRAN, S$ROOTD, S$WA, soil$WCAD, soil$WCWP, crop$TWCSD,
 						soil$WCFC, soil$WCWET, soil$WCST, crop$TRANCO, DELT)
 		R$TRAN <- EVA$TRAN					 # mm d-1
 		R$EVAP <- EVA$EVAP					 # mm d-1
@@ -132,13 +133,14 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		TRANRF <- ifelse(R$PTRAN <= 0, 1, R$TRAN/R$PTRAN) # (-)
 		
 		# Drainage and Runoff is calculated using the drunir function.
-		DRUNIR  <- drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, !control$water_limited, soil$DRATE,
+		DRUNIR  <- LINTULcassava:::drunir(R$TRAIN, R$NINTC, R$EVAP, R$TRAN, !control$water_limited, soil$DRATE,
 								 DELT, S$WA, S$ROOTD, soil$WCFC, soil$WCST)
 		R$DRAIN  <- DRUNIR$DRAIN				# mm d-1
 		R$RUNOFF <- DRUNIR$RUNOFF				 # mm d-1
 		
 		# Rate of change of soil water amount
 		R$WA <- (R$TRAIN + EXPLOR + DRUNIR$IRRIG) - (R$NINTC + R$RUNOFF + R$TRAN + R$EVAP + R$DRAIN)  # mm d-1
+		R$IRRIG <- DRUNIR$IRRIG
 
 		#if (!EMERG) return(R)
 
@@ -175,7 +177,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		PMAXRT <- stats::approx(crop$PMINMAXRT[,1], crop$PMINMAXRT[,3], S$TSUMCROP)$y   # g P g-1 DM
 		KMAXRT <- stats::approx(crop$KMINMAXRT[,1], crop$KMINMAXRT[,3], S$TSUMCROP)$y   # g K g-1 DM
 		
-		NPKICAL <- npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
+		NPKICAL <- LINTULcassava:::npkical2(S, crop, NMINLV, PMINLV, KMINLV, 
 				NMINST, PMINST, KMINST, NMINSO, PMINSO, KMINSO, NMAXLV, PMAXLV, KMAXLV,
 				NMAXST, PMAXST, KMAXST, NMAXSO, PMAXSO, KMAXSO)
 		
@@ -189,7 +191,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		} else {
 			NPKI <- 1
 		}
-		
+				
 	#---DORMANCY AND RECOVERY-------------------------------------------#
 		# The crop enters the dormancy phase as the soil water content is lower than the soil water content at 
 		# severe drought and as the LAI is lower than the minimal LAI. 
@@ -241,7 +243,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		LUE <- crop$LUE_OPT * stats::approx(crop$TTB[,1], crop$TTB[,2], W$TAVG)$y   # g DM m-2 d-1
 		
       # When water stress is more severe or nutrient is stress is more severe
-      GTOTAL <- LUE * PARINT * min(TRANRF, NPKI) * (!DORMANCY)  # g DM m-2 d-1
+		GTOTAL <- LUE * PARINT * min(TRANRF, NPKI) * (!DORMANCY)  # g DM m-2 d-1
 
 		
 	#---LEAF SENESCENCE------------------------------------------------------#
@@ -368,7 +370,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		#-------------------------------------------NUTRIENT DYNAMICS------------------------------------------#
 		# Nutrient amounts in the crop, and the nutrient amount available for crop uptake are calculated here 
 		# using the nutrientdyn function. 
-		R <- nutrientdyn2(
+		R <- LINTULcassava:::nutrientdyn2(
 			today, S, R, crop, soil, management, EMERG, DELT, 
 			NMINLV, PMINLV, KMINLV, NMINST, PMINST, 
 			KMINST, NMINSO, PMINSO, KMINSO, NMINRT, PMINRT, KMINRT, 
@@ -382,7 +384,7 @@ LINTCAS2_NPK <- function(weather, crop, soil, management, control) {
 		GLV <- FLV * (GTOTAL + abs(R$WCUTTING)) + R$REDISTLVG * PUSHREDIST  # g green leaves DM m-2 d-1
 		
 		# Growth of the leaf are index
-		GLAI <- gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
+		GLAI <- LINTULcassava:::gla(DTEFF, S$TSUMCROP, crop$LAII, crop$RGRL, DELT, SLA, S$LAI, GLV, 
 					crop$TSUMLA_MIN, TRANRF, WC, soil$WCWP, R$WCUTTING, FLV,
 					crop$LAIEXPOEND, DORMANCY, NPKI)	 # m2 m-2 d-1
 			

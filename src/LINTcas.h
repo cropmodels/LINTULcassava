@@ -68,7 +68,7 @@ public:
 	double PUSHDORMRECTSUM=0; double PUSHREDISTENDTSUM=0; // Deg. C d-1
 	double DORMTIME=0; // d d-1
 	double WCUTTING=0; // g DM m-2 d-1
-	//double TRAIN=0;// mm d-1
+	double TRAIN=0;// mm d-1
 	double PAR=0;// MJ m-2 d-1
 	double LAI=0;// m2 m-2 d-1
 	double WLVD=0; double WLV=0; double WST=0; double WSO=0; double WRT=0; double WLVG=0; // g DM m-2 d-1
@@ -117,7 +117,7 @@ public:
 	double PUSHDORMRECTSUM=0; double PUSHREDISTENDTSUM=0; // Deg. C d-1
 	double DORMTIME=0; // d d-1
 	double WCUTTING=0; // g DM m-2 d-1
-	//double TRAIN=0;// mm d-1
+	double TRAIN=0;// mm d-1
 	double PAR=0;// MJ m-2 d-1
 	double LAI=0;// m2 m-2 d-1
 	double WLVD=0; double WLV=0; double WST=0; double WSO=0; double WRT=0; double WLVG=0; // g DM m-2 d-1

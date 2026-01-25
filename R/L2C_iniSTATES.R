@@ -44,7 +44,7 @@ LC_iniSTATES <- function(pars){
 		REDISTLVG = 0,
 		REDISTSO = 0,
 		PUSHREDISTSUM = 0, # deg. C  :    Temperature sum of the redistribution after dormancy
-		WSOFASTRANSLSO =0 
+		WSOFASTRANSLSO = 0 
     )
 }
 
@@ -52,6 +52,7 @@ LC_NPK_iniSTATES <-function(pars){
   
 	# LINTUL2-CASSAVA: 30 states
 	c( LC_iniSTATES(pars),
+		IRRIG = 0,
 	
 		# LINTUL2-CASSAVA_NPK: 27 states
 		NCUTTING = 0.015 * pars[['WCUTTINGUNIT']] * pars[['NCUTTINGS']], #g N m-2

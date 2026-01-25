@@ -16,29 +16,6 @@ Original R code by Rob van den Beuken; rob.vandenbeuken@wur.nl; (c) 2019, PPS
 #include "Rcpp.h"
 
 
-void LINcasModel::initialize(long maxdur) {
-
-	S.ROOTD = crop.ROOTDI; 
-	S.WA = 1000 * crop.ROOTDI * soil.WCFC; // should be separate parameter
-	S.WCUTTING = crop.WCUTTINGUNIT * crop.NCUTTINGS; 
-
-	if (control.NPKmodel) {
-		soil.RTNMINS = (1/0.9) * soil.NMINI / season_length;
-		soil.RTPMINS = (1/0.9) * soil.PMINI / season_length;
-		soil.RTKMINS = (1/0.9) * soil.KMINI / season_length;
-	}
-	
-	if (control.outvars == "batch") {
-		out.names = {"step", "WSO"};
-	} else {
-		out.names = {"step", "ROOTD", "WA", "TSUM", "TSUMCROP", "TSUMCROPLEAFAGE", "DORMTSUM", "PUSHDORMRECTSUM", "PUSHREDISTENDTSUM", "DORMTIME", "WCUTTING", "PAR", "LAI", "WLVD", "WLV", "WST", "WSO", "WRT", "WLVG", "TRAN", "EVAP", "PTRAN", "PEVAP", "RUNOFF", "NINTC", "DRAIN", "REDISTLVG", "REDISTSO", "PUSHREDISTSUM", "WSOFASTRANSLSO", "IRRIG"};
-		if (control.outvars == "full") {
-			out.names.insert(out.names.end(), {"RROOTD", "RWA", "RTSUM", "RTSUMCROP", "RTSUMCROPLEAFAGE", "RDORMTSUM", "RPUSHDORMRECTSUM", "RPUSHREDISTENDTSUM", "RDORMTIME", "RWCUTTING", "RPAR", "RLAI", "RWLVD", "RWLV", "RWST", "RWSO", "RWRT", "RWLVG", "RTRAN", "REVAP", "RPTRAN", "RPEVAP", "RRUNOFF", "RNINTC", "RDRAIN", "RREDISTLVG", "RREDISTSO", "RPUSHREDISTSUM", "RWSOFASTRANSLSO", "RIRRIG"} );
-		}
-	}	
-	out.values.reserve(maxdur * out.names.size());
-}
-
 void LINcasModel::states() {
 	S.ROOTD = S.ROOTD + R.ROOTD;
 	S.WA = S.WA + R.WA;
@@ -98,26 +75,6 @@ void LINcasModel::output(){
 	}
 }
 
-
-
-
-bool LINcasModel::weather_step() {
-	A.date = weather.date[time];
-
-	A.SRAD = weather.srad[time] / 1000.;
-	A.WIND = weather.wind[time];
-	A.VAPR = weather.vapr[time];
-	A.PREC = weather.prec[time];
-
-	double SatVP_TMMN = SatVP(weather.tmin[time]);
-	double SatVP_TMMX = SatVP(weather.tmax[time]);
-  // vapour pressure deficits;
-	A.VPD_MN = std::max(0., SatVP_TMMN - A.VAPR);
-	A.VPD_MX = std::max(0., SatVP_TMMX - A.VAPR);
-	A.TAVG = 0.5 * (weather.tmin[time] + weather.tmax[time]);   // Deg. C     :     daily average temperature
-
-	return true;
-}
 
 void LINcasModel::rates() {
 

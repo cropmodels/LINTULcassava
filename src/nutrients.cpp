@@ -12,6 +12,10 @@ C++ version by RH, 2026-01-20
 
 
 #include "LINTcas.h"
+
+#include <iomanip>
+#include <limits>
+
 #include "Rcpp.h"
 
 
@@ -87,15 +91,15 @@ void LINcasModel::nutrientdyn(bool EMERG,
 			bool PUSHREDIST) {
 
     //---------------- Fertilizer application;
-    // Ferilizer N/P/K application (kg N/P/K ha-1 d-1);
-    double RFERTN = approx2(management.FERTAB[0], management.FERTAB[1], time);    // kg N ha-1 d-1;
-	RFERTN = (RFERTN * 1000) / 10000;             // g N m-2 d-1 ;
-
-    double RFERTP = approx2(management.FERTAB[0], management.FERTAB[2], time);    // kg P ha-1 d-1;
-	RFERTP = (RFERTP * 1000) / 10000;              // g P m-2 d-1;
-
-    double RFERTK = approx2(management.FERTAB[0], management.FERTAB[3], time);    // kg K ha-1 d-1;
-	RFERTK = (RFERTK * 1000) / 10000;             // g N m-2 d-1;
+	// Fertilizer N/P/K application (kg N/P/K ha-1 d-1)
+	double RFERTN = 0, RFERTP = 0, RFERTK = 0;
+    auto it = std::find(management.FERTAB[0].begin(), management.FERTAB[0].end(), A.date);
+    if (it != management.FERTAB[0].end()) {
+		size_t i = std::distance(management.FERTAB[0].begin(), it);
+		RFERTN = management.FERTAB[1][i] * crop.N_RECOV / 10; // kg ha-1 to g m-2 
+		RFERTP = management.FERTAB[2][i] * crop.P_RECOV / 10; // kg ha-1 to g m-2 
+		RFERTK = management.FERTAB[3][i] * crop.K_RECOV / 10; // kg ha-1 to g m-2 
+	}
 
 	//---------------- Translocatable nutrient amounts;
 	// The amount of translocatable nutrients to the storage organs is the actual nutrient amount minus the ;
@@ -304,7 +308,7 @@ void LINcasModel::nutrientdyn(bool EMERG,
 	R.ANST = RNUST + RNTST + RANCUTST + RNDLV_REDIST;          // g N m-2 d-1
 	R.ANRT = RNURT + RNTRT + RANCUTRT;                         // g N m-2 d-1
 	R.ANSO = RNUSO + RNTSO + RANCUTSO - RANSO2LVSO;            // g N m-2 d-1
-
+	
 	R.APLVG = RPULV + RPTLV + RAPCUTLV + RAPSO2LVLV  - RPDLVG; // g P m-2 d-1
 	R.APST = RPUST + RPTST + RAPCUTST;                         // g P m-2 d-1
 	R.APRT = RPURT + RPTRT + RAPCUTRT;                         // g P m-2 d-1

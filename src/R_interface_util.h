@@ -91,10 +91,10 @@ std::vector<std::vector<double>> TableFromList2(List lst, const char* s, size_t 
 	//result.insert(result.end(), x.begin(), x.end());
 	std::vector<double> r = Rcpp::as<std::vector<double> >(x);
 	int sz = r.size() / n;
-	std::vector<double> X(r.begin(), r.begin() + sz - 1);
+	std::vector<double> X(r.begin(), r.begin() + sz);
 	std::vector<std::vector<double>> out {X};
 	for (size_t i=1; i<n; i++) {
-		std::vector<double> Y(r.begin()+(sz*i), r.begin()+(sz*(i+1))-1);
+		std::vector<double> Y(r.begin()+(sz*i), r.begin()+(sz*(i+1)));
 		out.push_back(Y); 
 	}
 	return out;
